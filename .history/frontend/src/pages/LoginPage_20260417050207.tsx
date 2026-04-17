@@ -3,7 +3,6 @@ import { useNavigate } from "react-router-dom";
 import { useAuthStore } from "@/stores/authStore";
 import { useAppStore } from "@/stores/appStore";
 import { getTranslation } from "@/i18n";
-import { Mail, Lock, Eye, EyeOff, Loader2 } from "lucide-react";
 import logo from "@/assets/images/logo.png";
 
 export function LoginPage() {
@@ -83,7 +82,19 @@ export function LoginPage() {
               </label>
               <div className="relative">
                 <div className="absolute inset-y-0 inset-s-0 flex items-center ps-3 pointer-events-none">
-                  <Mail className="w-5 h-5 text-brand-400" />
+                  <svg
+                    className="w-5 h-5 text-brand-400"
+                    fill="none"
+                    stroke="currentColor"
+                    viewBox="0 0 24 24"
+                  >
+                    <path
+                      strokeLinecap="round"
+                      strokeLinejoin="round"
+                      strokeWidth={1.5}
+                      d="M16 12a4 4 0 10-8 0 4 4 0 008 0zm0 0v1.5a2.5 2.5 0 005 0V12a9 9 0 10-9 9m4.5-1.206a8.959 8.959 0 01-4.5 1.206"
+                    />
+                  </svg>
                 </div>
                 <input
                   type="email"
@@ -101,8 +112,20 @@ export function LoginPage() {
                 {getTranslation(locale, "auth.password")}
               </label>
               <div className="relative">
-                <div className="absolute inset-y-0 inset-s-0 flex items-center ps-3 pointer-events-none">
-                  <Lock className="w-5 h-5 text-brand-400" />
+                <div className="absolute inset-y-0 start-0 flex items-center ps-3 pointer-events-none">
+                  <svg
+                    className="w-5 h-5 text-brand-400"
+                    fill="none"
+                    stroke="currentColor"
+                    viewBox="0 0 24 24"
+                  >
+                    <path
+                      strokeLinecap="round"
+                      strokeLinejoin="round"
+                      strokeWidth={1.5}
+                      d="M12 15v2m-6 4h12a2 2 0 002-2v-6a2 2 0 00-2-2H6a2 2 0 00-2 2v6a2 2 0 002 2zm10-10V7a4 4 0 00-8 0v4h8z"
+                    />
+                  </svg>
                 </div>
                 <input
                   type={showPassword ? "text" : "password"}
@@ -115,12 +138,42 @@ export function LoginPage() {
                 <button
                   type="button"
                   onClick={() => setShowPassword(!showPassword)}
-                  className="absolute inset-y-0 inset-e-0 flex items-center pe-3 cursor-pointer"
+                  className="absolute inset-y-0 end-0 flex items-center pe-3"
                 >
                   {showPassword ? (
-                    <EyeOff className="w-5 h-5 text-brand-400 hover:text-brand-600" />
+                    <svg
+                      className="w-5 h-5 text-brand-400 hover:text-brand-600"
+                      fill="none"
+                      stroke="currentColor"
+                      viewBox="0 0 24 24"
+                    >
+                      <path
+                        strokeLinecap="round"
+                        strokeLinejoin="round"
+                        strokeWidth={1.5}
+                        d="M15 12a3 3 0 11-6 0 3 3 0 016 0zm2.828-6.243a1 1 0 011.415 0M19.07 4.93a1 1 0 010 1.414l-14.14 14.14a1 1 0 01-1.415-1.414l14.14-14.14a1 1 0 011.415 0zM17.657 6.343a8 8 0 000 11.314M5.343 17.657a8 8 0 000-11.314"
+                      />
+                      <path
+                        strokeLinecap="round"
+                        strokeLinejoin="round"
+                        strokeWidth={1.5}
+                        d="M3 3l18 18"
+                      />
+                    </svg>
                   ) : (
-                    <Eye className="w-5 h-5 text-brand-400 hover:text-brand-600" />
+                    <svg
+                      className="w-5 h-5 text-brand-400 hover:text-brand-600"
+                      fill="none"
+                      stroke="currentColor"
+                      viewBox="0 0 24 24"
+                    >
+                      <path
+                        strokeLinecap="round"
+                        strokeLinejoin="round"
+                        strokeWidth={1.5}
+                        d="M15 12a3 3 0 11-6 0 3 3 0 016 0zm0 0v1.5a2.5 2.5 0 005 0V12a9 9 0 10-9 9m4.5-1.206a8.959 8.959 0 01-4.5 1.206"
+                      />
+                    </svg>
                   )}
                 </button>
               </div>
@@ -154,7 +207,25 @@ export function LoginPage() {
             >
               {isLoading ? (
                 <span className="flex items-center justify-center">
-                  <Loader2 className="animate-spin -ms-1 me-3 h-5 w-5 text-white" />
+                  <svg
+                    className="animate-spin -ms-1 me-3 h-5 w-5 text-white"
+                    fill="none"
+                    viewBox="0 0 24 24"
+                  >
+                    <circle
+                      className="opacity-25"
+                      cx="12"
+                      cy="12"
+                      r="10"
+                      stroke="currentColor"
+                      strokeWidth="4"
+                    />
+                    <path
+                      className="opacity-75"
+                      fill="currentColor"
+                      d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4z"
+                    />
+                  </svg>
                   {getTranslation(locale, "common.loading")}
                 </span>
               ) : (

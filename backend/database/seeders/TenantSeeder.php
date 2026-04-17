@@ -76,7 +76,19 @@ class TenantSeeder extends Seeder
         ]);
         $manager->assignRole('PHC Manager');
 
+        $nurse = User::create([
+            'tenant_id' => $tenant->id,
+            'phc_center_id' => $phc->id,
+            'department_id' => $dept->id,
+            'name' => 'Staff Nurse',
+            'email' => 'nurse@phc.sa',
+            'password' => Hash::make('password123'),
+        ]);
+        $nurse->assignRole('Staff Nurse');
+
         $this->command->info('Demo data seeded successfully!');
         $this->command->info('Login: admin@phc.sa / password123');
+        $this->command->info('Login: manager@phc.sa / password123');
+        $this->command->info('Login: nurse@phc.sa / password123');
     }
 }

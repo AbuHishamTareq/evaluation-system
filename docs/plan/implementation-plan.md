@@ -16,28 +16,28 @@
 - [X] Initialize React 19 + Vite + TypeScript frontend
 - [X] Configure Tailwind v4 with RTL support
 - [X] Set up Docker Compose for local development
-- [ ] Configure Git repository and CI/CD pipeline
+- [X] Configure Git repository and CI/CD pipeline
 
 ### 1.2 Authentication & Authorization
-- [ ] Implement Laravel Sanctum authentication
-- [ ] Set up Spatie Laravel-Permission (roles & permissions)
-- [ ] Create RBAC middleware with tenant isolation
+- [X] Implement Laravel Sanctum authentication
+- [X] Set up Spatie Laravel-Permission (roles & permissions)
+- [X] Create RBAC middleware with tenant isolation
 - [X] Build login/logout flow with bilingual UI
-- [ ] Implement password policy (min 12 chars, complexity requirements)
+- [X] Implement password policy (min 12 chars, complexity requirements)
 
 ### 1.3 Database Foundation
-- [ ] Design and implement core migrations:
+- [X] Design and implement core migrations:
   - `users`, `roles`, `permissions`, `role_has_permissions`
   - `tenants`, `phc_centers`, `regions`
   - `staff_profiles`, `departments`
-- [ ] Create base seeders for demo data
+- [X] Create base seeders for demo data
 
 ### 1.4 Frontend Foundation
 - [X] Set up React Router with protected routes
 - [X] Configure Zustand for state management
 - [X] Implement i18n with en.json and ar.json
 - [X] Build RTL layout engine and theme switcher
-- [ ] Create base UI components (Button, Input, Card, Table)
+- [X] Create base UI components (Button, Input, Card, Table)
 
 ---
 
@@ -202,12 +202,12 @@ Dashboard (aggregates all modules)
 
 ## Deliverables Checklist
 
-- [ ] Laravel 13 API with Clean Architecture
-- [ ] React 19 PWA with RTL support
-- [ ] MySQL schema with all MVP tables
+- [X] Laravel 13 API with Clean Architecture
+- [X] React 19 PWA with RTL support
+- [X] MySQL schema with all MVP tables
 - [ ] RBAC with 9 user roles
 - [ ] 6 functional modules
-- [ ] Bilingual UI (EN/AR)
+- [X] Bilingual UI (EN/AR)
 - [ ] Offline-first PWA
 - [ ] Audit logging
 - [ ] Export/Import engine

@@ -42,6 +42,8 @@ export default {
     enterEmail: 'Enter your email',
     enterPassword: 'Enter your password',
     version: 'Saudi Arabia PHC System v1.0',
+    passwordMinLength: 'Password must be at least 12 characters',
+    passwordComplexity: 'Password must contain uppercase, lowercase, number and special character',
   },
   nav: {
     dashboard: 'Dashboard',
