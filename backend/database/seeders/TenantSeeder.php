@@ -62,7 +62,7 @@ class TenantSeeder extends Seeder
             'department_id' => $dept->id,
             'name' => 'Admin User',
             'email' => 'admin@phc.sa',
-            'password' => Hash::make('password123'),
+            'password' => Hash::make('Password123!'),
         ]);
         $admin->assignRole('Main Office');
 
@@ -72,7 +72,7 @@ class TenantSeeder extends Seeder
             'department_id' => $dept->id,
             'name' => 'PHC Manager',
             'email' => 'manager@phc.sa',
-            'password' => Hash::make('password123'),
+            'password' => Hash::make('Password123!'),
         ]);
         $manager->assignRole('PHC Manager');
 
@@ -82,13 +82,13 @@ class TenantSeeder extends Seeder
             'department_id' => $dept->id,
             'name' => 'Staff Nurse',
             'email' => 'nurse@phc.sa',
-            'password' => Hash::make('password123'),
+            'password' => Hash::make('Password123!'),
         ]);
         $nurse->assignRole('Staff Nurse');
 
         $this->command->info('Demo data seeded successfully!');
-        $this->command->info('Login: admin@phc.sa / password123');
-        $this->command->info('Login: manager@phc.sa / password123');
-        $this->command->info('Login: nurse@phc.sa / password123');
+        $this->command->info('Login: admin@phc.sa / Password123!');
+        $this->command->info('Login: manager@phc.sa / Password123!');
+        $this->command->info('Login: nurse@phc.sa / Password123!');
     }
 }
