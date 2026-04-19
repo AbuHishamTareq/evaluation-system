@@ -6,7 +6,6 @@ use Illuminate\Http\UploadedFile;
 use Illuminate\Support\Collection;
 use Illuminate\Support\Facades\Log;
 use PhpOffice\PhpSpreadsheet\IOFactory;
-use PhpOffice\PhpSpreadsheet\Shared\Date;
 
 class ImportService
 {
@@ -35,7 +34,7 @@ class ImportService
     {
         return in_array($mimeType, [
             'application/vnd.ms-excel',
-            'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet'
+            'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet',
         ]) || in_array($extension, ['xls', 'xlsx']);
     }
 
@@ -43,7 +42,7 @@ class ImportService
     {
         $data = collect();
         $handle = fopen($file->getRealPath(), 'r');
-        $headers = fgetcsv($handle);
+        $headers = fgetcsv($handle, escape: '');
 
         if (! $headers) {
             return $data;
@@ -59,7 +58,7 @@ class ImportService
             }
         }
 
-        while (($row = fgetcsv($handle)) !== false) {
+        while (($row = fgetcsv($handle, escape: '')) !== false) {
             $item = [];
             foreach ($mappedHeaders as $index => $field) {
                 $item[$field] = $row[$index] ?? null;
@@ -81,18 +80,27 @@ class ImportService
         $spreadsheet = $reader->load($file->getRealPath());
         $worksheet = $spreadsheet->getActiveSheet();
 
-        // Get headers from first row
+        $colLetter = function ($col): string {
+            $letters = '';
+            while ($col > 0) {
+                $col--;
+                $letters = chr(65 + ($col % 26)).$letters;
+                $col = intdiv($col, 26);
+            }
+
+            return $letters ?: 'A';
+        };
+
         $highestRow = $worksheet->getHighestRow();
         $highestColumn = $worksheet->getHighestColumn();
-        $highestColumnIndex = IOFactory::columnIndexFromString($highestColumn);
+        $highestColumnNum = $this->columnLetterToNumber($highestColumn);
 
         $headers = [];
-        for ($col = 1; $col <= $highestColumnIndex; $col++) {
-            $cell = $worksheet->getCellByColumnAndRow($col, 1);
-            $headers[] = $cell->getValue();
+        for ($col = 1; $col <= $highestColumnNum; $col++) {
+            $cellAddr = $colLetter($col).'1';
+            $headers[] = $worksheet->getCell($cellAddr)->getValue();
         }
 
-        // Map headers
         $mappedHeaders = [];
         foreach ($headers as $index => $header) {
             $header = trim((string) $header);
@@ -103,23 +111,28 @@ class ImportService
             }
         }
 
-        // Read data rows
         for ($row = 2; $row <= $highestRow; $row++) {
             $item = [];
             foreach ($mappedHeaders as $index => $field) {
-                $cell = $worksheet->getCellByColumnAndRow($index + 1, $row);
-                $value = $cell->getValue();
-                // Handle null values and DateTime objects
-                if ($value instanceof \PhpOffice\PhpSpreadsheet\Shared\Date) {
-                    $value = \PhpOffice\PhpSpreadsheet\Shared\Date::ExcelToPHP($value);
-                    $value = gmdate('Y-m-d H:i:s', $value);
-                }
+                $cellAddr = $colLetter($index + 1).$row;
+                $value = $worksheet->getCell($cellAddr)->getValue();
                 $item[$field] = $value === null ? null : $value;
             }
             $data->push($item);
         }
 
         return $data;
+    }
+
+    protected function columnLetterToNumber(string $letter): int
+    {
+        $num = 0;
+        $letters = str_split($letter);
+        foreach ($letters as $char) {
+            $num = $num * 26 + (ord($char) - 64);
+        }
+
+        return $num;
     }
 
     public function validateData(array $data, array $rules): array

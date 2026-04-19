@@ -8,12 +8,9 @@ use App\Models\Issue;
 use App\Models\Shift;
 use App\Models\StaffProfile;
 use Illuminate\Support\Facades\Response;
+use Mpdf\Mpdf;
 use PhpOffice\PhpSpreadsheet\IOFactory;
 use PhpOffice\PhpSpreadsheet\Spreadsheet;
-use PhpOffice\PhpSpreadsheet\Writer\Xlsx;
-use PhpOffice\PhpSpreadsheet\Writer\Pdf;
-use Dompdf\Dompdf;
-use Dompdf\Options;
 
 class ExportService
 {
@@ -98,6 +95,22 @@ class ExportService
         ])->toArray();
     }
 
+    public function exportStaffReportByIds(array $ids): array
+    {
+        return StaffProfile::with(['phcCenter', 'department'])
+            ->whereIn('id', $ids)
+            ->get()
+            ->map(fn ($s) => [
+                'id' => $s->id,
+                'employee_id' => $s->employee_id,
+                'name' => $s->full_name,
+                'center' => $s->phcCenter?->name,
+                'department' => $s->department?->name,
+                'status' => $s->employment_status,
+                'hire_date' => $s->hire_date?->format('Y-m-d'),
+            ])->toArray();
+    }
+
     public function exportIssueReport(array $filters): array
     {
         $query = Issue::with(['phcCenter', 'assignee']);
@@ -177,14 +190,18 @@ class ExportService
             return '';
         }
 
-        $output = fopen('php://temp', 'w');
+        $output = fopen('php://temp', 'w+');
         fputcsv($output, array_keys($data[0]));
 
         foreach ($data as $row) {
             fputcsv($output, array_values($row));
         }
 
-        return stream_get_contents($output);
+        rewind($output);
+        $content = stream_get_contents($output);
+        fclose($output);
+
+        return $content;
     }
 
     protected function generateSummary(array $data): array
@@ -197,35 +214,66 @@ class ExportService
 
     public function exportToExcel(array $data, string $filename): \Symfony\Component\HttpFoundation\Response
     {
-        $spreadsheet = new Spreadsheet();
+        $spreadsheet = new Spreadsheet;
         $sheet = $spreadsheet->getActiveSheet();
 
-        if (!empty($data)) {
-            // Set headers
-            $headers = array_keys($data[0]);
-            $column = 0;
-            foreach ($headers as $header) {
-                $sheet->setCellValueByColumnAndRow($column + 1, 1, $header);
-                $column++;
+        $colLetter = function ($col): string {
+            $letters = '';
+            while ($col > 0) {
+                $col--;
+                $letters = chr(65 + ($col % 26)).$letters;
+                $col = intdiv($col, 26);
             }
 
-            // Set data
-            $row = 2;
-            foreach ($data as $rowData) {
-                $column = 0;
-                foreach ($rowData as $value) {
-                    $sheet->setCellValueByColumnAndRow($column + 1, $row, $value);
-                    $column++;
+            return $letters ?: 'A';
+        };
+
+        if (! empty($data)) {
+            $firstRow = $data[0];
+            $isAssociative = array_keys($firstRow) !== range(0, count($firstRow) - 1);
+
+            if ($isAssociative) {
+                $headers = array_keys($firstRow);
+                $col = 1;
+                foreach ($headers as $header) {
+                    $sheet->setCellValue($colLetter($col).'1', $header);
+                    $col++;
                 }
-                $row++;
+
+                $rowNum = 2;
+                foreach ($data as $rowData) {
+                    $col = 1;
+                    foreach ($rowData as $value) {
+                        $sheet->setCellValue($colLetter($col).$rowNum, $value);
+                        $col++;
+                    }
+                    $rowNum++;
+                }
+            } else {
+                $headers = $firstRow;
+                $col = 1;
+                foreach ($headers as $header) {
+                    $sheet->setCellValue($colLetter($col).'1', $header);
+                    $col++;
+                }
+
+                $rowNum = 2;
+                foreach (array_slice($data, 1) as $rowData) {
+                    $col = 1;
+                    foreach ($rowData as $value) {
+                        $sheet->setCellValue($colLetter($col).$rowNum, $value);
+                        $col++;
+                    }
+                    $rowNum++;
+                }
             }
         }
 
-        $writer = new Xlsx($spreadsheet);
-        $output = '';
-        ob_start();
-        $writer->save('php://output');
-        $output = ob_get_clean();
+        $writer = IOFactory::createWriter($spreadsheet, 'Xlsx');
+        $tempFile = tempnam(sys_get_temp_dir(), 'excel_');
+        $writer->save($tempFile);
+        $output = file_get_contents($tempFile);
+        unlink($tempFile);
 
         return Response::make($output, 200, [
             'Content-Type' => 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet',
@@ -238,17 +286,32 @@ class ExportService
         // Convert data to HTML table
         $html = $this->dataToHtmlTable($data);
 
-        // Configure DOMPDF
-        $options = new Options();
-        $options->set('defaultFont', 'Sans-serif');
-        $options->setIsRemoteEnabled(true);
+        // Add UTF-8 meta tag for proper Arabic character support
+        $html = '<!DOCTYPE html>
+<html>
+<head>
+<meta http-equiv="Content-Type" content="text/html; charset=utf-8">
+<style>
+    body { font-family: DejaVu Sans, sans-serif; }
+    table { border-collapse: collapse; width: 100%; font-family: DejaVu Sans, sans-serif; }
+    th, td { border: 1px solid #000; padding: 5px; }
+</style>
+</head>
+<body>'.$html.'</body>
+</html>';
 
-        $dompdf = new Dompdf($options);
-        $dompdf->loadHtml($html);
-        $dompdf->setPaper('A4', 'portrait');
-        $dompdf->render();
+        // Configure mPDF for Arabic support
+        $mpdf = new Mpdf([
+            'mode' => 'utf-8',
+            'format' => 'A4',
+            'orientation' => 'P',
+            'default_font_size' => 10,
+            'default_font' => 'Arial',
+        ]);
 
-        return Response::make($dompdf->output(), 200, [
+        $mpdf->WriteHTML($html);
+
+        return Response::make($mpdf->Output('', 'S'), 200, [
             'Content-Type' => 'application/pdf',
             'Content-Disposition' => "attachment; filename=\"{$filename}.pdf\"",
         ]);
@@ -261,7 +324,7 @@ class ExportService
         }
 
         $html = '<table border="1" cellpadding="5" cellspacing="0" style="border-collapse: collapse; width: 100%;">';
-        
+
         // Add headers
         $html .= '<tr style="background-color: #f2f2f2; font-weight: bold;">';
         foreach (array_keys($data[0]) as $header) {
@@ -273,7 +336,7 @@ class ExportService
         foreach ($data as $row) {
             $html .= '<tr>';
             foreach ($row as $cell) {
-                $html .= "<td>" . htmlspecialchars($cell ?? '', ENT_QUOTES) . "</td>";
+                $html .= '<td>'.htmlspecialchars($cell ?? '', ENT_QUOTES).'</td>';
             }
             $html .= '</tr>';
         }

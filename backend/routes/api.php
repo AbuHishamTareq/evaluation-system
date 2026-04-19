@@ -9,9 +9,12 @@ use App\Http\Controllers\API\V1\Evaluation\ActionPlanController;
 use App\Http\Controllers\API\V1\Evaluation\EvaluationController;
 use App\Http\Controllers\API\V1\Evaluation\EvaluationTemplateController;
 use App\Http\Controllers\API\V1\HR\AlertController as HRAlertController;
+use App\Http\Controllers\API\V1\HR\DepartmentController;
+use App\Http\Controllers\API\V1\HR\PhcCenterController;
 use App\Http\Controllers\API\V1\HR\ShiftController;
 use App\Http\Controllers\API\V1\HR\ShiftRequestController;
 use App\Http\Controllers\API\V1\HR\StaffProfileController;
+use App\Http\Controllers\API\V1\HR\ZoneController;
 use App\Http\Controllers\API\V1\Issues\IssueController;
 use App\Http\Controllers\API\V1\Pharmacy\MedicationAlertController;
 use App\Http\Controllers\API\V1\Pharmacy\MedicationBatchController;
@@ -30,8 +33,44 @@ Route::prefix('v1')->group(function () {
         Route::put('/auth/profile', [AuthController::class, 'updateProfile']);
 
         Route::middleware(['throttle:60,1', TenancyScope::class])->group(function () {
+            Route::get('staff-profiles/export', [StaffProfileController::class, 'export']);
+            Route::post('staff-profiles/import', [StaffProfileController::class, 'import']);
+            Route::get('staff-profiles/template', [StaffProfileController::class, 'downloadTemplate']);
+            Route::get('staff-profiles/next-id', [StaffProfileController::class, 'getNextEmployeeId']);
+            Route::post('staff-profiles/bulk-update-status', [StaffProfileController::class, 'bulkUpdateStatus']);
+            Route::patch('staff-profiles/{staffProfile}/toggle-status', [StaffProfileController::class, 'toggleStatus']);
             Route::apiResource('staff-profiles', StaffProfileController::class);
+            Route::get('staff-profiles/{staffProfile}/educations', [StaffProfileController::class, 'educations']);
+            Route::post('staff-profiles/{staffProfile}/educations', [StaffProfileController::class, 'storeEducation']);
+            Route::put('staff-profiles/{staffProfile}/educations/{staffEducation}', [StaffProfileController::class, 'updateEducation']);
+            Route::delete('staff-profiles/{staffProfile}/educations/{staffEducation}', [StaffProfileController::class, 'destroyEducation']);
+            Route::get('staff-profiles/{staffProfile}/certificates', [StaffProfileController::class, 'certificates']);
+            Route::post('staff-profiles/{staffProfile}/certificates', [StaffProfileController::class, 'storeCertificate']);
+            Route::put('staff-profiles/{staffProfile}/certificates/{staffCertificate}', [StaffProfileController::class, 'updateCertificate']);
+            Route::delete('staff-profiles/{staffProfile}/certificates/{staffCertificate}', [StaffProfileController::class, 'destroyCertificate']);
+            Route::get('staff-profiles/{staffProfile}/experiences', [StaffProfileController::class, 'experiences']);
+            Route::post('staff-profiles/{staffProfile}/experiences', [StaffProfileController::class, 'storeExperience']);
+            Route::put('staff-profiles/{staffProfile}/experiences/{staffExperience}', [StaffProfileController::class, 'updateExperience']);
+            Route::delete('staff-profiles/{staffProfile}/experiences/{staffExperience}', [StaffProfileController::class, 'destroyExperience']);
             Route::apiResource('shifts', ShiftController::class);
+            Route::post('departments/import', [DepartmentController::class, 'import']);
+            Route::get('departments/export', [DepartmentController::class, 'export']);
+            Route::patch('departments/{department}/toggle-status', [DepartmentController::class, 'toggleStatus']);
+            Route::apiResource('departments', DepartmentController::class);
+
+            Route::post('zones/import', [ZoneController::class, 'import']);
+            Route::get('zones/export', [ZoneController::class, 'export']);
+            Route::patch('zones/{zone}/toggle-status', [ZoneController::class, 'toggleStatus']);
+            Route::apiResource('zones', ZoneController::class);
+
+            Route::post('phc-centers/import', [PhcCenterController::class, 'import']);
+            Route::get('zones/export', [ZoneController::class, 'export']);
+            Route::patch('zones/{zone}/toggle-status', [ZoneController::class, 'toggleStatus']);
+            Route::apiResource('zones', ZoneController::class);
+            Route::post('phc-centers/import', [PhcCenterController::class, 'import']);
+            Route::get('phc-centers/export', [PhcCenterController::class, 'export']);
+            Route::patch('phc-centers/{phcCenter}/toggle-status', [PhcCenterController::class, 'toggleStatus']);
+            Route::apiResource('phc-centers', PhcCenterController::class);
             Route::apiResource('shift-requests', ShiftRequestController::class)->except(['update']);
 
             Route::patch('shift-requests/{shift_request}/approve', [ShiftRequestController::class, 'approve']);
