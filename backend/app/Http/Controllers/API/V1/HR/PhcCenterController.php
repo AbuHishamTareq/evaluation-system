@@ -10,6 +10,7 @@ use App\Models\Region;
 use App\Services\Dashboard\ExportService;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
+use PhpOffice\PhpSpreadsheet\IOFactory;
 use Symfony\Component\HttpFoundation\Response;
 
 class PhcCenterController extends Controller
@@ -103,7 +104,7 @@ class PhcCenterController extends Controller
     public function import(Request $request): JsonResponse
     {
         $request->validate([
-            'file' => 'required|file|mimes:csv,txt,application/vnd.ms-excel,application/vnd.openxmlformats-officedocument.spreadsheetml.sheet|max:10240',
+            'file' => 'required|file|mimes:csv,txt,xlsx,xls,application/vnd.ms-excel,application/vnd.openxmlformats-officedocument.spreadsheetml.sheet|max:10240',
         ]);
 
         $file = $request->file('file');
@@ -136,15 +137,19 @@ class PhcCenterController extends Controller
         });
 
         $tenantId = $request->user()?->tenant_id ?? 1;
+        $importedCount = 0;
 
         foreach ($processedData->toArray() as $phcData) {
-            $phcData['tenant_id'] = $tenantId;
-            PhcCenter::create($phcData);
+            if (! empty($phcData['name'])) {
+                $phcData['tenant_id'] = $tenantId;
+                PhcCenter::create($phcData);
+                $importedCount++;
+            }
         }
 
         return response()->json([
-            'message' => 'Successfully imported '.count($processedData).' PHC Centers',
-            'imported_count' => count($processedData),
+            'message' => 'Successfully imported '.$importedCount.' PHC Centers',
+            'imported_count' => $importedCount,
         ]);
     }
 
@@ -198,6 +203,17 @@ class PhcCenterController extends Controller
 
     private function processFile($file, array $columnMapping)
     {
+        $extension = $file->getClientOriginalExtension();
+
+        if (in_array($extension, ['xlsx', 'xls'])) {
+            return $this->processExcelFile($file, $columnMapping);
+        }
+
+        return $this->processCsvFile($file, $columnMapping);
+    }
+
+    private function processCsvFile($file, array $columnMapping)
+    {
         $data = [];
         $handle = fopen($file->getRealPath(), 'r');
         $headers = fgetcsv($handle);
@@ -213,6 +229,35 @@ class PhcCenterController extends Controller
             $data[] = $rowData;
         }
         fclose($handle);
+
+        return collect($data);
+    }
+
+    private function processExcelFile($file, array $columnMapping)
+    {
+        $spreadsheet = IOFactory::load($file->getRealPath());
+        $worksheet = $spreadsheet->getActiveSheet();
+        $rows = $worksheet->toArray();
+
+        if (empty($rows)) {
+            return collect([]);
+        }
+
+        $headers = array_shift($rows);
+        $data = [];
+
+        foreach ($rows as $row) {
+            $rowData = [];
+            foreach ($row as $index => $value) {
+                $header = $headers[$index] ?? null;
+                if ($header && isset($columnMapping[$header])) {
+                    $rowData[$columnMapping[$header]] = $value;
+                }
+            }
+            if (! empty($rowData)) {
+                $data[] = $rowData;
+            }
+        }
 
         return collect($data);
     }

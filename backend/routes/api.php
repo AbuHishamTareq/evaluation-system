@@ -10,10 +10,17 @@ use App\Http\Controllers\API\V1\Evaluation\EvaluationController;
 use App\Http\Controllers\API\V1\Evaluation\EvaluationTemplateController;
 use App\Http\Controllers\API\V1\HR\AlertController as HRAlertController;
 use App\Http\Controllers\API\V1\HR\DepartmentController;
+use App\Http\Controllers\API\V1\HR\MedicalFieldController;
+use App\Http\Controllers\API\V1\HR\NationalityController;
 use App\Http\Controllers\API\V1\HR\PhcCenterController;
+use App\Http\Controllers\API\V1\HR\RankController;
+use App\Http\Controllers\API\V1\HR\RoleController;
+use App\Http\Controllers\API\V1\HR\ShcCategoryController;
 use App\Http\Controllers\API\V1\HR\ShiftController;
 use App\Http\Controllers\API\V1\HR\ShiftRequestController;
+use App\Http\Controllers\API\V1\HR\SpecialtyController;
 use App\Http\Controllers\API\V1\HR\StaffProfileController;
+use App\Http\Controllers\API\V1\HR\UserController;
 use App\Http\Controllers\API\V1\HR\ZoneController;
 use App\Http\Controllers\API\V1\Issues\IssueController;
 use App\Http\Controllers\API\V1\Pharmacy\MedicationAlertController;
@@ -32,7 +39,7 @@ Route::prefix('v1')->group(function () {
         Route::post('/auth/logout', [AuthController::class, 'logout']);
         Route::put('/auth/profile', [AuthController::class, 'updateProfile']);
 
-        Route::middleware(['throttle:60,1', TenancyScope::class])->group(function () {
+        Route::middleware(['throttle:120,1', TenancyScope::class])->group(function () {
             Route::get('staff-profiles/export', [StaffProfileController::class, 'export']);
             Route::post('staff-profiles/import', [StaffProfileController::class, 'import']);
             Route::get('staff-profiles/template', [StaffProfileController::class, 'downloadTemplate']);
@@ -64,13 +71,44 @@ Route::prefix('v1')->group(function () {
             Route::apiResource('zones', ZoneController::class);
 
             Route::post('phc-centers/import', [PhcCenterController::class, 'import']);
-            Route::get('zones/export', [ZoneController::class, 'export']);
-            Route::patch('zones/{zone}/toggle-status', [ZoneController::class, 'toggleStatus']);
-            Route::apiResource('zones', ZoneController::class);
-            Route::post('phc-centers/import', [PhcCenterController::class, 'import']);
             Route::get('phc-centers/export', [PhcCenterController::class, 'export']);
             Route::patch('phc-centers/{phcCenter}/toggle-status', [PhcCenterController::class, 'toggleStatus']);
             Route::apiResource('phc-centers', PhcCenterController::class);
+
+            Route::post('nationalities/import', [NationalityController::class, 'import']);
+            Route::get('nationalities/export', [NationalityController::class, 'export']);
+            Route::patch('nationalities/{nationality}/toggle-status', [NationalityController::class, 'toggleStatus']);
+            Route::apiResource('nationalities', NationalityController::class);
+
+            Route::get('roles/permissions', [RoleController::class, 'permissions']);
+            Route::apiResource('roles', RoleController::class);
+
+            Route::get('users/roles', [UserController::class, 'getAvailableRoles']);
+            Route::post('users/{user}/assign-role', [UserController::class, 'assignRole']);
+            Route::post('users/{user}/remove-role', [UserController::class, 'removeRole']);
+            Route::post('users/{user}/sync-roles', [UserController::class, 'syncRoles']);
+            Route::apiResource('users', UserController::class);
+
+            Route::post('medical-fields/import', [MedicalFieldController::class, 'import']);
+            Route::get('medical-fields/export', [MedicalFieldController::class, 'export']);
+            Route::patch('medical-fields/{medicalField}/toggle-status', [MedicalFieldController::class, 'toggleStatus']);
+            Route::apiResource('medical-fields', MedicalFieldController::class);
+
+            Route::post('specialties/import', [SpecialtyController::class, 'import']);
+            Route::get('specialties/export', [SpecialtyController::class, 'export']);
+            Route::patch('specialties/{specialty}/toggle-status', [SpecialtyController::class, 'toggleStatus']);
+            Route::apiResource('specialties', SpecialtyController::class);
+
+            Route::post('ranks/import', [RankController::class, 'import']);
+            Route::get('ranks/export', [RankController::class, 'export']);
+            Route::patch('ranks/{rank}/toggle-status', [RankController::class, 'toggleStatus']);
+            Route::apiResource('ranks', RankController::class);
+
+            Route::post('shc-categories/import', [ShcCategoryController::class, 'import']);
+            Route::get('shc-categories/export', [ShcCategoryController::class, 'export']);
+            Route::patch('shc-categories/{shcCategory}/toggle-status', [ShcCategoryController::class, 'toggleStatus']);
+            Route::apiResource('shc-categories', ShcCategoryController::class);
+
             Route::apiResource('shift-requests', ShiftRequestController::class)->except(['update']);
 
             Route::patch('shift-requests/{shift_request}/approve', [ShiftRequestController::class, 'approve']);

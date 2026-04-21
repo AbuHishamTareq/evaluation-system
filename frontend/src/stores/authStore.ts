@@ -27,12 +27,17 @@ interface AuthState {
   setUser: (user: User | null) => void
 }
 
+const getInitialToken = () => {
+  if (typeof window === 'undefined') return null
+  return localStorage.getItem('token')
+}
+
 export const useAuthStore = create<AuthState>()(
   persist(
-    (set) => ({
+    (set, get) => ({
       user: null,
-      token: null,
-      isAuthenticated: false,
+      token: getInitialToken(),
+      isAuthenticated: !!getInitialToken(),
       isLoading: false,
 
       login: async (email: string, password: string) => {
@@ -68,9 +73,9 @@ export const useAuthStore = create<AuthState>()(
       },
 
       fetchUser: async () => {
-        const token = localStorage.getItem('token')
-        if (!token) {
-          set({ isAuthenticated: false })
+        const currentToken = get().token || localStorage.getItem('token')
+        if (!currentToken) {
+          set({ isAuthenticated: false, isLoading: false })
           return
         }
         set({ isLoading: true })
@@ -78,7 +83,7 @@ export const useAuthStore = create<AuthState>()(
           const { data } = await authApi.me()
           set({
             user: data.user,
-            token,
+            token: currentToken,
             isAuthenticated: true,
             isLoading: false,
           })

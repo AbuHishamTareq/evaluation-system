@@ -11,7 +11,7 @@ class EloquentStaffProfileRepository implements StaffProfileRepositoryInterface
 {
     public function getAll(array $filters = []): LengthAwarePaginator
     {
-        $query = StaffProfile::with(['user', 'zone', 'phcCenter', 'department']);
+        $query = StaffProfile::with(['user', 'zone', 'phcCenter', 'department', 'nationality', 'shcCategory']);
 
         if (! empty($filters['zone_id'])) {
             $query->where('zone_id', $filters['zone_id']);
@@ -48,7 +48,7 @@ class EloquentStaffProfileRepository implements StaffProfileRepositoryInterface
 
     public function getById(int $id): ?StaffProfile
     {
-        return StaffProfile::with(['user', 'zone', 'phcCenter', 'department'])->find($id);
+        return StaffProfile::with(['user', 'zone', 'phcCenter', 'department', 'nationality', 'shcCategory'])->find($id);
     }
 
     public function getByUserId(int $userId): ?StaffProfile
@@ -64,7 +64,7 @@ class EloquentStaffProfileRepository implements StaffProfileRepositoryInterface
     public function update(StaffProfile $profile, array $data): StaffProfile
     {
         $profile->update($data);
-        $profile->load(['user', 'zone', 'phcCenter', 'department']);
+        $profile->load(['user', 'zone', 'phcCenter', 'department', 'shcCategory']);
 
         return $profile;
     }

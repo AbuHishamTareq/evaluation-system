@@ -6,7 +6,13 @@ use App\Http\Controllers\Controller;
 use App\Http\Requests\StoreStaffProfileRequest;
 use App\Http\Requests\UpdateStaffProfileRequest;
 use App\Models\Department;
+use App\Models\MedicalField;
+use App\Models\Nationality;
 use App\Models\PhcCenter;
+use App\Models\Rank;
+use App\Models\Region;
+use App\Models\ShcCategory;
+use App\Models\Specialty;
 use App\Models\StaffCertificate;
 use App\Models\StaffEducation;
 use App\Models\StaffExperience;
@@ -76,7 +82,11 @@ class StaffProfileController extends Controller
 
     public function show(StaffProfile $staffProfile): JsonResponse
     {
-        $staffProfile->load(['user', 'zone', 'phcCenter', 'department', 'certificates', 'educations', 'experiences']);
+        $staffProfile->load([
+            'user', 'zone', 'phcCenter', 'department', 'nationality',
+            'shcCategory.medicalField', 'shcCategory.specialty', 'shcCategory.rank',
+            'certificates', 'educations', 'experiences',
+        ]);
 
         return response()->json(['data' => $staffProfile]);
     }
@@ -96,7 +106,7 @@ class StaffProfileController extends Controller
         $profile = $this->service->update($staffProfile, $validated);
 
         return response()->json([
-            'data' => $profile->load('user'),
+            'data' => $profile->load(['user', 'shcCategory']),
             'message' => 'Staff profile updated successfully',
         ]);
     }
@@ -158,7 +168,7 @@ class StaffProfileController extends Controller
     public function import(Request $request): JsonResponse
     {
         $request->validate([
-            'file' => 'required|file|mimes:csv,txt,application/vnd.ms-excel,application/vnd.openxmlformats-officedocument.spreadsheetml.sheet|max:10240',
+            'file' => 'required|file|mimes:csv,txt,xlsx,xls,application/vnd.ms-excel,application/vnd.openxmlformats-officedocument.spreadsheetml.sheet|max:10240',
         ]);
 
         $file = $request->file('file');
@@ -167,26 +177,70 @@ class StaffProfileController extends Controller
             'Employee ID' => 'employee_id',
             'First Name' => 'first_name',
             'Last Name' => 'last_name',
+            'First Name (Arabic)' => 'first_name_ar',
+            'Last Name (Arabic)' => 'last_name_ar',
+            'National ID' => 'national_id',
+            'Nationality' => 'nationality_id',
+            'Birth Date' => 'birth_date',
+            'Gender' => 'gender',
             'Phone' => 'phone',
             'Email' => 'email',
+            'Zone' => 'zone_id',
+            'PHC Center' => 'phc_center_id',
             'Department' => 'department_id',
-            'PHC' => 'phc_center_id',
+            'Medical Field' => 'medical_field_id',
+            'Specialty' => 'specialty_id',
+            'Rank' => 'rank_id',
             'Status' => 'employment_status',
+            'Hire Date' => 'hire_date',
+            'License Number' => 'scfhs_license',
+            'License Expiry Date' => 'scfhs_license_expiry',
+            'Policy Number' => 'malpractice_insurance',
+            'Policy Expiry Date' => 'malpractice_expiry',
         ];
 
         try {
             $data = $this->importService->processFile($file, $columnMapping);
 
-            $departmentMap = Department::pluck('id', 'name')->toArray();
+            $zoneMap = Region::pluck('id', 'name')->toArray();
             $phcCenterMap = PhcCenter::pluck('id', 'name')->toArray();
+            $departmentMap = Department::pluck('id', 'name')->toArray();
+            $nationalityMap = Nationality::pluck('id', 'name')->toArray();
+            $medicalFieldMap = MedicalField::pluck('id', 'name')->toArray();
+            $specialtyMap = Specialty::pluck('id', 'name')->toArray();
+            $rankMap = Rank::pluck('id', 'name')->toArray();
 
-            $processedData = $data->map(function ($row) use ($departmentMap, $phcCenterMap) {
-                if (! empty($row['department_id'])) {
-                    $row['department_id'] = $departmentMap[$row['department_id']] ?? null;
+            $shcCategoryMap = [];
+            $shcCategories = ShcCategory::all();
+            foreach ($shcCategories as $shc) {
+                $key = ($medicalFieldMap[$shc->medical_field_id] ?? '').'|'.($specialtyMap[$shc->specialty_id] ?? '').'|'.($rankMap[$shc->rank_id] ?? '');
+                $shcCategoryMap[$key] = $shc->id;
+            }
+
+            $processedData = $data->map(function ($row) use ($zoneMap, $phcCenterMap, $departmentMap, $nationalityMap, $medicalFieldMap, $specialtyMap, $rankMap, $shcCategoryMap) {
+                if (! empty($row['zone_id'])) {
+                    $row['zone_id'] = $zoneMap[$row['zone_id']] ?? null;
                 }
                 if (! empty($row['phc_center_id'])) {
                     $row['phc_center_id'] = $phcCenterMap[$row['phc_center_id']] ?? null;
                 }
+                if (! empty($row['department_id'])) {
+                    $row['department_id'] = $departmentMap[$row['department_id']] ?? null;
+                }
+                if (! empty($row['nationality_id'])) {
+                    $row['nationality_id'] = $nationalityMap[$row['nationality_id']] ?? null;
+                }
+
+                $mfName = $medicalFieldMap[$row['medical_field_id']] ?? '';
+                $spName = $specialtyMap[$row['specialty_id']] ?? '';
+                $rkName = $rankMap[$row['rank_id']] ?? '';
+
+                if (! empty($row['medical_field_id']) && ! empty($row['specialty_id']) && ! empty($row['rank_id'])) {
+                    $key = $mfName.'|'.$spName.'|'.$rkName;
+                    $row['shc_category_id'] = $shcCategoryMap[$key] ?? null;
+                }
+
+                unset($row['medical_field_id'], $row['specialty_id'], $row['rank_id']);
 
                 return $row;
             });
@@ -206,11 +260,36 @@ class StaffProfileController extends Controller
     {
         $format = $request->input('format', 'csv');
 
-        $headers = ['Employee ID', 'First Name', 'Last Name', 'Phone', 'Email', 'Department', 'PHC', 'Status'];
-        $departments = Department::pluck('name')->take(3)->toArray();
-        $phcCenters = PhcCenter::pluck('name')->take(3)->toArray();
+        $zones = Region::pluck('name')->toArray();
+        $phcCenters = PhcCenter::pluck('name')->toArray();
+        $departments = Department::pluck('name')->toArray();
+        $medicalFields = MedicalField::pluck('name')->toArray();
+        $specialties = Specialty::pluck('name')->toArray();
+        $ranks = Rank::pluck('name')->toArray();
+        $nationalities = Nationality::pluck('name')->toArray();
+
+        $headers = [
+            'Employee ID', 'First Name', 'Last Name', 'First Name (Arabic)', 'Last Name (Arabic)',
+            'National ID', 'Nationality', 'Birth Date', 'Gender',
+            'Phone', 'Email',
+            'Zone', 'PHC Center', 'Department',
+            'Medical Field', 'Specialty', 'Rank',
+            'Status', 'Hire Date',
+            'License Number', 'License Expiry Date',
+            'Policy Number', 'Policy Expiry Date',
+        ];
+
         $sampleData = [
-            ['EMP001', 'John', 'Doe', '966501234567', 'john@example.com', $departments[0] ?? 'Nursing', $phcCenters[0] ?? 'Main PHC', 'active'],
+            [
+                'EMP001', 'John', 'Doe', 'جون', 'ديو',
+                '1234567890', $nationalities[0] ?? 'Saudi Arabia', '1990-01-01', 'male',
+                '966501234567', 'john@example.com',
+                $zones[0] ?? 'Central', $phcCenters[0] ?? 'Main PHC', $departments[0] ?? 'Nursing',
+                $medicalFields[0] ?? 'Medicine', $specialties[0] ?? 'General', $ranks[0] ?? 'Specialist',
+                'active', '2024-01-01',
+                'SCFHS12345', '2027-01-01',
+                'POL12345', '2027-01-01',
+            ],
         ];
         $allData = array_merge([$headers], $sampleData);
 

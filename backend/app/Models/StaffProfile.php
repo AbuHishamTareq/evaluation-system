@@ -10,10 +10,10 @@ use Illuminate\Database\Eloquent\Relations\HasMany;
 use Illuminate\Database\Eloquent\SoftDeletes;
 
 #[Fillable([
-    'user_id', 'zone_id', 'phc_center_id', 'department_id', 'employee_id',
+    'user_id', 'zone_id', 'phc_center_id', 'department_id', 'nationality_id', 'shc_category_id', 'employee_id',
     'first_name', 'last_name', 'first_name_ar', 'last_name_ar',
     'phone', 'email', 'national_id', 'birth_date', 'gender',
-    'job_title', 'scfhs_license', 'scfhs_license_expiry',
+    'scfhs_license', 'scfhs_license_expiry',
     'malpractice_insurance', 'malpractice_expiry',
     'certifications', 'education', 'employment_status',
     'hire_date', 'termination_date',
@@ -51,6 +51,16 @@ class StaffProfile extends Model
     public function department(): BelongsTo
     {
         return $this->belongsTo(Department::class);
+    }
+
+    public function nationality(): BelongsTo
+    {
+        return $this->belongsTo(Nationality::class);
+    }
+
+    public function shcCategory(): BelongsTo
+    {
+        return $this->belongsTo(ShcCategory::class);
     }
 
     public function educations(): HasMany

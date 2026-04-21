@@ -10,6 +10,35 @@
   --color-brand-700: #2E4565;
   --color-brand-800: #5C6C84;
   --color-brand-900: #2E4565;
+
+  --color-primary: #6366F1;
+  --color-secondary: #EC4899;
+  --color-accent: #10B981;
+  --color-surface: #FFFFFF;
+  --color-background: #F3F4F6;
+  --color-text: #0F172A;
+  --color-muted: #64748B;
+
+  --gradient-primary: linear-gradient(135deg, #6366F1 0%, #8B5CF6 50%, #EC4899 100%);
+  --gradient-secondary: linear-gradient(135deg, #10B981 0%, #3B82F6 100%);
+  --gradient-card: linear-gradient(145deg, rgba(255,255,255,0.9) 0%, rgba(248,250,252,0.7) 100%);
+
+  --shadow-color-lg: 0 10px 25px -5px rgba(99, 102, 241, 0.25), 0 8px 10px -6px rgba(99, 102, 241, 0.1);
+}
+
+@layer utilities {
+  .bg-gradient-primary {
+    background-image: linear-gradient(135deg, #6366F1 0%, #8B5CF6 50%, #EC4899 100%);
+  }
+  .bg-gradient-secondary {
+    background-image: linear-gradient(135deg, #10B981 0%, #3B82F6 100%);
+  }
+  .bg-gradient-card {
+    background-image: linear-gradient(145deg, rgba(255,255,255,0.9) 0%, rgba(248,250,252,0.7) 100%);
+  }
+  .shadow-color-lg {
+    box-shadow: 0 10px 25px -5px rgba(99, 102, 241, 0.25), 0 8px 10px -6px rgba(99, 102, 241, 0.1);
+  }
 }
 
 @font-face {

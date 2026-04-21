@@ -1,4 +1,5 @@
 import type { ReactNode } from 'react'
+import { useEffect } from 'react'
 import { Navigate } from 'react-router-dom'
 import { useAuthStore } from '@/stores/authStore'
 
@@ -7,9 +8,15 @@ interface ProtectedRouteProps {
 }
 
 export function ProtectedRoute({ children }: ProtectedRouteProps) {
-  const { isAuthenticated, isLoading } = useAuthStore()
+  const { isAuthenticated, isLoading, fetchUser, token } = useAuthStore()
 
-  if (isLoading) {
+  useEffect(() => {
+    if (token && !isAuthenticated && isLoading) {
+      fetchUser()
+    }
+  }, [token, isAuthenticated, isLoading, fetchUser])
+
+  if (!isAuthenticated && isLoading) {
     return (
       <div className="min-h-screen flex items-center justify-center">
         <div className="text-gray-600">Loading...</div>

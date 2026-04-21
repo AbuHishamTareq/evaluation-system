@@ -166,7 +166,11 @@ class DashboardService
 
     protected function getPhcCenterDetails(int $id): array
     {
-        $center = PhcCenter::findOrFail($id);
+        $center = PhcCenter::withTrashed()->find($id);
+
+        if (! $center) {
+            return ['name' => 'Unknown', 'code' => '', 'stats' => []];
+        }
 
         return [
             'name' => $center->name,
@@ -177,7 +181,11 @@ class DashboardService
 
     protected function getRegionDetails(int $id): array
     {
-        $region = Region::findOrFail($id);
+        $region = Region::withTrashed()->find($id);
+
+        if (! $region) {
+            return ['name' => 'Unknown', 'code' => '', 'stats' => []];
+        }
 
         return [
             'name' => $region->name,

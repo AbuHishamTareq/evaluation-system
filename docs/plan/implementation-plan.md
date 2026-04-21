@@ -30,7 +30,10 @@
   - `users`, `roles`, `permissions`, `role_has_permissions`
   - `tenants`, `phc_centers`, `regions`
   - `staff_profiles`, `departments`
+  - `shifts`, `incident_reports`, `medications`, `evaluations`, `issues`
 - [X] Create base seeders for demo data
+- [X] Run migrations successfully (17 tables created)
+- [X] Seed demo users: admin@phc.sa, manager@phc.sa, nurse@phc.sa (Password123!)
 
 ### 1.4 Frontend Foundation
 - [X] Set up React Router with protected routes
@@ -44,77 +47,100 @@
 ## Phase 2: Core Modules Setup (Weeks 5-8)
 
 ### 2.1 HR Management & Staffing Module
-- [ ] Build staff profile CRUD (personal info, SCFHS license, certifications)
-- [ ] Implement shift management (create, assign, view)
-- [ ] Build shift swap/request workflow with supervisor approval
-- [ ] Create shortage prediction alerts (configurable thresholds)
-- [ ] Staff search and filtering with full-text search
+- [X] Build staff profile CRUD (personal info, SCFHS license, certifications)
+- [X] Implement shift management (create, assign, view)
+- [X] Build shift swap/request workflow with supervisor approval
+- [X] Create shortage prediction alerts (configurable thresholds)
+- [X] Staff search and filtering with full-text search
+
+### 2.1.1 Staff Extended Details (Multi-Step Form)
+- [X] Add multi-step form UI (Personal, Contact, Job, Licenses, Documents)
+- [X] Add Education step (school name, degree, GPA, graduation date, can add multiple)
+- [X] Add Certificate step (institute name, certificate name, issue date, expiry date)
+- [X] Add Experience step (company name, position, start/end dates, responsibilities)
+
+### 2.1.2 Staff Management Testing
+- [X] Test Adding Staff
+- [X] Test Editing Staff
+- [X] Test Soft Delete Staff
+- [X] Test View Staff
+- [X] Test Export Staff List (CSV, Excel, PDF)
+- [X] Test Import Staff List (CSV, Excel)
+- [X] Test Activate/Deactivate Staff
+
+### 2.1.3 Department Management Module
+- [X] Create department CRUD API (name, description, code)
+- [X] Link departments to PHC centers
+- [X] Build department list page with filtering by PHC
+- [X] Add/Edit department form with PHC selection
+- [ ] View department details with staff count
+- [ ] Test department CRUD operations
 
 ### 2.2 Patient Safety Incident Reporting Module
-- [ ] Build incident report form (5 types: Medication, Storage, Treatment, Equipment, Near-Miss)
-- [ ] Implement automated workflow routing based on severity
-- [ ] Create RCA template with structured fields
-- [ ] Build incident dashboard with status tracking
-- [ ] Implement notifications for high-severity incidents
+- [X] Build incident report form (5 types: Medication, Storage, Treatment, Equipment, Near-Miss)
+- [X] Implement automated workflow routing based on severity
+- [X] Create RCA template with structured fields
+- [X] Build incident dashboard with status tracking
+- [X] Implement notifications for high-severity incidents
 
 ### 2.3 Medication Control & Tracking Module
-- [ ] Build medication batch management (storage, quantities, expiration)
-- [ ] Implement medication lifecycle tracking (prescribed → dispensed → administered → verified)
-- [ ] Create risk flagging engine (low stock, near-expiry, allergy conflicts)
-- [ ] Build medication alerts dashboard
-- [ ] Design barcode API endpoints (Phase 2 ready)
+- [X] Build medication batch management (storage, quantities, expiration)
+- [X] Implement medication lifecycle tracking (prescribed → dispensed → administered → verified)
+- [X] Create risk flagging engine (low stock, near-expiry, allergy conflicts)
+- [X] Build medication alerts dashboard
+- [X] Design barcode API endpoints (Phase 2 ready)
 
 ---
 
 ## Phase 3: Evaluation & Issue Tracking (Weeks 9-12)
 
 ### 3.1 Service Evaluations Module
-- [ ] Build dynamic question builder
-- [ ] Implement CSV/Excel import for question banks
-- [ ] Support question types: MCQ, Multi-Select, Star Rating, Essay
-- [ ] Create evaluation form renderer
-- [ ] Build auto/manual action plan generation
-- [ ] Implement evidence attachment upload (max 25MB)
+- [X] Build dynamic question builder
+- [X] Implement CSV/Excel import for question banks
+- [X] Support question types: MCQ, Multi-Select, Star Rating, Essay
+- [X] Create evaluation form renderer
+- [X] Build auto/manual action plan generation
+- [X] Implement evidence attachment upload (max 25MB)
 
 ### 3.2 Team-Based Issue Tracking Module
-- [ ] Build issue creation and status workflow
-- [ ] Implement comments and @mentions
-- [ ] Create notification system for @mentions
-- [ ] Link issues to source evaluations/incidents
-- [ ] Build audit trail visibility
+- [X] Build issue creation and status workflow
+- [X] Implement comments and @mentions
+- [X] Create notification system for @mentions
+- [X] Link issues to source evaluations/incidents
+- [X] Build audit trail visibility
 
 ### 3.3 PHC Management Dashboard
-- [ ] Build KPI visualization (incidents, eval %, staffing gaps)
-- [ ] Implement drill-down capability with breadcrumb navigation
-- [ ] Create comparative metrics (vs Region vs National)
-- [ ] Build PDF/Excel export with RTL formatting
-- [ ] Implement bulk CSV/Excel import with validation
+- [X] Build KPI visualization (incidents, eval %, staffing gaps)
+- [X] Implement drill-down capability with breadcrumb navigation
+- [X] Create comparative metrics (vs Region vs National)
+- [X] Build PDF/Excel export with RTL formatting
+- [X] Implement bulk CSV/Excel import with validation
 
 ---
 
 ## Phase 4: Cross-Cutting Features (Weeks 13-16)
 
 ### 4.1 Workflow Engine
-- [ ] Build configurable routing rules UI
-- [ ] Implement SLA timers and escalation paths
-- [ ] Create notification templates
-- [ ] Build auto-assignment on SLA breach
+- [X] Build configurable routing rules UI
+- [X] Implement SLA timers and escalation paths
+- [X] Create notification templates
+- [X] Build auto-assignment on SLA breach
 
 ### 4.2 Audit Logging
-- [ ] Implement immutable audit trail for all CRUD operations
-- [ ] Build audit log viewer with filters
-- [ ] Create export functionality for compliance reviews
+- [X] Implement immutable audit trail for all CRUD operations
+- [X] Build audit log viewer with filters
+- [X] Create export functionality for compliance reviews
 
 ### 4.3 Offline-First PWA
-- [ ] Configure Service Worker for offline caching
-- [ ] Implement IndexedDB for offline data capture
-- [ ] Build background sync for pending operations
-- [ ] Create conflict resolution UI
+- [X] Configure Service Worker for offline caching
+- [X] Implement IndexedDB for offline data capture
+- [X] Build background sync for pending operations
+- [X] Create conflict resolution UI
 
 ### 4.4 Data Import/Export
-- [ ] Build CSV/Excel import with Arabic column mapping
-- [ ] Implement validation with error log download
-- [ ] Create PDF export with RTL formatting
+- [X] Build CSV/Excel import with Arabic column mapping
+- [X] Implement validation with error log download
+- [X] Create PDF export with RTL Formatting
 
 ---
 
