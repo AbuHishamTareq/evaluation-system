@@ -3,34 +3,49 @@
 namespace App\Http\Controllers\API\V1\HR;
 
 use App\Http\Controllers\Controller;
+use App\Http\Traits\CachesIndex;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\Cache;
 use Spatie\Permission\Models\Permission;
 use Spatie\Permission\Models\Role;
 
 class RoleController extends Controller
 {
+    use CachesIndex;
+
+    protected static string $cachePrefix = 'roles:';
+
+    protected static int $cacheTtl = 30;
+
     public function index(Request $request): JsonResponse
     {
-        $query = Role::query()->with('permissions');
+        $filters = $request->only(['search', 'per_page']);
+        $cacheKey = $this->getIndexCacheKey(md5(json_encode($filters)));
 
-        if ($request->has('search')) {
-            $search = $request->input('search');
-            $query->where('name', 'like', "%{$search}%");
-        }
+        $data = Cache::remember($cacheKey, now()->addMinutes(static::$cacheTtl), function () use ($request) {
+            $query = Role::query()->with('permissions');
 
-        $perPage = $request->input('per_page', 15);
-        $roles = $query->orderByDesc('created_at')->paginate(min($perPage, 100));
+            if ($request->has('search')) {
+                $search = $request->input('search');
+                $query->where('name', 'like', "%{$search}%");
+            }
 
-        return response()->json([
-            'data' => $roles->items(),
-            'meta' => [
-                'total' => $roles->total(),
-                'current_page' => $roles->currentPage(),
-                'last_page' => $roles->lastPage(),
-                'per_page' => $roles->perPage(),
-            ],
-        ]);
+            $perPage = $request->input('per_page', 15);
+            $roles = $query->orderByDesc('created_at')->paginate(min($perPage, 100));
+
+            return [
+                'data' => array_map(fn ($item) => $item->toArray(), $roles->items()),
+                'meta' => [
+                    'total' => $roles->total(),
+                    'current_page' => $roles->currentPage(),
+                    'last_page' => $roles->lastPage(),
+                    'per_page' => $roles->perPage(),
+                ],
+            ];
+        });
+
+        return response()->json($data);
     }
 
     public function store(Request $request): JsonResponse
@@ -53,6 +68,8 @@ class RoleController extends Controller
             $role->syncPermissions($permissions);
         }
 
+        $this->clearIndexCache();
+
         return response()->json([
             'data' => $role->load('permissions'),
             'message' => 'Role created successfully',
@@ -61,9 +78,15 @@ class RoleController extends Controller
 
     public function show(Role $role): JsonResponse
     {
-        return response()->json([
-            'data' => $role->load('permissions'),
-        ]);
+        $cacheKey = static::$cachePrefix.'show:'.$role->id;
+
+        $data = Cache::remember($cacheKey, now()->addMinutes(static::$cacheTtl), function () use ($role) {
+            $role->load('permissions');
+
+            return ['data' => $role->toArray()];
+        });
+
+        return response()->json($data);
     }
 
     public function update(Request $request, Role $role): JsonResponse
@@ -86,6 +109,9 @@ class RoleController extends Controller
             $role->syncPermissions($permissions);
         }
 
+        $this->clearIndexCache();
+        Cache::forget(static::$cachePrefix.'show:'.$role->id);
+
         return response()->json([
             'data' => $role->load('permissions'),
             'message' => 'Role updated successfully',
@@ -102,6 +128,9 @@ class RoleController extends Controller
 
         $role->delete();
 
+        $this->clearIndexCache();
+        Cache::forget(static::$cachePrefix.'show:'.$role->id);
+
         return response()->json([
             'message' => 'Role deleted successfully',
         ]);
@@ -109,16 +138,22 @@ class RoleController extends Controller
 
     public function permissions(): JsonResponse
     {
-        $permissions = Permission::orderBy('created_at', 'desc')->get();
+        $cacheKey = static::$cachePrefix.'permissions';
 
-        $grouped = $permissions->groupBy(function ($permission) {
-            $parts = explode('.', $permission->name);
+        $data = Cache::remember($cacheKey, now()->addMinutes(static::$cacheTtl), function () {
+            $permissions = Permission::orderBy('name')->get();
 
-            return $parts[0] ?? 'other';
+            $grouped = $permissions->groupBy(function ($permission) {
+                $parts = explode('.', $permission->name);
+
+                return $parts[0] ?? 'other';
+            });
+
+            $sorted = $grouped->sortKeys();
+
+            return ['data' => $sorted->toArray()];
         });
 
-        return response()->json([
-            'data' => $grouped,
-        ]);
+        return response()->json($data);
     }
 }

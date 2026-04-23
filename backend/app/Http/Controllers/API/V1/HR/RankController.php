@@ -3,52 +3,67 @@
 namespace App\Http\Controllers\API\V1\HR;
 
 use App\Http\Controllers\Controller;
+use App\Http\Traits\CachesIndex;
 use App\Models\Rank;
 use App\Services\Dashboard\ExportService;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
 use Illuminate\Http\Response;
+use Illuminate\Support\Facades\Cache;
 use PhpOffice\PhpSpreadsheet\IOFactory;
 
 class RankController extends Controller
 {
+    use CachesIndex;
+
+    protected static string $cachePrefix = 'ranks:';
+
+    protected static int $cacheTtl = 30;
+
     public function __construct(
         private ExportService $exportService
     ) {}
 
     public function index(Request $request): JsonResponse
     {
-        $query = Rank::query();
+        $filters = $request->only(['level', 'is_active', 'search', 'per_page']);
+        $cacheKey = $this->getIndexCacheKey(md5(json_encode($filters)));
 
-        if ($request->has('level')) {
-            $query->where('level', $request->input('level'));
-        }
+        $data = Cache::remember($cacheKey, now()->addMinutes(static::$cacheTtl), function () use ($request) {
+            $query = Rank::query();
 
-        if ($request->has('is_active')) {
-            $query->where('is_active', $request->boolean('is_active'));
-        }
+            if ($request->has('level')) {
+                $query->where('level', $request->input('level'));
+            }
 
-        if ($request->has('search')) {
-            $search = $request->input('search');
-            $query->where(function ($q) use ($search) {
-                $q->where('name', 'like', "%{$search}%")
-                    ->orWhere('name_ar', 'like', "%{$search}%")
-                    ->orWhere('code', 'like', "%{$search}%");
-            });
-        }
+            if ($request->has('is_active')) {
+                $query->where('is_active', $request->boolean('is_active'));
+            }
 
-        $perPage = $request->input('per_page', 15);
-        $ranks = $query->orderByDesc('created_at')->paginate($perPage);
+            if ($request->has('search')) {
+                $search = $request->input('search');
+                $query->where(function ($q) use ($search) {
+                    $q->where('name', 'like', "%{$search}%")
+                        ->orWhere('name_ar', 'like', "%{$search}%")
+                        ->orWhere('code', 'like', "%{$search}%");
+                });
+            }
 
-        return response()->json([
-            'data' => $ranks->items(),
-            'meta' => [
-                'total' => $ranks->total(),
-                'current_page' => $ranks->currentPage(),
-                'last_page' => $ranks->lastPage(),
-                'per_page' => $ranks->perPage(),
-            ],
-        ]);
+            $perPage = $request->input('per_page', 15);
+            $ranks = $query->orderByDesc('created_at')->paginate($perPage);
+
+            return [
+                'data' => array_map(fn ($item) => $item->toArray(), $ranks->items()),
+                'meta' => [
+                    'total' => $ranks->total(),
+                    'current_page' => $ranks->currentPage(),
+                    'last_page' => $ranks->lastPage(),
+                    'per_page' => $ranks->perPage(),
+                ],
+            ];
+        });
+
+        return response()->json($data);
     }
 
     public function store(Request $request): JsonResponse
@@ -67,17 +82,23 @@ class RankController extends Controller
 
         $rank = Rank::create($validated);
 
+        $this->clearIndexCache();
+
         return response()->json([
-            'data' => $rank,
+            'data' => $rank->toArray(),
             'message' => 'Rank created successfully',
         ], 201);
     }
 
     public function show(Rank $rank): JsonResponse
     {
-        return response()->json([
-            'data' => $rank,
-        ]);
+        $cacheKey = static::$cachePrefix.'show:'.$rank->id;
+
+        $data = Cache::remember($cacheKey, now()->addMinutes(static::$cacheTtl), function () use ($rank) {
+            return ['data' => $rank->toArray()];
+        });
+
+        return response()->json($data);
     }
 
     public function update(Request $request, Rank $rank): JsonResponse
@@ -92,8 +113,11 @@ class RankController extends Controller
 
         $rank->update($validated);
 
+        $this->clearIndexCache();
+        Cache::forget(static::$cachePrefix.'show:'.$rank->id);
+
         return response()->json([
-            'data' => $rank,
+            'data' => $rank->toArray(),
             'message' => 'Rank updated successfully',
         ]);
     }
@@ -102,6 +126,9 @@ class RankController extends Controller
     {
         $rank->delete();
 
+        $this->clearIndexCache();
+        Cache::forget(static::$cachePrefix.'show:'.$rank->id);
+
         return response()->json(['message' => 'Rank deleted successfully']);
     }
 
@@ -109,8 +136,11 @@ class RankController extends Controller
     {
         $rank->update(['is_active' => ! $rank->is_active]);
 
+        $this->clearIndexCache();
+        Cache::forget(static::$cachePrefix.'show:'.$rank->id);
+
         return response()->json([
-            'data' => $rank->fresh(),
+            'data' => $rank->fresh()->toArray(),
             'message' => $rank->is_active ? 'Rank activated successfully' : 'Rank deactivated successfully',
         ]);
     }
@@ -153,6 +183,8 @@ class RankController extends Controller
                 $importedCount++;
             }
         }
+
+        $this->clearIndexCache();
 
         return response()->json([
             'message' => 'Successfully imported '.$importedCount.' ranks',

@@ -3,48 +3,63 @@
 namespace App\Http\Controllers\API\V1\HR;
 
 use App\Http\Controllers\Controller;
+use App\Http\Traits\CachesIndex;
 use App\Models\MedicalField;
 use App\Services\Dashboard\ExportService;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
 use Illuminate\Http\Response;
+use Illuminate\Support\Facades\Cache;
 use PhpOffice\PhpSpreadsheet\IOFactory;
 
 class MedicalFieldController extends Controller
 {
+    use CachesIndex;
+
+    protected static string $cachePrefix = 'medical_fields:';
+
+    protected static int $cacheTtl = 30;
+
     public function __construct(
         private ExportService $exportService
     ) {}
 
     public function index(Request $request): JsonResponse
     {
-        $query = MedicalField::query();
+        $filters = $request->only(['is_active', 'search', 'per_page']);
+        $cacheKey = $this->getIndexCacheKey(md5(json_encode($filters)));
 
-        if ($request->has('is_active')) {
-            $query->where('is_active', $request->boolean('is_active'));
-        }
+        $data = Cache::remember($cacheKey, now()->addMinutes(static::$cacheTtl), function () use ($request) {
+            $query = MedicalField::query();
 
-        if ($request->has('search')) {
-            $search = $request->input('search');
-            $query->where(function ($q) use ($search) {
-                $q->where('name', 'like', "%{$search}%")
-                    ->orWhere('name_ar', 'like', "%{$search}%")
-                    ->orWhere('code', 'like', "%{$search}%");
-            });
-        }
+            if ($request->has('is_active')) {
+                $query->where('is_active', $request->boolean('is_active'));
+            }
 
-        $perPage = $request->input('per_page', 15);
-        $medicalFields = $query->orderByDesc('created_at')->paginate($perPage);
+            if ($request->has('search')) {
+                $search = $request->input('search');
+                $query->where(function ($q) use ($search) {
+                    $q->where('name', 'like', "%{$search}%")
+                        ->orWhere('name_ar', 'like', "%{$search}%")
+                        ->orWhere('code', 'like', "%{$search}%");
+                });
+            }
 
-        return response()->json([
-            'data' => $medicalFields->items(),
-            'meta' => [
-                'total' => $medicalFields->total(),
-                'current_page' => $medicalFields->currentPage(),
-                'last_page' => $medicalFields->lastPage(),
-                'per_page' => $medicalFields->perPage(),
-            ],
-        ]);
+            $perPage = $request->input('per_page', 15);
+            $medicalFields = $query->orderByDesc('created_at')->paginate($perPage);
+
+            return [
+                'data' => array_map(fn ($item) => $item->toArray(), $medicalFields->items()),
+                'meta' => [
+                    'total' => $medicalFields->total(),
+                    'current_page' => $medicalFields->currentPage(),
+                    'last_page' => $medicalFields->lastPage(),
+                    'per_page' => $medicalFields->perPage(),
+                ],
+            ];
+        });
+
+        return response()->json($data);
     }
 
     public function store(Request $request): JsonResponse
@@ -58,17 +73,23 @@ class MedicalFieldController extends Controller
 
         $medicalField = MedicalField::create($validated);
 
+        $this->clearIndexCache();
+
         return response()->json([
-            'data' => $medicalField,
+            'data' => $medicalField->toArray(),
             'message' => 'Medical Field created successfully',
         ], 201);
     }
 
     public function show(MedicalField $medicalField): JsonResponse
     {
-        return response()->json([
-            'data' => $medicalField,
-        ]);
+        $cacheKey = static::$cachePrefix.'show:'.$medicalField->id;
+
+        $data = Cache::remember($cacheKey, now()->addMinutes(static::$cacheTtl), function () use ($medicalField) {
+            return ['data' => $medicalField->toArray()];
+        });
+
+        return response()->json($data);
     }
 
     public function update(Request $request, MedicalField $medicalField): JsonResponse
@@ -82,8 +103,11 @@ class MedicalFieldController extends Controller
 
         $medicalField->update($validated);
 
+        $this->clearIndexCache();
+        Cache::forget(static::$cachePrefix.'show:'.$medicalField->id);
+
         return response()->json([
-            'data' => $medicalField,
+            'data' => $medicalField->toArray(),
             'message' => 'Medical Field updated successfully',
         ]);
     }
@@ -92,6 +116,9 @@ class MedicalFieldController extends Controller
     {
         $medicalField->delete();
 
+        $this->clearIndexCache();
+        Cache::forget(static::$cachePrefix.'show:'.$medicalField->id);
+
         return response()->json(['message' => 'Medical Field deleted successfully']);
     }
 
@@ -99,8 +126,11 @@ class MedicalFieldController extends Controller
     {
         $medicalField->update(['is_active' => ! $medicalField->is_active]);
 
+        $this->clearIndexCache();
+        Cache::forget(static::$cachePrefix.'show:'.$medicalField->id);
+
         return response()->json([
-            'data' => $medicalField->fresh(),
+            'data' => $medicalField->fresh()->toArray(),
             'message' => $medicalField->is_active ? 'Medical Field activated successfully' : 'Medical Field deactivated successfully',
         ]);
     }
@@ -139,6 +169,8 @@ class MedicalFieldController extends Controller
                 $importedCount++;
             }
         }
+
+        $this->clearIndexCache();
 
         return response()->json([
             'message' => 'Successfully imported '.$importedCount.' medical fields',

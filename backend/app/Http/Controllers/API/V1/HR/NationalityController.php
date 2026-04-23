@@ -3,52 +3,67 @@
 namespace App\Http\Controllers\API\V1\HR;
 
 use App\Http\Controllers\Controller;
+use App\Http\Traits\CachesIndex;
 use App\Models\Nationality;
 use App\Services\Dashboard\ExportService;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\Cache;
 use PhpOffice\PhpSpreadsheet\IOFactory;
 use Symfony\Component\HttpFoundation\Response;
 
 class NationalityController extends Controller
 {
+    use CachesIndex;
+
+    protected static string $cachePrefix = 'nationalities:';
+
+    protected static int $cacheTtl = 30;
+
     public function __construct(
         private ExportService $exportService
     ) {}
 
     public function index(Request $request): JsonResponse
     {
-        $query = Nationality::query();
+        $filters = $request->only(['is_active', 'search', 'per_page']);
+        $cacheKey = $this->getIndexCacheKey(md5(json_encode($filters)));
 
-        if ($request->has('is_active')) {
-            $isActive = $request->boolean('is_active');
-            if ($request->input('is_active') === false || $request->input('is_active') === 'false') {
-                $isActive = false;
+        $data = Cache::remember($cacheKey, now()->addMinutes(static::$cacheTtl), function () use ($request) {
+            $query = Nationality::query();
+
+            if ($request->has('is_active')) {
+                $isActive = $request->boolean('is_active');
+                if ($request->input('is_active') === false || $request->input('is_active') === 'false') {
+                    $isActive = false;
+                }
+                $query->where('is_active', $isActive);
             }
-            $query->where('is_active', $isActive);
-        }
 
-        if ($request->has('search')) {
-            $search = $request->input('search');
-            $query->where(function ($q) use ($search) {
-                $q->where('name', 'like', "%{$search}%")
-                    ->orWhere('name_ar', 'like', "%{$search}%")
-                    ->orWhere('code', 'like', "%{$search}%");
-            });
-        }
+            if ($request->has('search')) {
+                $search = $request->input('search');
+                $query->where(function ($q) use ($search) {
+                    $q->where('name', 'like', "%{$search}%")
+                        ->orWhere('name_ar', 'like', "%{$search}%")
+                        ->orWhere('code', 'like', "%{$search}%");
+                });
+            }
 
-        $perPage = $request->input('per_page', 15);
-        $nationalities = $query->orderByDesc('created_at')->paginate($perPage);
+            $perPage = $request->input('per_page', 15);
+            $nationalities = $query->orderByDesc('created_at')->paginate($perPage);
 
-        return response()->json([
-            'data' => $nationalities->items(),
-            'meta' => [
-                'total' => $nationalities->total(),
-                'current_page' => $nationalities->currentPage(),
-                'last_page' => $nationalities->lastPage(),
-                'per_page' => $nationalities->perPage(),
-            ],
-        ]);
+            return [
+                'data' => array_map(fn ($item) => $item->toArray(), $nationalities->items()),
+                'meta' => [
+                    'total' => $nationalities->total(),
+                    'current_page' => $nationalities->currentPage(),
+                    'last_page' => $nationalities->lastPage(),
+                    'per_page' => $nationalities->perPage(),
+                ],
+            ];
+        });
+
+        return response()->json($data);
     }
 
     public function store(Request $request): JsonResponse
@@ -62,17 +77,23 @@ class NationalityController extends Controller
 
         $nationality = Nationality::create($validated);
 
+        $this->clearIndexCache();
+
         return response()->json([
-            'data' => $nationality,
+            'data' => $nationality->toArray(),
             'message' => 'Nationality created successfully',
         ], 201);
     }
 
     public function show(Nationality $nationality): JsonResponse
     {
-        return response()->json([
-            'data' => $nationality,
-        ]);
+        $cacheKey = static::$cachePrefix.'show:'.$nationality->id;
+
+        $data = Cache::remember($cacheKey, now()->addMinutes(static::$cacheTtl), function () use ($nationality) {
+            return ['data' => $nationality->toArray()];
+        });
+
+        return response()->json($data);
     }
 
     public function update(Request $request, Nationality $nationality): JsonResponse
@@ -86,8 +107,11 @@ class NationalityController extends Controller
 
         $nationality->update($validated);
 
+        $this->clearIndexCache();
+        Cache::forget(static::$cachePrefix.'show:'.$nationality->id);
+
         return response()->json([
-            'data' => $nationality,
+            'data' => $nationality->toArray(),
             'message' => 'Nationality updated successfully',
         ]);
     }
@@ -96,6 +120,9 @@ class NationalityController extends Controller
     {
         $nationality->delete();
 
+        $this->clearIndexCache();
+        Cache::forget(static::$cachePrefix.'show:'.$nationality->id);
+
         return response()->json(['message' => 'Nationality deleted successfully']);
     }
 
@@ -103,8 +130,11 @@ class NationalityController extends Controller
     {
         $nationality->update(['is_active' => ! $nationality->is_active]);
 
+        $this->clearIndexCache();
+        Cache::forget(static::$cachePrefix.'show:'.$nationality->id);
+
         return response()->json([
-            'data' => $nationality->fresh(),
+            'data' => $nationality->fresh()->toArray(),
             'message' => $nationality->is_active ? 'Nationality activated successfully' : 'Nationality deactivated successfully',
         ]);
     }
@@ -144,6 +174,8 @@ class NationalityController extends Controller
                 $importedCount++;
             }
         }
+
+        $this->clearIndexCache();
 
         return response()->json([
             'message' => 'Successfully imported '.$importedCount.' nationalities',

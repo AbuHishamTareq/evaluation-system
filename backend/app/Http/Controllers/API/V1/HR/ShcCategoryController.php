@@ -3,6 +3,7 @@
 namespace App\Http\Controllers\API\V1\HR;
 
 use App\Http\Controllers\Controller;
+use App\Http\Traits\CachesIndex;
 use App\Models\MedicalField;
 use App\Models\Rank;
 use App\Models\ShcCategory;
@@ -11,55 +12,69 @@ use App\Services\Dashboard\ExportService;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
 use Illuminate\Http\Response;
+use Illuminate\Support\Facades\Cache;
 use PhpOffice\PhpSpreadsheet\IOFactory;
 
 class ShcCategoryController extends Controller
 {
+    use CachesIndex;
+
+    protected static string $cachePrefix = 'shc_categories:';
+
+    protected static int $cacheTtl = 30;
+
     public function __construct(
         private ExportService $exportService
     ) {}
 
     public function index(Request $request): JsonResponse
     {
-        $query = ShcCategory::with(['medicalField', 'specialty', 'rank']);
+        $filters = $request->only(['medical_field_id', 'specialty_id', 'rank_id', 'is_active', 'search', 'per_page']);
+        $cacheKey = $this->getIndexCacheKey(md5(json_encode($filters)));
 
-        if ($request->has('medical_field_id')) {
-            $query->where('medical_field_id', $request->input('medical_field_id'));
-        }
+        $data = Cache::remember($cacheKey, now()->addMinutes(static::$cacheTtl), function () use ($request) {
+            $query = ShcCategory::with(['medicalField', 'specialty', 'rank']);
 
-        if ($request->has('specialty_id')) {
-            $query->where('specialty_id', $request->input('specialty_id'));
-        }
+            if ($request->has('medical_field_id')) {
+                $query->where('medical_field_id', $request->input('medical_field_id'));
+            }
 
-        if ($request->has('rank_id')) {
-            $query->where('rank_id', $request->input('rank_id'));
-        }
+            if ($request->has('specialty_id')) {
+                $query->where('specialty_id', $request->input('specialty_id'));
+            }
 
-        if ($request->has('is_active')) {
-            $query->where('is_active', $request->boolean('is_active'));
-        }
+            if ($request->has('rank_id')) {
+                $query->where('rank_id', $request->input('rank_id'));
+            }
 
-        if ($request->has('search')) {
-            $search = $request->input('search');
-            $query->where(function ($q) use ($search) {
-                $q->where('code', 'like', "%{$search}%")
-                    ->orWhere('description', 'like', "%{$search}%")
-                    ->orWhere('description_ar', 'like', "%{$search}%");
-            });
-        }
+            if ($request->has('is_active')) {
+                $query->where('is_active', $request->boolean('is_active'));
+            }
 
-        $perPage = $request->input('per_page', 15);
-        $shcCategories = $query->orderByDesc('created_at')->paginate($perPage);
+            if ($request->has('search')) {
+                $search = $request->input('search');
+                $query->where(function ($q) use ($search) {
+                    $q->where('code', 'like', "%{$search}%")
+                        ->orWhere('description', 'like', "%{$search}%")
+                        ->orWhere('description_ar', 'like', "%{$search}%");
+                });
+            }
 
-        return response()->json([
-            'data' => $shcCategories->items(),
-            'meta' => [
-                'total' => $shcCategories->total(),
-                'current_page' => $shcCategories->currentPage(),
-                'last_page' => $shcCategories->lastPage(),
-                'per_page' => $shcCategories->perPage(),
-            ],
-        ]);
+            $perPage = $request->input('per_page', 15);
+            $shcCategories = $query->orderByDesc('created_at')->paginate($perPage);
+
+            return [
+                'data' => array_map(fn ($item) => $item->toArray(), $shcCategories->items()),
+                'meta' => [
+                    'total' => $shcCategories->total(),
+                    'current_page' => $shcCategories->currentPage(),
+                    'last_page' => $shcCategories->lastPage(),
+                    'per_page' => $shcCategories->perPage(),
+                ],
+            ];
+        });
+
+        return response()->json($data);
     }
 
     public function store(Request $request): JsonResponse
@@ -76,19 +91,25 @@ class ShcCategoryController extends Controller
 
         $shcCategory = ShcCategory::create($validated);
 
+        $this->clearIndexCache();
+
         return response()->json([
-            'data' => $shcCategory,
+            'data' => $shcCategory->toArray(),
             'message' => 'SHC Category created successfully',
         ], 201);
     }
 
     public function show(ShcCategory $shcCategory): JsonResponse
     {
-        $shcCategory->load(['medicalField', 'specialty', 'rank']);
+        $cacheKey = static::$cachePrefix.'show:'.$shcCategory->id;
 
-        return response()->json([
-            'data' => $shcCategory,
-        ]);
+        $data = Cache::remember($cacheKey, now()->addMinutes(static::$cacheTtl), function () use ($shcCategory) {
+            $shcCategory->load(['medicalField', 'specialty', 'rank']);
+
+            return ['data' => $shcCategory->toArray()];
+        });
+
+        return response()->json($data);
     }
 
     public function update(Request $request, ShcCategory $shcCategory): JsonResponse
@@ -105,8 +126,11 @@ class ShcCategoryController extends Controller
 
         $shcCategory->update($validated);
 
+        $this->clearIndexCache();
+        Cache::forget(static::$cachePrefix.'show:'.$shcCategory->id);
+
         return response()->json([
-            'data' => $shcCategory,
+            'data' => $shcCategory->toArray(),
             'message' => 'SHC Category updated successfully',
         ]);
     }
@@ -115,6 +139,9 @@ class ShcCategoryController extends Controller
     {
         $shcCategory->delete();
 
+        $this->clearIndexCache();
+        Cache::forget(static::$cachePrefix.'show:'.$shcCategory->id);
+
         return response()->json(['message' => 'SHC Category deleted successfully']);
     }
 
@@ -122,8 +149,11 @@ class ShcCategoryController extends Controller
     {
         $shcCategory->update(['is_active' => ! $shcCategory->is_active]);
 
+        $this->clearIndexCache();
+        Cache::forget(static::$cachePrefix.'show:'.$shcCategory->id);
+
         return response()->json([
-            'data' => $shcCategory->fresh(),
+            'data' => $shcCategory->fresh()->toArray(),
             'message' => $shcCategory->is_active ? 'SHC Category activated successfully' : 'SHC Category deactivated successfully',
         ]);
     }
@@ -177,6 +207,8 @@ class ShcCategoryController extends Controller
                 $importedCount++;
             }
         }
+
+        $this->clearIndexCache();
 
         return response()->json([
             'message' => 'Successfully imported '.$importedCount.' SHC categories',

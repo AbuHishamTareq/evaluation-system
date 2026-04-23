@@ -5,7 +5,6 @@ namespace App\Http\Controllers\API\V1\HR;
 use App\Http\Controllers\Controller;
 use App\Http\Requests\StoreStaffProfileRequest;
 use App\Http\Requests\UpdateStaffProfileRequest;
-use App\Http\Traits\CachesIndex;
 use App\Models\Department;
 use App\Models\MedicalField;
 use App\Models\Nationality;
@@ -28,11 +27,9 @@ use Symfony\Component\HttpFoundation\Response;
 
 class StaffProfileController extends Controller
 {
-    use CachesIndex;
+    private const CACHE_PREFIX = 'staff_profiles:';
 
-    protected static string $cachePrefix = 'staff_profiles:';
-
-    protected static int $cacheTtl = 30;
+    private const CACHE_TTL = 30; // minutes
 
     public function __construct(
         protected StaffProfileService $service,
@@ -42,23 +39,17 @@ class StaffProfileController extends Controller
 
     public function index(Request $request): JsonResponse
     {
-        $filters = $request->only([
-            'zone_id',
-            'phc_center_id',
-            'department_id',
-            'employment_status',
-            'search',
-            'per_page',
-        ]);
+        $cacheKey = self::CACHE_PREFIX.'index:'.md5(json_encode($request->all()));
 
-        $filtersKey = md5(json_encode($filters));
-        $cacheKey = $this->getIndexCacheKey($filtersKey);
+        $data = Cache::remember($cacheKey, now()->addMinutes(self::CACHE_TTL), function () use ($request) {
+            $filters = $request->only([
+                'zone_id', 'phc_center_id', 'department_id', 'employment_status', 'search', 'per_page',
+            ]);
 
-        $data = Cache::remember($cacheKey, now()->addMinutes(self::$cacheTtl), function () use ($filters) {
             $staffProfiles = $this->service->getAll($filters);
 
             return [
-                'data' => array_map(fn ($item) => $item->toArray(), $staffProfiles->items()),
+                'data' => $staffProfiles->items(),
                 'meta' => [
                     'total' => $staffProfiles->total(),
                     'current_page' => $staffProfiles->currentPage(),
@@ -83,7 +74,7 @@ class StaffProfileController extends Controller
 
         $profile = $this->service->create($validated);
 
-        $this->clearIndexCache();
+        $this->clearCache();
 
         return response()->json([
             'data' => $profile,
@@ -112,24 +103,16 @@ class StaffProfileController extends Controller
 
     public function show(StaffProfile $staffProfile): JsonResponse
     {
-        $cacheKey = static::$cachePrefix.'show:'.$staffProfile->id;
+        $cacheKey = self::CACHE_PREFIX.'show:'.$staffProfile->id;
 
-        $data = Cache::remember($cacheKey, now()->addMinutes(static::$cacheTtl), function () use ($staffProfile) {
+        $data = Cache::remember($cacheKey, now()->addMinutes(self::CACHE_TTL), function () use ($staffProfile) {
             $staffProfile->load([
-                'user',
-                'zone',
-                'phcCenter',
-                'department',
-                'nationality',
-                'shcCategory.medicalField',
-                'shcCategory.specialty',
-                'shcCategory.rank',
-                'certificates',
-                'educations',
-                'experiences',
+                'user', 'zone', 'phcCenter', 'department', 'nationality',
+                'shcCategory.medicalField', 'shcCategory.specialty', 'shcCategory.rank',
+                'certificates', 'educations', 'experiences',
             ]);
 
-            return ['data' => $staffProfile->toArray()];
+            return ['data' => $staffProfile];
         });
 
         return response()->json($data);
@@ -149,8 +132,8 @@ class StaffProfileController extends Controller
 
         $profile = $this->service->update($staffProfile, $validated);
 
-        $this->clearIndexCache();
-        Cache::forget(static::$cachePrefix.'show:'.$staffProfile->id);
+        $this->clearCache();
+        Cache::forget(self::CACHE_PREFIX.'show:'.$staffProfile->id);
 
         return response()->json([
             'data' => $profile->load(['user', 'shcCategory']),
@@ -162,8 +145,8 @@ class StaffProfileController extends Controller
     {
         $this->service->delete($staffProfile);
 
-        $this->clearIndexCache();
-        Cache::forget(static::$cachePrefix.'show:'.$staffProfile->id);
+        $this->clearCache();
+        Cache::forget(self::CACHE_PREFIX.'show:'.$staffProfile->id);
 
         return response()->json(['message' => 'Staff profile deleted successfully']);
     }
@@ -177,8 +160,8 @@ class StaffProfileController extends Controller
         $newStatus = $staffProfile->employment_status === 'active' ? 'terminated' : 'active';
         $staffProfile->update(['employment_status' => $newStatus]);
 
-        $this->clearIndexCache();
-        Cache::forget(static::$cachePrefix.'show:'.$staffProfile->id);
+        $this->clearCache();
+        Cache::forget(self::CACHE_PREFIX.'show:'.$staffProfile->id);
 
         return response()->json([
             'data' => $staffProfile->fresh(),
@@ -212,7 +195,10 @@ class StaffProfileController extends Controller
 
         $count = StaffProfile::whereIn('id', $ids)->update(['employment_status' => $status]);
 
-        $this->clearIndexCache();
+        $this->clearCache();
+        foreach ($ids as $id) {
+            Cache::forget(self::CACHE_PREFIX.'show:'.$id);
+        }
 
         return response()->json([
             'message' => "Updated {$count} staff profiles to {$status}",
@@ -302,6 +288,8 @@ class StaffProfileController extends Controller
 
             $count = $this->importService->import(StaffProfile::class, $processedData->toArray());
 
+            $this->clearCache();
+
             return response()->json([
                 'message' => "Successfully imported {$count} records",
                 'imported_count' => $count,
@@ -324,56 +312,26 @@ class StaffProfileController extends Controller
         $nationalities = Nationality::pluck('name')->toArray();
 
         $headers = [
-            'Employee ID',
-            'First Name',
-            'Last Name',
-            'First Name (Arabic)',
-            'Last Name (Arabic)',
-            'National ID',
-            'Nationality',
-            'Birth Date',
-            'Gender',
-            'Phone',
-            'Email',
-            'Zone',
-            'PHC Center',
-            'Department',
-            'Medical Field',
-            'Specialty',
-            'Rank',
-            'Status',
-            'Hire Date',
-            'License Number',
-            'License Expiry Date',
-            'Policy Number',
-            'Policy Expiry Date',
+            'Employee ID', 'First Name', 'Last Name', 'First Name (Arabic)', 'Last Name (Arabic)',
+            'National ID', 'Nationality', 'Birth Date', 'Gender',
+            'Phone', 'Email',
+            'Zone', 'PHC Center', 'Department',
+            'Medical Field', 'Specialty', 'Rank',
+            'Status', 'Hire Date',
+            'License Number', 'License Expiry Date',
+            'Policy Number', 'Policy Expiry Date',
         ];
 
         $sampleData = [
             [
-                'EMP001',
-                'John',
-                'Doe',
-                'جون',
-                'ديو',
-                '1234567890',
-                $nationalities[0] ?? 'Saudi Arabia',
-                '1990-01-01',
-                'male',
-                '966501234567',
-                'john@example.com',
-                $zones[0] ?? 'Central',
-                $phcCenters[0] ?? 'Main PHC',
-                $departments[0] ?? 'Nursing',
-                $medicalFields[0] ?? 'Medicine',
-                $specialties[0] ?? 'General',
-                $ranks[0] ?? 'Specialist',
-                'active',
-                '2024-01-01',
-                'SCFHS12345',
-                '2027-01-01',
-                'POL12345',
-                '2027-01-01',
+                'EMP001', 'John', 'Doe', 'جون', 'ديو',
+                '1234567890', $nationalities[0] ?? 'Saudi Arabia', '1990-01-01', 'male',
+                '966501234567', 'john@example.com',
+                $zones[0] ?? 'Central', $phcCenters[0] ?? 'Main PHC', $departments[0] ?? 'Nursing',
+                $medicalFields[0] ?? 'Medicine', $specialties[0] ?? 'General', $ranks[0] ?? 'Specialist',
+                'active', '2024-01-01',
+                'SCFHS12345', '2027-01-01',
+                'POL12345', '2027-01-01',
             ],
         ];
         $allData = array_merge([$headers], $sampleData);
@@ -548,5 +506,10 @@ class StaffProfileController extends Controller
         $staffExperience->delete();
 
         return response()->json(['message' => 'Experience deleted successfully']);
+    }
+
+    private function clearCache(): void
+    {
+        Cache::tags([self::CACHE_PREFIX])->flush();
     }
 }

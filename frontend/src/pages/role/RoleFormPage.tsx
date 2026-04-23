@@ -73,6 +73,40 @@ export function RoleFormPage() {
     }))
   }
 
+  const toggleAllPermissions = () => {
+    const allPermIds = Object.values(allPermissions).flat().map((p: Permission) => p.id)
+    if (formData.permissions.length === allPermIds.length) {
+      setFormData(prev => ({ ...prev, permissions: [] }))
+    } else {
+      setFormData(prev => ({ ...prev, permissions: allPermIds }))
+    }
+  }
+
+  const toggleGroupPermissions = (group: string) => {
+    const groupPermIds = allPermissions[group]?.map((p: Permission) => p.id) || []
+    const allGroupSelected = groupPermIds.every(id => formData.permissions.includes(id))
+    if (allGroupSelected) {
+      setFormData(prev => ({
+        ...prev,
+        permissions: prev.permissions.filter(id => !groupPermIds.includes(id)),
+      }))
+    } else {
+      setFormData(prev => {
+        const newPerms = [...new Set([...prev.permissions, ...groupPermIds])]
+        return { ...prev, permissions: newPerms }
+      })
+    }
+  }
+
+  const getGroupIds = (group: string) => allPermissions[group]?.map((p: Permission) => p.id) || []
+  const isGroupAllSelected = (group: string) => {
+    const groupIds = getGroupIds(group)
+    return groupIds.length > 0 && groupIds.every(id => formData.permissions.includes(id))
+  }
+
+  const allPermIds = Object.values(allPermissions).flat().map((p: Permission) => p.id)
+  const isAllSelected = allPermIds.length > 0 && formData.permissions.length === allPermIds.length
+
   const handleSubmit = async () => {
     if (!formData.name) {
       Swal.fire({
@@ -113,16 +147,45 @@ export function RoleFormPage() {
   }
 
   const permissionLabels: Record<string, string> = {
+    // Users & Roles
+    users: locale === 'ar' ? 'المستخدمين' : 'Users',
+    roles: locale === 'ar' ? 'الأدوار' : 'Roles',
+    // Staff Management
     staff: locale === 'ar' ? 'الموظفين' : 'Staff',
-    department: locale === 'ar' ? 'الأقسام' : 'Departments',
-    zone: locale === 'ar' ? 'المناطق' : 'Zones',
-    'phc-center': locale === 'ar' ? 'مراكز الصحة' : 'PHC Centers',
-    nationality: locale === 'ar' ? 'الجنسيات' : 'Nationalities',
-    medicalField: locale === 'ar' ? 'الحقول الطبية' : 'Medical Fields',
-    specialty: locale === 'ar' ? 'التخصصات' : 'Specialties',
-    rank: locale === 'ar' ? 'الرتبة' : 'Ranks',
-    shcCategory: locale === 'ar' ? 'فئات الهيئة' : 'SHC Categories',
-    role: locale === 'ar' ? 'الأدوار' : 'Roles',
+    shifts: locale === 'ar' ? 'الورديات' : 'Shifts',
+    shift_requests: locale === 'ar' ? 'طلبات الوردية' : 'Shift Requests',
+    // HR Reference Data
+    departments: locale === 'ar' ? 'الأقسام' : 'Departments',
+    zones: locale === 'ar' ? 'المناطق' : 'Zones',
+    phc_centers: locale === 'ar' ? 'مراكز الصحة' : 'PHC Centers',
+    nationalities: locale === 'ar' ? 'الجنسيات' : 'Nationalities',
+    medical_fields: locale === 'ar' ? 'الحقول الطبية' : 'Medical Fields',
+    specialties: locale === 'ar' ? 'التخصصات' : 'Specialties',
+    ranks: locale === 'ar' ? 'الرتبة' : 'Ranks',
+    shc_categories: locale === 'ar' ? 'فئات الهيئة' : 'SHC Categories',
+    // Incidents
+    incidents: locale === 'ar' ? 'الحوادث' : 'Incidents',
+    // Medications
+    medications: locale === 'ar' ? 'الأدوية' : 'Medications',
+    medication_batches: locale === 'ar' ? 'دفعات الأدوية' : 'Medication Batches',
+    medication_logs: locale === 'ar' ? 'سجلات الأدوية' : 'Medication Logs',
+    medication_alerts: locale === 'ar' ? 'تنبيهات الأدوية' : 'Medication Alerts',
+    // Evaluations
+    evaluations: locale === 'ar' ? 'التقييمات' : 'Evaluations',
+    evaluation_templates: locale === 'ar' ? 'قوالب التقييم' : 'Evaluation Templates',
+    action_plans: locale === 'ar' ? 'خطط العمل' : 'Action Plans',
+    // Issues
+    issues: locale === 'ar' ? 'المشاكل' : 'Issues',
+    // System Features
+    alerts: locale === 'ar' ? 'التنبيهات' : 'Alerts',
+    audit_logs: locale === 'ar' ? 'سجلات التدقيق' : 'Audit Logs',
+    imports: locale === 'ar' ? 'الاستيراد' : 'Imports',
+    exports: locale === 'ar' ? 'التصدير' : 'Exports',
+    dashboard: locale === 'ar' ? 'لوحة المعلومات' : 'Dashboard',
+    // Reports
+    reports: locale === 'ar' ? 'التقارير' : 'Reports',
+    // Settings
+    settings: locale === 'ar' ? 'الإعدادات' : 'Settings',
   }
 
   return (
@@ -186,15 +249,41 @@ export function RoleFormPage() {
           </div>
 
           <div>
-            <h2 className="text-lg font-semibold text-gray-900 mb-4">
-              {locale === 'ar' ? 'الصلاحيات' : 'Permissions'}
-            </h2>
+            <div className="flex items-center justify-between mb-4">
+              <h2 className="text-lg font-semibold text-gray-900">
+                {locale === 'ar' ? 'الصلاحيات' : 'Permissions'}
+              </h2>
+              <label className="flex items-center gap-2 cursor-pointer">
+                <input
+                  type="checkbox"
+                  checked={isAllSelected}
+                  onChange={toggleAllPermissions}
+                  className="w-4 h-4 text-brand-600 rounded border-gray-300 focus:ring-brand-500"
+                />
+                <span className="text-sm font-medium text-gray-700">
+                  {locale === 'ar' ? 'تحديد الكل' : 'Select All'}
+                </span>
+              </label>
+            </div>
             <div className="space-y-4">
               {Object.entries(allPermissions).map(([group, perms]) => (
                 <div key={group} className="border border-gray-200 rounded-lg p-4">
-                  <h3 className="font-medium text-gray-900 mb-3">
-                    {permissionLabels[group] || group}
-                  </h3>
+                  <div className="flex items-center justify-between mb-3">
+                    <h3 className="font-medium text-gray-900">
+                      {permissionLabels[group] || group}
+                    </h3>
+                    <label className="flex items-center gap-2 cursor-pointer">
+                      <input
+                        type="checkbox"
+                        checked={isGroupAllSelected(group)}
+                        onChange={() => toggleGroupPermissions(group)}
+                        className="w-4 h-4 text-brand-600 rounded border-gray-300 focus:ring-brand-500"
+                      />
+                      <span className="text-sm text-gray-600">
+                        {locale === 'ar' ? 'تحديد الكل' : 'Select All'}
+                      </span>
+                    </label>
+                  </div>
                   <div className="flex flex-wrap gap-2">
                     {perms.map(perm => (
                       <label

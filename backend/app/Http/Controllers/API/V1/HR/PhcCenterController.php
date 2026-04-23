@@ -5,53 +5,68 @@ namespace App\Http\Controllers\API\V1\HR;
 use App\Http\Controllers\Controller;
 use App\Http\Requests\StorePhcCenterRequest;
 use App\Http\Requests\UpdatePhcCenterRequest;
+use App\Http\Traits\CachesIndex;
 use App\Models\PhcCenter;
 use App\Models\Region;
 use App\Services\Dashboard\ExportService;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\Cache;
 use PhpOffice\PhpSpreadsheet\IOFactory;
 use Symfony\Component\HttpFoundation\Response;
 
 class PhcCenterController extends Controller
 {
+    use CachesIndex;
+
+    protected static string $cachePrefix = 'phc_centers:';
+
+    protected static int $cacheTtl = 30;
+
     public function __construct(
         private ExportService $exportService
     ) {}
 
     public function index(Request $request): JsonResponse
     {
-        $query = PhcCenter::with('region');
+        $filters = $request->only(['region_id', 'is_active', 'search', 'per_page']);
+        $cacheKey = $this->getIndexCacheKey(md5(json_encode($filters)));
 
-        if ($request->has('region_id')) {
-            $query->where('region_id', $request->input('region_id'));
-        }
+        $data = Cache::remember($cacheKey, now()->addMinutes(static::$cacheTtl), function () use ($request) {
+            $query = PhcCenter::with('region');
 
-        if ($request->has('is_active')) {
-            $query->where('is_active', $request->boolean('is_active'));
-        }
+            if ($request->has('region_id')) {
+                $query->where('region_id', $request->input('region_id'));
+            }
 
-        if ($request->has('search')) {
-            $search = $request->input('search');
-            $query->where(function ($q) use ($search) {
-                $q->where('name', 'like', "%{$search}%")
-                    ->orWhere('name_ar', 'like', "%{$search}%")
-                    ->orWhere('code', 'like', "%{$search}%");
-            });
-        }
+            if ($request->has('is_active')) {
+                $query->where('is_active', $request->boolean('is_active'));
+            }
 
-        $perPage = $request->input('per_page', 15);
-        $phcCenters = $query->orderByDesc('created_at')->paginate($perPage);
+            if ($request->has('search')) {
+                $search = $request->input('search');
+                $query->where(function ($q) use ($search) {
+                    $q->where('name', 'like', "%{$search}%")
+                        ->orWhere('name_ar', 'like', "%{$search}%")
+                        ->orWhere('code', 'like', "%{$search}%");
+                });
+            }
 
-        return response()->json([
-            'data' => $phcCenters->items(),
-            'meta' => [
-                'total' => $phcCenters->total(),
-                'current_page' => $phcCenters->currentPage(),
-                'last_page' => $phcCenters->lastPage(),
-                'per_page' => $phcCenters->perPage(),
-            ],
-        ]);
+            $perPage = $request->input('per_page', 15);
+            $phcCenters = $query->orderByDesc('created_at')->paginate($perPage);
+
+            return [
+                'data' => array_map(fn ($item) => $item->toArray(), $phcCenters->items()),
+                'meta' => [
+                    'total' => $phcCenters->total(),
+                    'current_page' => $phcCenters->currentPage(),
+                    'last_page' => $phcCenters->lastPage(),
+                    'per_page' => $phcCenters->perPage(),
+                ],
+            ];
+        });
+
+        return response()->json($data);
     }
 
     public function store(StorePhcCenterRequest $request): JsonResponse
@@ -61,6 +76,8 @@ class PhcCenterController extends Controller
 
         $phcCenter = PhcCenter::create($data);
 
+        $this->clearIndexCache();
+
         return response()->json([
             'data' => $phcCenter->load('region'),
             'message' => 'PHC Center created successfully',
@@ -69,14 +86,23 @@ class PhcCenterController extends Controller
 
     public function show(PhcCenter $phcCenter): JsonResponse
     {
-        return response()->json([
-            'data' => $phcCenter->load(['region', 'departments']),
-        ]);
+        $cacheKey = static::$cachePrefix.'show:'.$phcCenter->id;
+
+        $data = Cache::remember($cacheKey, now()->addMinutes(static::$cacheTtl), function () use ($phcCenter) {
+            $phcCenter->load(['region', 'departments']);
+
+            return ['data' => $phcCenter->toArray()];
+        });
+
+        return response()->json($data);
     }
 
     public function update(UpdatePhcCenterRequest $request, PhcCenter $phcCenter): JsonResponse
     {
         $phcCenter->update($request->validated());
+
+        $this->clearIndexCache();
+        Cache::forget(static::$cachePrefix.'show:'.$phcCenter->id);
 
         return response()->json([
             'data' => $phcCenter->load('region'),
@@ -88,12 +114,18 @@ class PhcCenterController extends Controller
     {
         $phcCenter->delete();
 
+        $this->clearIndexCache();
+        Cache::forget(static::$cachePrefix.'show:'.$phcCenter->id);
+
         return response()->json(['message' => 'PHC Center deleted successfully']);
     }
 
     public function toggleStatus(PhcCenter $phcCenter): JsonResponse
     {
         $phcCenter->update(['is_active' => ! $phcCenter->is_active]);
+
+        $this->clearIndexCache();
+        Cache::forget(static::$cachePrefix.'show:'.$phcCenter->id);
 
         return response()->json([
             'data' => $phcCenter->fresh()->load('region'),
@@ -146,6 +178,8 @@ class PhcCenterController extends Controller
                 $importedCount++;
             }
         }
+
+        $this->clearIndexCache();
 
         return response()->json([
             'message' => 'Successfully imported '.$importedCount.' PHC Centers',

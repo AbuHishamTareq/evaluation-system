@@ -5,48 +5,63 @@ namespace App\Http\Controllers\API\V1\HR;
 use App\Http\Controllers\Controller;
 use App\Http\Requests\StoreZoneRequest;
 use App\Http\Requests\UpdateZoneRequest;
+use App\Http\Traits\CachesIndex;
 use App\Models\Region;
 use App\Services\Dashboard\ExportService;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\Cache;
 use PhpOffice\PhpSpreadsheet\IOFactory;
 use Symfony\Component\HttpFoundation\Response;
 
 class ZoneController extends Controller
 {
+    use CachesIndex;
+
+    protected static string $cachePrefix = 'zones:';
+
+    protected static int $cacheTtl = 30;
+
     public function __construct(
         private ExportService $exportService
     ) {}
 
     public function index(Request $request): JsonResponse
     {
-        $query = Region::query();
+        $filters = $request->only(['is_active', 'search', 'per_page']);
+        $cacheKey = $this->getIndexCacheKey(md5(json_encode($filters)));
 
-        if ($request->has('is_active')) {
-            $query->where('is_active', $request->boolean('is_active'));
-        }
+        $data = Cache::remember($cacheKey, now()->addMinutes(static::$cacheTtl), function () use ($request) {
+            $query = Region::query();
 
-        if ($request->has('search')) {
-            $search = $request->input('search');
-            $query->where(function ($q) use ($search) {
-                $q->where('name', 'like', "%{$search}%")
-                    ->orWhere('name_ar', 'like', "%{$search}%")
-                    ->orWhere('code', 'like', "%{$search}%");
-            });
-        }
+            if ($request->has('is_active')) {
+                $query->where('is_active', $request->boolean('is_active'));
+            }
 
-        $perPage = $request->input('per_page', 15);
-        $zones = $query->orderByDesc('created_at')->paginate($perPage);
+            if ($request->has('search')) {
+                $search = $request->input('search');
+                $query->where(function ($q) use ($search) {
+                    $q->where('name', 'like', "%{$search}%")
+                        ->orWhere('name_ar', 'like', "%{$search}%")
+                        ->orWhere('code', 'like', "%{$search}%");
+                });
+            }
 
-        return response()->json([
-            'data' => $zones->items(),
-            'meta' => [
-                'total' => $zones->total(),
-                'current_page' => $zones->currentPage(),
-                'last_page' => $zones->lastPage(),
-                'per_page' => $zones->perPage(),
-            ],
-        ]);
+            $perPage = $request->input('per_page', 15);
+            $zones = $query->orderByDesc('created_at')->paginate($perPage);
+
+            return [
+                'data' => array_map(fn ($item) => $item->toArray(), $zones->items()),
+                'meta' => [
+                    'total' => $zones->total(),
+                    'current_page' => $zones->currentPage(),
+                    'last_page' => $zones->lastPage(),
+                    'per_page' => $zones->perPage(),
+                ],
+            ];
+        });
+
+        return response()->json($data);
     }
 
     public function store(StoreZoneRequest $request): JsonResponse
@@ -55,25 +70,36 @@ class ZoneController extends Controller
         $data['tenant_id'] = $request->user()?->tenant_id ?? 1;
         $zone = Region::create($data);
 
+        $this->clearIndexCache();
+
         return response()->json([
-            'data' => $zone,
+            'data' => $zone->toArray(),
             'message' => 'Zone created successfully',
         ], 201);
     }
 
     public function show(Region $zone): JsonResponse
     {
-        return response()->json([
-            'data' => $zone->load('phcCenters'),
-        ]);
+        $cacheKey = static::$cachePrefix.'show:'.$zone->id;
+
+        $data = Cache::remember($cacheKey, now()->addMinutes(static::$cacheTtl), function () use ($zone) {
+            $zone->load('phcCenters');
+
+            return ['data' => $zone->toArray()];
+        });
+
+        return response()->json($data);
     }
 
     public function update(UpdateZoneRequest $request, Region $zone): JsonResponse
     {
         $zone->update($request->validated());
 
+        $this->clearIndexCache();
+        Cache::forget(static::$cachePrefix.'show:'.$zone->id);
+
         return response()->json([
-            'data' => $zone,
+            'data' => $zone->toArray(),
             'message' => 'Zone updated successfully',
         ]);
     }
@@ -82,6 +108,9 @@ class ZoneController extends Controller
     {
         $zone->delete();
 
+        $this->clearIndexCache();
+        Cache::forget(static::$cachePrefix.'show:'.$zone->id);
+
         return response()->json(['message' => 'Zone deleted successfully']);
     }
 
@@ -89,8 +118,11 @@ class ZoneController extends Controller
     {
         $zone->update(['is_active' => ! $zone->is_active]);
 
+        $this->clearIndexCache();
+        Cache::forget(static::$cachePrefix.'show:'.$zone->id);
+
         return response()->json([
-            'data' => $zone->fresh(),
+            'data' => $zone->fresh()->toArray(),
             'message' => $zone->is_active ? 'Zone activated successfully' : 'Zone deactivated successfully',
         ]);
     }
@@ -130,6 +162,8 @@ class ZoneController extends Controller
                 $importedCount++;
             }
         }
+
+        $this->clearIndexCache();
 
         return response()->json([
             'message' => 'Successfully imported '.$importedCount.' zones',

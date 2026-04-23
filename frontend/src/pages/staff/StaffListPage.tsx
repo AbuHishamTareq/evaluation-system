@@ -1,5 +1,5 @@
 /* eslint-disable react-hooks/exhaustive-deps */
-import { useState, useEffect } from 'react'
+import { useState, useEffect, useCallback } from 'react'
 import { Link } from 'react-router-dom'
 import Swal from 'sweetalert2'
 import {
@@ -63,11 +63,7 @@ export function StaffListPage() {
   const { status, department_id, license_expiry } = useStaffFilters()
   const debouncedSearch = useDebounce(search, 500)
 
-  useEffect(() => {
-    fetchStaff()
-  }, [debouncedSearch, pagination.pageIndex, pagination.pageSize, status, department_id, license_expiry])
-
-  const fetchStaff = async () => {
+  const fetchStaff = useCallback(async () => {
     setIsLoading(true)
     setError(null)
     try {
@@ -80,7 +76,8 @@ export function StaffListPage() {
       if (department_id) params.department_id = department_id
       
       const res = await staffApi.getAll(params)
-      setData(res.data.data || [])
+      const items = (res.data.data || []).filter((s: { id?: number }) => s.id)
+      setData(items)
       setTotalCount(res.data.meta?.total || res.data.total || 0)
     } catch (err: unknown) {
       const error = err as { response?: { data?: { message?: string } } }
@@ -89,7 +86,11 @@ export function StaffListPage() {
     } finally {
       setIsLoading(false)
     }
-  }
+  }, [debouncedSearch, pagination.pageIndex, pagination.pageSize, status, department_id, license_expiry])
+
+  useEffect(() => {
+    fetchStaff()
+  }, [fetchStaff])
 
   const toggleSelect = (id: number) => {
     setSelectedRows(prev => 
@@ -185,27 +186,30 @@ export function StaffListPage() {
           />
         </div>
       ),
-      cell: ({ row }: { row: { original: { id: number } } }) => (
-        <div className="flex justify-center">
-          <input
-            type="checkbox"
-            checked={selectedRows.includes(row.original.id)}
-            onChange={() => toggleSelect(row.original.id)}
-            className="w-4 h-4 rounded border-gray-300 text-brand-600 focus:ring-brand-500 cursor-pointer"
-          />
-        </div>
-      ),
+      cell: ({ row }: { row: { original?: StaffMember } }) => {
+        if (!row.original?.id) return null
+        return (
+          <div className="flex justify-center">
+            <input
+              type="checkbox"
+              checked={selectedRows.includes(row.original!.id)}
+              onChange={() => toggleSelect(row.original!.id)}
+              className="w-4 h-4 rounded border-gray-300 text-brand-600 focus:ring-brand-500 cursor-pointer"
+            />
+          </div>
+        )
+      },
     },
     columnHelper.accessor(
       (row) => ({
-        en: `${row.first_name} ${row.last_name}`,
-        ar: `${row.first_name_ar} ${row.last_name_ar}`,
+        en: `${row.first_name || ''} ${row.last_name || ''}`.trim(),
+        ar: `${row.first_name_ar || ''} ${row.last_name_ar || ''}`.trim(),
       }),
       {
         id: 'name',
         header: locale === 'ar' ? 'الاسم' : 'Name',
         cell: ({ getValue }) => {
-          const name = getValue()
+          const name = getValue() || { en: '-', ar: '-' }
           return (
             <div className="flex flex-col">
               <span className="font-medium text-gray-900">{locale === 'ar' ? name.ar : name.en}</span>
@@ -221,36 +225,37 @@ export function StaffListPage() {
     ),
     columnHelper.accessor('employee_id', {
       header: locale === 'ar' ? 'رقم الموظف' : 'Employee ID',
-      cell: ({ getValue }) => <span className="font-mono text-sm">{getValue()}</span>,
+      cell: ({ getValue }) => <span className="font-mono text-sm">{getValue() || '-'}</span>,
     }),
     columnHelper.accessor(
       (row) => row.email || row.user?.email || '-',
       {
         id: 'email',
         header: locale === 'ar' ? 'البريد الإلكتروني' : 'Email',
-        cell: ({ getValue }) => <span className="text-sm">{getValue()}</span>,
+        cell: ({ getValue }) => <span className="text-sm">{getValue() || '-'}</span>,
       }
     ),
     columnHelper.accessor('phone', {
       header: locale === 'ar' ? 'الهاتف' : 'Phone',
-      cell: ({ getValue }) => <span className="text-sm">{getValue()}</span>,
+      cell: ({ getValue }) => <span className="text-sm">{getValue() || '-'}</span>,
     }),
     columnHelper.accessor(
       (row) => row.department?.name || '-',
       {
         id: 'department',
         header: locale === 'ar' ? 'القسم' : 'Department',
-        cell: ({ getValue }) => <span className="text-sm">{getValue()}</span>,
+        cell: ({ getValue }) => <span className="text-sm">{getValue() || '-'}</span>,
       }
     ),
     columnHelper.accessor('employment_status', {
       header: locale === 'ar' ? 'الحالة' : 'Status',
       cell: ({ row }) => {
-        const empStatus = row.original.employment_status
+        if (!row.original?.id) return null
+        const empStatus = row.original!.employment_status
         const isActive = empStatus === 'active'
         return (
           <button
-            onClick={() => handleToggleStatus(row.original.id, empStatus)}
+            onClick={() => handleToggleStatus(row.original!.id, empStatus)}
             className={`inline-flex items-center gap-1 px-2.5 py-0.5 rounded-full text-xs font-medium cursor-pointer ${
               isActive ? 'bg-green-100 text-green-800 hover:bg-green-200' : 'bg-red-100 text-red-800 hover:bg-red-200'
             }`}
@@ -268,31 +273,34 @@ export function StaffListPage() {
     columnHelper.display({
       id: 'actions',
       header: locale === 'ar' ? 'الإجراءات' : 'Actions',
-      cell: ({ row }) => (
-        <div className="flex items-center gap-2">
-          <Link
-            to={`/staff/${row.original.id}`}
-            className="p-2 text-amber-600 hover:bg-amber-50 rounded"
-            title={locale === 'ar' ? 'عرض' : 'View'}
-          >
-            <Eye className="w-4 h-4" />
-          </Link>
-          <Link
-            to={`/staff/${row.original.id}/edit`}
-            className="p-2 text-blue-600 hover:bg-blue-50 rounded"
-            title={locale === 'ar' ? 'تعديل' : 'Edit'}
-          >
-            <Edit2 className="w-4 h-4" />
-          </Link>
-          <button
-            className="p-2 text-red-600 hover:bg-red-50 rounded"
-            title={locale === 'ar' ? 'حذف' : 'Delete'}
-            onClick={() => handleDelete(row.original.id)}
-          >
-            <Trash2 className="w-4 h-4" />
-          </button>
-        </div>
-      ),
+      cell: ({ row }) => {
+        if (!row.original?.id) return null
+        return (
+          <div className="flex items-center gap-2">
+            <Link
+              to={`/staff/${row.original!.id}`}
+              className="p-2 text-amber-600 hover:bg-amber-50 rounded"
+              title={locale === 'ar' ? 'عرض' : 'View'}
+            >
+              <Eye className="w-4 h-4" />
+            </Link>
+            <Link
+              to={`/staff/${row.original!.id}/edit`}
+              className="p-2 text-blue-600 hover:bg-blue-50 rounded"
+              title={locale === 'ar' ? 'تعديل' : 'Edit'}
+            >
+              <Edit2 className="w-4 h-4" />
+            </Link>
+            <button
+              className="p-2 text-red-600 hover:bg-red-50 rounded"
+              title={locale === 'ar' ? 'حذف' : 'Delete'}
+              onClick={() => handleDelete(row.original!.id)}
+            >
+              <Trash2 className="w-4 h-4" />
+            </button>
+          </div>
+        )
+      },
     }),
   ]
 

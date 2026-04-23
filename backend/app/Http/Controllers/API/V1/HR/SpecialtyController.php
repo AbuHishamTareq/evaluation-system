@@ -3,53 +3,68 @@
 namespace App\Http\Controllers\API\V1\HR;
 
 use App\Http\Controllers\Controller;
+use App\Http\Traits\CachesIndex;
 use App\Models\MedicalField;
 use App\Models\Specialty;
 use App\Services\Dashboard\ExportService;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
 use Illuminate\Http\Response;
+use Illuminate\Support\Facades\Cache;
 use PhpOffice\PhpSpreadsheet\IOFactory;
 
 class SpecialtyController extends Controller
 {
+    use CachesIndex;
+
+    protected static string $cachePrefix = 'specialties:';
+
+    protected static int $cacheTtl = 30;
+
     public function __construct(
         private ExportService $exportService
     ) {}
 
     public function index(Request $request): JsonResponse
     {
-        $query = Specialty::with('medicalField');
+        $filters = $request->only(['medical_field_id', 'is_active', 'search', 'per_page']);
+        $cacheKey = $this->getIndexCacheKey(md5(json_encode($filters)));
 
-        if ($request->has('medical_field_id')) {
-            $query->where('medical_field_id', $request->input('medical_field_id'));
-        }
+        $data = Cache::remember($cacheKey, now()->addMinutes(static::$cacheTtl), function () use ($request) {
+            $query = Specialty::with('medicalField');
 
-        if ($request->has('is_active')) {
-            $query->where('is_active', $request->boolean('is_active'));
-        }
+            if ($request->has('medical_field_id')) {
+                $query->where('medical_field_id', $request->input('medical_field_id'));
+            }
 
-        if ($request->has('search')) {
-            $search = $request->input('search');
-            $query->where(function ($q) use ($search) {
-                $q->where('name', 'like', "%{$search}%")
-                    ->orWhere('name_ar', 'like', "%{$search}%")
-                    ->orWhere('code', 'like', "%{$search}%");
-            });
-        }
+            if ($request->has('is_active')) {
+                $query->where('is_active', $request->boolean('is_active'));
+            }
 
-        $perPage = $request->input('per_page', 15);
-        $specialties = $query->orderByDesc('created_at')->paginate($perPage);
+            if ($request->has('search')) {
+                $search = $request->input('search');
+                $query->where(function ($q) use ($search) {
+                    $q->where('name', 'like', "%{$search}%")
+                        ->orWhere('name_ar', 'like', "%{$search}%")
+                        ->orWhere('code', 'like', "%{$search}%");
+                });
+            }
 
-        return response()->json([
-            'data' => $specialties->items(),
-            'meta' => [
-                'total' => $specialties->total(),
-                'current_page' => $specialties->currentPage(),
-                'last_page' => $specialties->lastPage(),
-                'per_page' => $specialties->perPage(),
-            ],
-        ]);
+            $perPage = $request->input('per_page', 15);
+            $specialties = $query->orderByDesc('created_at')->paginate($perPage);
+
+            return [
+                'data' => array_map(fn ($item) => $item->toArray(), $specialties->items()),
+                'meta' => [
+                    'total' => $specialties->total(),
+                    'current_page' => $specialties->currentPage(),
+                    'last_page' => $specialties->lastPage(),
+                    'per_page' => $specialties->perPage(),
+                ],
+            ];
+        });
+
+        return response()->json($data);
     }
 
     public function store(Request $request): JsonResponse
@@ -64,19 +79,25 @@ class SpecialtyController extends Controller
 
         $specialty = Specialty::create($validated);
 
+        $this->clearIndexCache();
+
         return response()->json([
-            'data' => $specialty,
+            'data' => $specialty->toArray(),
             'message' => 'Specialty created successfully',
         ], 201);
     }
 
     public function show(Specialty $specialty): JsonResponse
     {
-        $specialty->load('medicalField');
+        $cacheKey = static::$cachePrefix.'show:'.$specialty->id;
 
-        return response()->json([
-            'data' => $specialty,
-        ]);
+        $data = Cache::remember($cacheKey, now()->addMinutes(static::$cacheTtl), function () use ($specialty) {
+            $specialty->load('medicalField');
+
+            return ['data' => $specialty->toArray()];
+        });
+
+        return response()->json($data);
     }
 
     public function update(Request $request, Specialty $specialty): JsonResponse
@@ -91,8 +112,11 @@ class SpecialtyController extends Controller
 
         $specialty->update($validated);
 
+        $this->clearIndexCache();
+        Cache::forget(static::$cachePrefix.'show:'.$specialty->id);
+
         return response()->json([
-            'data' => $specialty,
+            'data' => $specialty->toArray(),
             'message' => 'Specialty updated successfully',
         ]);
     }
@@ -101,6 +125,9 @@ class SpecialtyController extends Controller
     {
         $specialty->delete();
 
+        $this->clearIndexCache();
+        Cache::forget(static::$cachePrefix.'show:'.$specialty->id);
+
         return response()->json(['message' => 'Specialty deleted successfully']);
     }
 
@@ -108,8 +135,11 @@ class SpecialtyController extends Controller
     {
         $specialty->update(['is_active' => ! $specialty->is_active]);
 
+        $this->clearIndexCache();
+        Cache::forget(static::$cachePrefix.'show:'.$specialty->id);
+
         return response()->json([
-            'data' => $specialty->fresh(),
+            'data' => $specialty->fresh()->toArray(),
             'message' => $specialty->is_active ? 'Specialty activated successfully' : 'Specialty deactivated successfully',
         ]);
     }
@@ -153,6 +183,8 @@ class SpecialtyController extends Controller
                 $importedCount++;
             }
         }
+
+        $this->clearIndexCache();
 
         return response()->json([
             'message' => 'Successfully imported '.$importedCount.' specialties',

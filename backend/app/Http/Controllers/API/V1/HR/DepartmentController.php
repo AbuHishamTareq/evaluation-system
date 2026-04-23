@@ -5,58 +5,75 @@ namespace App\Http\Controllers\API\V1\HR;
 use App\Http\Controllers\Controller;
 use App\Http\Requests\StoreDepartmentRequest;
 use App\Http\Requests\UpdateDepartmentRequest;
+use App\Http\Traits\CachesIndex;
 use App\Models\Department;
 use App\Models\PhcCenter;
 use App\Services\Dashboard\ExportService;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\Cache;
 use PhpOffice\PhpSpreadsheet\IOFactory;
 use Symfony\Component\HttpFoundation\Response;
 
 class DepartmentController extends Controller
 {
+    use CachesIndex;
+
+    protected static string $cachePrefix = 'departments:';
+
+    protected static int $cacheTtl = 30;
+
     public function __construct(
         private ExportService $exportService
     ) {}
 
     public function index(Request $request): JsonResponse
     {
-        $query = Department::with('phcCenter');
+        $filters = $request->only(['phc_center_id', 'is_active', 'search', 'per_page']);
+        $cacheKey = $this->getIndexCacheKey(md5(json_encode($filters)));
 
-        if ($request->has('phc_center_id')) {
-            $query->where('phc_center_id', $request->input('phc_center_id'));
-        }
+        $data = Cache::remember($cacheKey, now()->addMinutes(static::$cacheTtl), function () use ($request) {
+            $query = Department::with('phcCenter');
 
-        if ($request->has('is_active')) {
-            $query->where('is_active', $request->boolean('is_active'));
-        }
+            if ($request->has('phc_center_id')) {
+                $query->where('phc_center_id', $request->input('phc_center_id'));
+            }
 
-        if ($request->has('search')) {
-            $search = $request->input('search');
-            $query->where(function ($q) use ($search) {
-                $q->where('name', 'like', "%{$search}%")
-                    ->orWhere('name_ar', 'like', "%{$search}%")
-                    ->orWhere('code', 'like', "%{$search}%");
-            });
-        }
+            if ($request->has('is_active')) {
+                $query->where('is_active', $request->boolean('is_active'));
+            }
 
-        $perPage = $request->input('per_page', 15);
-        $departments = $query->orderByDesc('created_at')->paginate($perPage);
+            if ($request->has('search')) {
+                $search = $request->input('search');
+                $query->where(function ($q) use ($search) {
+                    $q->where('name', 'like', "%{$search}%")
+                        ->orWhere('name_ar', 'like', "%{$search}%")
+                        ->orWhere('code', 'like', "%{$search}%");
+                });
+            }
 
-        return response()->json([
-            'data' => $departments->items(),
-            'meta' => [
-                'total' => $departments->total(),
-                'current_page' => $departments->currentPage(),
-                'last_page' => $departments->lastPage(),
-                'per_page' => $departments->perPage(),
-            ],
-        ]);
+            $perPage = $request->input('per_page', 15);
+            $departments = $query->orderByDesc('created_at')->paginate($perPage);
+
+            return [
+                'data' => array_map(fn ($item) => $item->toArray(), $departments->items()),
+                'meta' => [
+                    'total' => $departments->total(),
+                    'current_page' => $departments->currentPage(),
+                    'last_page' => $departments->lastPage(),
+                    'per_page' => $departments->perPage(),
+                ],
+            ];
+        });
+
+        return response()->json($data);
     }
 
     public function store(StoreDepartmentRequest $request): JsonResponse
     {
         $department = Department::create($request->validated());
+
+        $this->clearIndexCache();
 
         return response()->json([
             'data' => $department->load('phcCenter'),
@@ -66,14 +83,23 @@ class DepartmentController extends Controller
 
     public function show(Department $department): JsonResponse
     {
-        return response()->json([
-            'data' => $department->load('phcCenter'),
-        ]);
+        $cacheKey = static::$cachePrefix.'show:'.$department->id;
+
+        $data = Cache::remember($cacheKey, now()->addMinutes(static::$cacheTtl), function () use ($department) {
+            $department->load('phcCenter');
+
+            return ['data' => $department->toArray()];
+        });
+
+        return response()->json($data);
     }
 
     public function update(UpdateDepartmentRequest $request, Department $department): JsonResponse
     {
         $department->update($request->validated());
+
+        $this->clearIndexCache();
+        Cache::forget(static::$cachePrefix.'show:'.$department->id);
 
         return response()->json([
             'data' => $department->load('phcCenter'),
@@ -85,12 +111,18 @@ class DepartmentController extends Controller
     {
         $department->delete();
 
+        $this->clearIndexCache();
+        Cache::forget(static::$cachePrefix.'show:'.$department->id);
+
         return response()->json(['message' => 'Department deleted successfully']);
     }
 
     public function toggleStatus(Department $department): JsonResponse
     {
         $department->update(['is_active' => ! $department->is_active]);
+
+        $this->clearIndexCache();
+        Cache::forget(static::$cachePrefix.'show:'.$department->id);
 
         return response()->json([
             'data' => $department->fresh()->load('phcCenter'),
@@ -135,6 +167,8 @@ class DepartmentController extends Controller
                 $importedCount++;
             }
         }
+
+        $this->clearIndexCache();
 
         return response()->json([
             'message' => 'Successfully imported '.$importedCount.' departments',
