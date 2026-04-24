@@ -26,6 +26,7 @@ import { ShcCategoryForm } from '@/pages/shc-category/ShcCategoryForm'
 import { RoleListPage } from '@/pages/role/RoleListPage'
 import { RoleFormPage } from '@/pages/role/RoleFormPage'
 import { UserListPage } from '@/pages/user/UserListPage'
+import { PasswordChangePage } from '@/pages/PasswordChangePage'
 
 function App() {
   const { isAuthenticated } = useAuthStore()
@@ -301,6 +302,14 @@ function App() {
           element={
             <ProtectedRoute>
               <UserListPage />
+            </ProtectedRoute>
+          }
+        />
+        <Route
+          path="/profile/password"
+          element={
+            <ProtectedRoute>
+              <PasswordChangePage />
             </ProtectedRoute>
           }
         />

@@ -36,6 +36,8 @@ export const authApi = {
   me: () => api.get('/v1/auth/me'),
   updateProfile: (data: { name?: string; locale?: string }) =>
     api.put('/v1/auth/profile', data),
+  changePassword: (currentPassword: string, newPassword: string) =>
+    api.post('/v1/auth/change-password', { current_password: currentPassword, new_password: newPassword }),
 }
 
 export const dashboardApi = {

@@ -71,4 +71,38 @@ class AuthController extends Controller
             'user' => $user->fresh()->load(['tenant', 'phcCenter', 'department', 'roles']),
         ]);
     }
+
+    public function changePassword(Request $request): JsonResponse
+    {
+        $request->validate([
+            'current_password' => 'required|string',
+            'new_password' => [
+                'required',
+                'string',
+                'min:12',
+                'regex:/^(?=.*[a-z])(?=.*[A-Z])(?=.*\d)(?=.*[@$!%*?&])[A-Za-z\d@$!%*?&]{12,}$/',
+            ],
+        ], [
+            'new_password.min' => 'The password must be at least 12 characters.',
+            'new_password.regex' => 'The password must contain uppercase, lowercase, number, and special character.',
+        ]);
+
+        $user = $request->user();
+
+        if (! Hash::check($request->current_password, $user->password)) {
+            return response()->json([
+                'message' => 'Current password is incorrect',
+            ], 422);
+        }
+
+        $user->update([
+            'password' => $request->new_password,
+        ]);
+
+        $user->tokens()->delete();
+
+        return response()->json([
+            'message' => 'Password changed successfully',
+        ]);
+    }
 }

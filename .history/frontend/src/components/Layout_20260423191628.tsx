@@ -1,5 +1,5 @@
 import type { ReactNode } from 'react'
-import { useState, useEffect, useRef } from 'react'
+import { useState, useEffect } from 'react'
 import { Link, useLocation } from 'react-router-dom'
 import { useAuthStore } from '@/stores/authStore'
 import { useAppStore } from '@/stores/appStore'
@@ -8,7 +8,7 @@ import {
   LayoutDashboard, Users, AlertTriangle, Pill, ClipboardCheck,
   AlertCircle, Bell, Search, Menu, X, LogOut, Building2,
   ChevronLeft, ChevronRight, Map, Home, Globe, Stethoscope,
-  GraduationCap, Award, ShieldCheck, UserCircle, ChevronDown, Key
+  GraduationCap, Award, ShieldCheck, UserCircle, ChevronDown
 } from 'lucide-react'
 
 interface NavItem {
@@ -45,12 +45,12 @@ function NavGroupComponent({ group, isSidebarCollapsed, setIsMobileMenuOpen }: {
       <button
         className={`w-full flex items-center gap-3 px-3 py-2.5 rounded-xl text-sm font-medium transition-all duration-300 ${
           isGroupActive
-            ? 'bg-gradient-to-r from-primary/20 to-secondary/20 text-primary'
-            : 'text-muted hover:bg-gradient-to-r hover:from-primary/10 hover:to-secondary/10 hover:text-primary'
+            ? 'bg-linear-to-r from-primary/20 to-secondary/20 text-primary'
+            : 'text-muted hover:bg-linear-to-r hover:from-primary/10 hover:to-secondary/10 hover:text-primary'
         }`}
         onClick={() => !isSidebarCollapsed && setIsExpanded(!isExpanded)}
       >
-        <group.icon className="w-5 h-5 flex-shrink-0" />
+        <group.icon className="w-5 h-5 shrink-0" />
         {!isSidebarCollapsed && (
           <>
             <span className="truncate flex-1 text-start">{title}</span>
@@ -71,11 +71,11 @@ function NavGroupComponent({ group, isSidebarCollapsed, setIsMobileMenuOpen }: {
                 onClick={() => setIsMobileMenuOpen(false)}
                 className={`flex items-center gap-2 px-2 py-2 rounded-lg text-sm font-medium transition-all duration-300 ${
                   isItemActive
-                    ? 'bg-gradient-to-r from-primary/20 to-secondary/20 text-primary'
-                    : 'text-muted hover:bg-gradient-to-r hover:from-primary/10 hover:to-secondary/10 hover:text-primary'
+                    ? 'bg-linear-to-r from-primary/20 to-secondary/20 text-primary'
+                    : 'text-muted hover:bg-linear-to-r hover:from-primary/10 hover:to-secondary/10 hover:text-primary'
                 }`}
               >
-                <Icon className="w-4 h-4 flex-shrink-0" />
+                <Icon className="w-4 h-4 shrink-0" />
                 <span className="truncate">{getTranslation(locale, `nav.${item.key}`)}</span>
               </Link>
             )
@@ -94,11 +94,11 @@ function NavGroupComponent({ group, isSidebarCollapsed, setIsMobileMenuOpen }: {
                 onClick={() => setIsMobileMenuOpen(false)}
                 className={`flex items-center gap-3 px-3 py-2 rounded-xl text-sm font-medium transition-all duration-300 ${
                   isItemActive
-                    ? 'bg-gradient-to-r from-primary/20 to-secondary/20 text-primary'
-                    : 'text-muted hover:bg-gradient-to-r hover:from-primary/10 hover:to-secondary/10 hover:text-primary'
+                    ? 'bg-linear-to-r from-primary/20 to-secondary/20 text-primary'
+                    : 'text-muted hover:bg-linear-to-r hover:from-primary/10 hover:to-secondary/10 hover:text-primary'
                 }`}
               >
-                <Icon className="w-4 h-4 flex-shrink-0" />
+                <Icon className="w-4 h-4 shrink-0" />
                 <span className="truncate">{getTranslation(locale, `nav.${item.key}`)}</span>
               </Link>
             )
@@ -141,7 +141,7 @@ const navGroups: (NavGroup | NavItem)[] = [
 ]
 
 export function Layout({ children }: LayoutProps) {
-  const { user } = useAuthStore()
+  const { user, logout } = useAuthStore()
   const { locale, setLocale, direction } = useAppStore()
   const location = useLocation()
   const [isSidebarCollapsed, setIsSidebarCollapsed] = useState(() => {
@@ -152,19 +152,12 @@ export function Layout({ children }: LayoutProps) {
     return false
   })
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false)
-  const [showUserMenu, setShowUserMenu] = useState(false)
-  const userMenuRef = useRef<HTMLDivElement>(null)
   const fontClass = locale === 'ar' ? 'font-ar' : 'font-en'
 
-  useEffect(() => {
-    const handleClickOutside = (event: MouseEvent) => {
-      if (showUserMenu && userMenuRef.current && !userMenuRef.current.contains(event.target as Node)) {
-        setShowUserMenu(false)
-      }
-    }
-    document.addEventListener('mousedown', handleClickOutside)
-    return () => document.removeEventListener('mousedown', handleClickOutside)
-  }, [showUserMenu])
+  const handleLogout = async () => {
+    await logout()
+    window.location.href = '/login'
+  }
 
   const toggleLocale = () => {
     const newLocale = locale === 'en' ? 'ar' : 'en'
@@ -182,11 +175,11 @@ export function Layout({ children }: LayoutProps) {
   const mobileClass = isMobileMenuOpen || direction === 'rtl' ? 'translate-x-0' : '-translate-x-full'
 
   return (
-    <div className={`min-h-screen bg-gradient-to-br from-background via-surface to-background ${fontClass}`} dir={direction}>
-      <aside className={`fixed top-0 start-0 h-full bg-surface border-e border-primary/10 transition-all duration-300 z-50 flex flex-col ${sidebarWidth} ${mobileClass} md:translate-x-0`}>
+    <div className={`min-h-screen bg-linear-to-br from-background via-surface to-background ${fontClass}`} dir={direction}>
+      <aside className={`fixed top-0 inset-s-0 h-full bg-surface border-e border-primary/10 transition-all duration-300 z-50 flex flex-col ${sidebarWidth} ${mobileClass} md:translate-x-0`}>
         <div className="flex items-center justify-between h-16 px-3 border-b border-primary/10">
           <Link to="/" className="flex items-center gap-2">
-            <div className="w-10 h-10 bg-gradient-primary rounded-xl flex items-center justify-center shadow-color-lg flex-shrink-0">
+            <div className="w-10 h-10 bg-gradient-primary rounded-xl flex items-center justify-center shadow-color-lg shrink-0">
               <span className="text-white font-bold text-sm">PHC</span>
             </div>
             {!isSidebarCollapsed && (
@@ -213,12 +206,12 @@ export function Layout({ children }: LayoutProps) {
                 onClick={() => setIsMobileMenuOpen(false)}
                 className={`flex items-center gap-3 px-3 py-2.5 rounded-xl text-sm font-medium transition-all duration-300 ${
                   isActive
-                    ? 'bg-gradient-to-r from-primary/20 to-secondary/20 text-primary'
-                    : 'text-muted hover:bg-gradient-to-r hover:from-primary/10 hover:to-secondary/10 hover:text-primary'
+                    ? 'bg-linear-to-r from-primary/20 to-secondary/20 text-primary'
+                    : 'text-muted hover:bg-linear-to-r hover:from-primary/10 hover:to-secondary/10 hover:text-primary'
                 }`}
                 title={isSidebarCollapsed ? getTranslation(locale, `nav.${item.key}`) : undefined}
               >
-                <Icon className="w-5 h-5 flex-shrink-0" />
+                <Icon className="w-5 h-5 shrink-0" />
                 {!isSidebarCollapsed && (
                   <span className="truncate">{getTranslation(locale, `nav.${item.key}`)}</span>
                 )}
@@ -230,7 +223,7 @@ export function Layout({ children }: LayoutProps) {
         <div className="p-2 border-t border-primary/10">
           <button
             onClick={toggleSidebar}
-            className="w-full flex items-center justify-center p-2 text-muted hover:text-primary hover:bg-gradient-to-r hover:from-primary/10 hover:to-secondary/10 rounded-xl transition-all duration-300"
+            className="w-full flex items-center justify-center p-2 text-muted hover:text-primary hover:bg-linear-to-r hover:from-primary/10 hover:to-secondary/10 rounded-xl transition-all duration-300"
             title={isSidebarCollapsed ? (locale === 'ar' ? 'توسيع' : 'Expand') : (locale === 'ar' ? 'طي' : 'Collapse')}
           >
             {isSidebarCollapsed ? (
@@ -255,12 +248,12 @@ export function Layout({ children }: LayoutProps) {
             </div>
 
             <div className="flex items-center gap-2 md:gap-4">
-              <button className="p-2.5 text-muted hover:text-primary hover:bg-gradient-to-r hover:from-primary/10 hover:to-secondary/10 rounded-xl transition-all duration-300 hover:scale-105">
+              <button className="p-2.5 text-muted hover:text-primary hover:bg-linear-to-r hover:from-primary/10 hover:to-secondary/10 rounded-xl transition-all duration-300 hover:scale-105">
                 <Search className="w-5 h-5" />
               </button>
-              <button className="p-2.5 text-muted hover:text-primary hover:bg-gradient-to-r hover:from-primary/10 hover:to-secondary/10 rounded-xl transition-all duration-300 hover:scale-105 relative">
+              <button className="p-2.5 text-muted hover:text-primary hover:bg-linear-to-r hover:from-primary/10 hover:to-secondary/10 rounded-xl transition-all duration-300 hover:scale-105 relative">
                 <Bell className="w-5 h-5" />
-                <span className="absolute top-1 end-1 w-2.5 h-2.5 bg-secondary rounded-full animate-pulse"></span>
+                <span className="absolute top-1 inset-e-1 w-2.5 h-2.5 bg-secondary rounded-full animate-pulse"></span>
               </button>
 
               <div className="hidden md:flex items-center gap-3 ps-4 border-s border-primary/20">
@@ -270,62 +263,18 @@ export function Layout({ children }: LayoutProps) {
                 >
                   {locale === 'en' ? 'العربية' : 'English'}
                 </button>
-                <div className="relative" ref={userMenuRef}>
-                  <button
-                    onClick={() => setShowUserMenu(!showUserMenu)}
-                    className="flex items-center gap-2 ps-1"
-                  >
-                    <div className="w-9 h-9 bg-gradient-to-r from-primary to-secondary rounded-full flex items-center justify-center shadow-color-lg">
-                      <span className="text-white text-sm font-medium">
-                        {user?.name?.charAt(0).toUpperCase()}
-                      </span>
-                    </div>
-                    <ChevronDown className="w-4 h-4 text-muted" />
-                  </button>
-                  {showUserMenu && (
-                    <div className="absolute end-0 top-full mt-2 w-72 bg-surface border border-primary/10 rounded-xl shadow-xl overflow-hidden z-50">
-                        <div className="p-4 bg-gradient-to-r from-primary/5 to-secondary/5 border-b border-primary/10">
-                          <div className="flex items-center gap-3">
-                            <div className="w-10 h-10 bg-gradient-to-r from-primary to-secondary rounded-full flex items-center justify-center">
-                              <span className="text-white font-medium">
-                                {user?.name?.charAt(0).toUpperCase()}
-                              </span>
-                            </div>
-                            <div className="flex-1 min-w-0">
-                              <div className="font-medium text-text truncate">{user?.name}</div>
-                              <div className="text-sm text-muted truncate">{user?.email}</div>
-                            </div>
-                          </div>
-                          {user?.phc_center && (
-                            <div className="mt-2 flex items-center gap-2 text-xs text-muted">
-                              <Building2 className="w-3 h-3" />
-                              <span className="truncate">{user.phc_center.name}</span>
-                            </div>
-                          )}
-                        </div>
-                        <div className="p-2">
-                          <Link
-                            to="/profile/password"
-                            className="flex items-center gap-3 px-3 py-2.5 rounded-lg text-sm text-text hover:bg-gradient-to-r hover:from-primary/10 hover:to-secondary/10 transition-all duration-200"
-                            onClick={() => setShowUserMenu(false)}
-                          >
-                            <Key className="w-4 h-4 text-primary" />
-                            <span className="font-medium">{locale === 'ar' ? 'تغيير كلمة المرور' : 'Change Password'}</span>
-                          </Link>
-                          <button
-                            onClick={async () => {
-                              await useAuthStore.getState().logout()
-                              window.location.href = '/login'
-                            }}
-                            className="w-full flex items-center gap-3 px-3 py-2.5 rounded-lg text-sm text-red-600 hover:bg-red-50 transition-all duration-200"
-                          >
-                            <LogOut className="w-4 h-4" />
-                            <span className="font-medium">{locale === 'ar' ? 'تسجيل الخروج' : 'Logout'}</span>
-                          </button>
-                        </div>
-</div>
-                  )}
+                <div className="w-9 h-9 bg-linear-to-r from-primary to-secondary rounded-full flex items-center justify-center shadow-color-lg">
+                  <span className="text-white text-sm font-medium">
+                    {user?.name?.charAt(0).toUpperCase()}
+                  </span>
                 </div>
+                <button
+                  onClick={handleLogout}
+                  className="text-sm text-secondary hover:text-red-500 transition-colors duration-300"
+                  title={getTranslation(locale, 'auth.logout')}
+                >
+                  <LogOut className="w-5 h-5" />
+                </button>
               </div>
             </div>
           </div>
