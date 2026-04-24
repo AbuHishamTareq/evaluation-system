@@ -56,6 +56,7 @@ export default {
     phc_centers: 'PHC Centers',
     'phc-centers': 'PHC Centers',
     nationalities: 'Nationalities',
+    'team-based-codes': 'Team Based Codes',
     'medical-fields': 'Medical Fields',
     specialties: 'Specialties',
     ranks: 'Ranks',

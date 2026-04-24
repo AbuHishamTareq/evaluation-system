@@ -49,6 +49,7 @@ class StaffProfileController extends Controller
             'employment_status',
             'search',
             'per_page',
+            'page',
         ]);
 
         $filtersKey = md5(json_encode($filters));

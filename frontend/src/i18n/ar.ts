@@ -56,6 +56,7 @@ export default {
     phc_centers: 'مراكز الصحة',
     'phc-centers': 'مراكز الصحة',
     nationalities: 'الجنسيات',
+    'team-based-codes': 'الرمزية القائمة على الفريق',
     'medical-fields': 'الحقول الطبية',
     specialties: 'التخصصات',
     ranks: 'الرتب',

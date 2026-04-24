@@ -26,7 +26,7 @@ class RankController extends Controller
 
     public function index(Request $request): JsonResponse
     {
-        $filters = $request->only(['level', 'is_active', 'search', 'per_page']);
+        $filters = $request->only(['level', 'is_active', 'search', 'per_page', 'page']);
         $cacheKey = $this->getIndexCacheKey(md5(json_encode($filters)));
 
         $data = Cache::remember($cacheKey, now()->addMinutes(static::$cacheTtl), function () use ($request) {

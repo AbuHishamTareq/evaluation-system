@@ -27,6 +27,8 @@ import { RoleListPage } from '@/pages/role/RoleListPage'
 import { RoleFormPage } from '@/pages/role/RoleFormPage'
 import { UserListPage } from '@/pages/user/UserListPage'
 import { PasswordChangePage } from '@/pages/PasswordChangePage'
+import { TeamBasedCodeListPage } from '@/pages/team-based-code/TeamBasedCodeListPage'
+import { TeamBasedCodeForm } from '@/pages/team-based-code/TeamBasedCodeForm'
 
 function App() {
   const { isAuthenticated } = useAuthStore()
@@ -310,6 +312,38 @@ function App() {
           element={
             <ProtectedRoute>
               <PasswordChangePage />
+            </ProtectedRoute>
+          }
+        />
+        <Route
+          path="/team-based-codes"
+          element={
+            <ProtectedRoute>
+              <TeamBasedCodeListPage />
+            </ProtectedRoute>
+          }
+        />
+        <Route
+          path="/team-based-codes/new"
+          element={
+            <ProtectedRoute>
+              <TeamBasedCodeForm />
+            </ProtectedRoute>
+          }
+        />
+        <Route
+          path="/team-based-codes/:id"
+          element={
+            <ProtectedRoute>
+              <TeamBasedCodeForm />
+            </ProtectedRoute>
+          }
+        />
+        <Route
+          path="/team-based-codes/:id/edit"
+          element={
+            <ProtectedRoute>
+              <TeamBasedCodeForm />
             </ProtectedRoute>
           }
         />

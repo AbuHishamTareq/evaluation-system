@@ -1,6 +1,6 @@
 import { LayoutDashboard, Users, AlertTriangle, Pill, ClipboardCheck,
   AlertCircle, Home, Globe, Stethoscope,
-  GraduationCap, Award, ShieldCheck, UserCircle, Map, Building2 } from 'lucide-react'
+  GraduationCap, Award, ShieldCheck, UserCircle, Map, Building2, UsersRound } from 'lucide-react'
 
 interface NavItem {
   key: string
@@ -37,6 +37,7 @@ const navGroups: (NavGroup | NavItem)[] = [
       { key: 'zones', icon: Map, path: '/zones' },
       { key: 'phc-centers', icon: Home, path: '/phc-centers' },
       { key: 'departments', icon: Building2, path: '/departments' },
+      { key: 'team-based-codes', icon: UsersRound, path: '/team-based-codes' },
     ],
   },
   { key: 'incidents', icon: AlertTriangle, path: '/incidents' },

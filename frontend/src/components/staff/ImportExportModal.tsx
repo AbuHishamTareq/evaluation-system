@@ -14,7 +14,7 @@ export interface ImportExportModalProps {
   onClose: () => void
   onComplete: () => void
   selectedIds?: number[]
-  type?: 'staff' | 'department' | 'zone' | 'phc-center' | 'nationality' | 'medicalField' | 'specialty' | 'rank' | 'shcCategory'
+  type?: 'staff' | 'department' | 'zone' | 'phc-center' | 'nationality' | 'medicalField' | 'specialty' | 'rank' | 'shcCategory' | 'teamBasedCode'
   api?: {
     getAll: (params?: any) => Promise<any>
     importFile: (file: File, format?: any) => Promise<any>
@@ -67,6 +67,16 @@ export function ImportExportModal({
         export: locale === 'ar' ? 'تصدير مراكز' : 'Export PHC Centers',
         importSuccess: locale === 'ar' ? 'تم استيراداكز الصحة بنجاح' : 'PHC Centers imported successfully',
         exportSuccess: locale === 'ar' ? 'تم تصدير البيانات بنجاح' : 'Export completed',
+        downloadTemplate: locale === 'ar' ? 'تحميل قالب' : 'Download Template',
+      }
+    }
+    if (type === 'teamBasedCode') {
+      return {
+        title: locale === 'ar' ? 'استيراد/تصدير الرمزية' : 'Import/Export Team Based Codes',
+        import: locale === 'ar' ? 'استيراد' : 'Import',
+        export: locale === 'ar' ? 'تصدير' : 'Export',
+        importSuccess: locale === 'ar' ? 'تم الاستيراد بنجاح' : 'Imported successfully',
+        exportSuccess: locale === 'ar' ? 'تم التصدير بنجاح' : 'Exported successfully',
         downloadTemplate: locale === 'ar' ? 'تحميل قالب' : 'Download Template',
       }
     }

@@ -20,6 +20,7 @@ use App\Http\Controllers\API\V1\HR\ShiftController;
 use App\Http\Controllers\API\V1\HR\ShiftRequestController;
 use App\Http\Controllers\API\V1\HR\SpecialtyController;
 use App\Http\Controllers\API\V1\HR\StaffProfileController;
+use App\Http\Controllers\API\V1\HR\TeamBasedCodeController;
 use App\Http\Controllers\API\V1\HR\UserController;
 use App\Http\Controllers\API\V1\HR\ZoneController;
 use App\Http\Controllers\API\V1\Issues\IssueController;
@@ -109,6 +110,11 @@ Route::prefix('v1')->group(function () {
             Route::get('shc-categories/export', [ShcCategoryController::class, 'export']);
             Route::patch('shc-categories/{shcCategory}/toggle-status', [ShcCategoryController::class, 'toggleStatus']);
             Route::apiResource('shc-categories', ShcCategoryController::class);
+
+            Route::post('team-based-codes/import', [TeamBasedCodeController::class, 'import']);
+            Route::get('team-based-codes/export', [TeamBasedCodeController::class, 'export']);
+            Route::patch('team-based-codes/{teamBasedCode}/toggle-status', [TeamBasedCodeController::class, 'toggleStatus']);
+            Route::apiResource('team-based-codes', TeamBasedCodeController::class);
 
             Route::apiResource('shift-requests', ShiftRequestController::class)->except(['update']);
 

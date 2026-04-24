@@ -496,3 +496,36 @@ export const userApi = {
     api.post(`/v1/users/${userId}/sync-roles`, { role_ids: roleIds }),
   getAvailableRoles: () => api.get('/v1/users/roles'),
 }
+
+export type CreateTeamBasedCodeData = {
+  code: string
+  role: string
+  is_active?: boolean
+}
+
+export type UpdateTeamBasedCodeData = Partial<CreateTeamBasedCodeData>
+
+export const teamBasedCodeApi = {
+  getAll: (params?: { is_active?: boolean | string; search?: string; page?: number; per_page?: number }) =>
+    api.get('/v1/team-based-codes', { params }),
+  getById: (id: number) => api.get(`/v1/team-based-codes/${id}`),
+  create: (data: CreateTeamBasedCodeData) => api.post('/v1/team-based-codes', data),
+  update: (id: number, data: UpdateTeamBasedCodeData) => api.put(`/v1/team-based-codes/${id}`, data),
+  delete: (id: number) => api.delete(`/v1/team-based-codes/${id}`),
+  toggleStatus: (id: number) => api.patch(`/v1/team-based-codes/${id}/toggle-status`),
+  export: (params?: { ids?: string; format?: string }) => api.get('/v1/team-based-codes/export', {
+    params: { ...params, responseType: 'blob' },
+  }),
+  exportFile: (format: 'csv' | 'excel' | 'pdf' = 'csv', params?: { ids?: string }) =>
+    api.get('/v1/team-based-codes/export', {
+      params: { ...params, format },
+      responseType: 'blob',
+    }),
+  importFile: (file: File) => {
+    const formData = new FormData()
+    formData.append('file', file)
+    return api.post('/v1/team-based-codes/import', formData, {
+      headers: { 'Content-Type': 'multipart/form-data' },
+    })
+  },
+}
