@@ -20,6 +20,7 @@ return new class extends Migration
             $table->string('unit')->nullable();
             $table->text('storage_requirements')->nullable();
             $table->timestamps();
+            $table->softDeletes();
 
             $table->index('tenant_id');
         });
@@ -36,6 +37,7 @@ return new class extends Migration
             $table->decimal('purchase_price', 10, 2)->nullable();
             $table->enum('status', ['available', 'low_stock', 'expired', 'recalled'])->default('available');
             $table->timestamps();
+            $table->softDeletes();
 
             $table->index('phc_center_id');
             $table->index('status');
@@ -55,6 +57,7 @@ return new class extends Migration
             $table->text('notes')->nullable();
             $table->timestamp('completed_at')->nullable();
             $table->timestamps();
+            $table->softDeletes();
 
             $table->index('medication_batch_id');
             $table->index('patient_id');
@@ -72,6 +75,7 @@ return new class extends Migration
             $table->foreignId('resolved_by_id')->nullable()->constrained('users')->nullOnDelete();
             $table->timestamp('resolved_at')->nullable();
             $table->timestamps();
+            $table->softDeletes();
 
             $table->index('phc_center_id');
             $table->index('type');

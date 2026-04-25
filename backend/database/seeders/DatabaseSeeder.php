@@ -18,6 +18,7 @@ class DatabaseSeeder extends Seeder
         $this->call([
             TenantSeeder::class,
             PermissionSeeder::class,
+            TeamBasedCodeSeeder::class,
         ]);
 
         User::factory()->create([

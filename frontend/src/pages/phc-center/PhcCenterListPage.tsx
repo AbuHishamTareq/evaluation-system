@@ -1,5 +1,5 @@
 import { useState, useEffect } from 'react'
-import { Link, useNavigate } from 'react-router-dom'
+import { Link } from 'react-router-dom'
 import Swal from 'sweetalert2'
 import {
   useReactTable,
@@ -13,7 +13,7 @@ import { phcCenterApi, zoneApi } from '@/lib/api'
 import { Layout } from '@/components/Layout'
 import { Button } from '@/components/ui/Button'
 import { ImportExportModal } from '@/components/staff/ImportExportModal'
-import { Search, Plus, Edit2, Trash2, Filter, ChevronLeft, ChevronRight, FileSpreadsheet, Building2 } from 'lucide-react'
+import { Search, Trash2, Filter, ChevronLeft, ChevronRight, FileSpreadsheet, Building2, UserPlus, X, Plus as PlusIcon } from 'lucide-react'
 
 interface PhcCenter {
   id: number
@@ -27,11 +27,343 @@ interface PhcCenter {
   region?: { id: number; name: string }
 }
 
+interface TeamBasedCode {
+  id: number
+  code: string
+  role: string
+  is_active: boolean
+}
+
 const columnHelper = createColumnHelper<PhcCenter>()
+
+function AssignCodesModal({
+  isOpen,
+  onClose,
+  phcCenterId,
+}: {
+  isOpen: boolean
+  onClose: () => void
+  phcCenterId: number
+}) {
+  const { locale } = useAppStore()
+  const [phcCenter, setPhcCenter] = useState<PhcCenter | null>(null)
+  const [assignedCodes, setAssignedCodes] = useState<TeamBasedCode[]>([])
+  const [availableCodes, setAvailableCodes] = useState<TeamBasedCode[]>([])
+  const [search, setSearch] = useState('')
+  const [isLoading, setIsLoading] = useState(true)
+  const [selectedForRemoval, setSelectedForRemoval] = useState<number[]>([])
+
+  useEffect(() => {
+    if (isOpen && phcCenterId) {
+      loadData()
+    }
+  }, [isOpen, phcCenterId, search])
+
+  const loadData = async () => {
+    setIsLoading(true)
+    try {
+      const centerRes = await phcCenterApi.getById(phcCenterId)
+      setPhcCenter(centerRes.data.data)
+
+      const assignedRes = await phcCenterApi.getAssignedTeamBasedCodes(phcCenterId)
+      setAssignedCodes(assignedRes.data.data || [])
+
+      const availableRes = await phcCenterApi.getAvailableTeamBasedCodes(phcCenterId, { search })
+      setAvailableCodes(availableRes.data.data || [])
+    } catch (err) {
+      console.error('Failed to load data:', err)
+    } finally {
+      setIsLoading(false)
+    }
+  }
+
+  const handleAssignCode = async (codeId: number) => {
+    const codeToMove = availableCodes.find(c => c.id === codeId)
+    if (!codeToMove) return
+
+    setAvailableCodes(prev => prev.filter(c => c.id !== codeId))
+    setAssignedCodes(prev => [...prev, codeToMove])
+
+    try {
+      await phcCenterApi.assignTeamBasedCode(phcCenterId, codeId)
+    } catch (err) {
+      setAssignedCodes(prev => prev.filter(c => c.id !== codeId))
+      setAvailableCodes(prev => [...prev, codeToMove])
+      console.error('Failed to assign code:', err)
+      Swal.fire({
+        title: locale === 'ar' ? 'خطأ' : 'Error',
+        text: locale === 'ar' ? 'فشل تعيين الرمز' : 'Failed to assign code',
+        icon: 'error',
+      })
+    }
+  }
+
+  const handleRemoveCode = async (codeId: number) => {
+    const codeToMove = assignedCodes.find(c => c.id === codeId)
+    if (!codeToMove) return
+
+    setAssignedCodes(prev => prev.filter(c => c.id !== codeId))
+    setAvailableCodes(prev => [...prev, codeToMove])
+    setSelectedForRemoval(prev => prev.filter(id => id !== codeId))
+
+    try {
+      await phcCenterApi.removeTeamBasedCode(phcCenterId, codeId)
+    } catch (err) {
+      setAvailableCodes(prev => prev.filter(c => c.id !== codeId))
+      setAssignedCodes(prev => [...prev, codeToMove])
+      console.error('Failed to remove code:', err)
+      Swal.fire({
+        title: locale === 'ar' ? 'خطأ' : 'Error',
+        text: locale === 'ar' ? 'فشل إزالة الرمز' : 'Failed to remove code',
+        icon: 'error',
+      })
+    }
+  }
+
+  const handleRemoveAll = async () => {
+    if (assignedCodes.length === 0) return
+
+    const codesToMove = [...assignedCodes]
+    setAssignedCodes([])
+    setAvailableCodes(prev => [...prev, ...codesToMove])
+    setSelectedForRemoval([])
+
+    try {
+      const ids = codesToMove.map(c => c.id)
+      await phcCenterApi.removeTeamBasedCodes(phcCenterId, ids)
+    } catch (err) {
+      setAssignedCodes(prev => [...prev, ...codesToMove])
+      setAvailableCodes(prev => prev.filter(c => !codesToMove.some(m => m.id === c.id)))
+      console.error('Failed to remove codes:', err)
+      Swal.fire({
+        title: locale === 'ar' ? 'خطأ' : 'Error',
+        text: locale === 'ar' ? 'فشل إزالة الرموز' : 'Failed to remove codes',
+        icon: 'error',
+      })
+    }
+  }
+
+  const handleRemoveSelected = async () => {
+    if (selectedForRemoval.length === 0) return
+
+    const codesToMove = assignedCodes.filter(c => selectedForRemoval.includes(c.id))
+    setAssignedCodes(prev => prev.filter(c => !selectedForRemoval.includes(c.id)))
+    setAvailableCodes(prev => [...prev, ...codesToMove])
+    setSelectedForRemoval([])
+
+    try {
+      await phcCenterApi.removeTeamBasedCodes(phcCenterId, selectedForRemoval)
+    } catch (err) {
+      setAvailableCodes(prev => prev.filter(c => !codesToMove.some(m => m.id === c.id)))
+      setAssignedCodes(prev => [...prev, ...codesToMove])
+      console.error('Failed to remove codes:', err)
+      Swal.fire({
+        title: locale === 'ar' ? 'خطأ' : 'Error',
+        text: locale === 'ar' ? 'فشل إزالة الرموز المحددة' : 'Failed to remove selected codes',
+        icon: 'error',
+      })
+    }
+  }
+
+  const handleToggleSelection = (codeId: number) => {
+    setSelectedForRemoval(prev =>
+      prev.includes(codeId)
+        ? prev.filter(id => id !== codeId)
+        : [...prev, codeId]
+    )
+  }
+
+  if (!isOpen) return null
+
+  return (
+    <div className="fixed inset-0 z-50 flex items-center justify-center">
+      <div className="absolute inset-0 bg-black/50" onClick={onClose} />
+      <div className="relative bg-white rounded-lg shadow-xl w-full max-w-4xl max-h-[90vh] overflow-hidden">
+        <div className="flex items-center justify-between p-4 border-b">
+          <h2 className="text-xl font-semibold text-gray-900">
+            {locale === 'ar' ? 'تعيين الرموز' : 'Assign Team Based Codes'}
+          </h2>
+          <button onClick={onClose} className="p-2 hover:bg-gray-100 rounded">
+            <X className="w-5 h-5" />
+          </button>
+        </div>
+
+        <div className="p-4 overflow-y-auto max-h-[calc(90vh-140px)]">
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+            {/* First Column - PHC Center Info & Assigned Codes */}
+            <div className="space-y-4">
+              {/* PHC Center Card */}
+              {phcCenter && (
+                <div className="bg-blue-50 border border-blue-200 rounded-lg p-4">
+                  <div className="flex items-center gap-3">
+                    <div className="p-3 bg-blue-100 rounded-lg">
+                      <Building2 className="w-6 h-6 text-blue-600" />
+                    </div>
+                    <div>
+                      <h3 className="font-semibold text-gray-900">{phcCenter.name}</h3>
+                      <p className="text-sm text-gray-600">
+                        {locale === 'ar' ? 'الرمز' : 'Code'}: {phcCenter.code}
+                      </p>
+                    </div>
+                  </div>
+                </div>
+              )}
+
+              {/* Assigned Codes */}
+              <div className="border rounded-lg p-4">
+                <div className="flex items-center justify-between mb-4">
+                  <h3 className="font-semibold text-gray-900">
+                    {locale === 'ar' ? 'الرموز الم.assigned Codes' : 'Assigned'}
+                  </h3>
+                  {selectedForRemoval.length > 0 ? (
+                    <button
+                      onClick={handleRemoveSelected}
+                      className="text-sm text-red-600 hover:bg-red-50 px-3 py-1 rounded"
+                    >
+                      {locale === 'ar'
+                        ? `إزالة (${selectedForRemoval.length})`
+                        : `Remove (${selectedForRemoval.length})`}
+                    </button>
+                  ) : (
+                    <button
+                      onClick={handleRemoveAll}
+                      disabled={assignedCodes.length === 0}
+                      className="text-sm text-red-600 hover:bg-red-50 px-3 py-1 rounded disabled:opacity-50"
+                    >
+                      {locale === 'ar' ? 'إزالة الكل' : 'Remove All'}
+                    </button>
+                  )}
+                </div>
+
+                {isLoading ? (
+                  <div className="text-center py-8">
+                    <p className="text-gray-500">
+                      {locale === 'ar' ? 'جاري التحميل...' : 'Loading...'}
+                    </p>
+                  </div>
+                ) : assignedCodes.length === 0 ? (
+                  <div className="text-center py-8">
+                    <p className="text-gray-500">
+                      {locale === 'ar' ? 'لا توجد رموز مخصصة' : 'No codes assigned'}
+                    </p>
+                  </div>
+                ) : (
+                  <div className="space-y-2">
+                    {assignedCodes.map((code) => (
+                      <div
+                        key={code.id}
+                        onClick={() => handleRemoveCode(code.id)}
+                        className={`flex items-center justify-between p-3 border rounded-lg transition-colors cursor-pointer hover:bg-red-50 ${
+                          selectedForRemoval.includes(code.id)
+                            ? 'bg-red-50 border-red-300'
+                            : 'bg-gray-50'
+                        }`}
+                      >
+                        <div className="flex items-center gap-3">
+                          <input
+                            type="checkbox"
+                            checked={selectedForRemoval.includes(code.id)}
+                            onChange={() => handleToggleSelection(code.id)}
+                            onClick={(e) => e.stopPropagation()}
+                            className="w-4 h-4 rounded border-gray-300"
+                          />
+                          <div>
+                            <p className="font-medium">{code.code}</p>
+                            <p className="text-sm text-gray-500">{code.role}</p>
+                          </div>
+                        </div>
+                        <div className="p-2 text-red-600">
+                          <Trash2 className="w-4 h-4" />
+                        </div>
+                      </div>
+                    ))}
+                  </div>
+                )}
+              </div>
+            </div>
+
+            {/* Second Column - Search & Available Codes */}
+            <div className="space-y-4">
+              <div className="border rounded-lg p-4">
+                <h3 className="font-semibold text-gray-900 mb-4">
+                  {locale === 'ar' ? 'الرموز المتاحة' : 'Available Codes'}
+                </h3>
+
+                <div className="mb-4">
+                  <div className="relative">
+                    <Search className="absolute start-3 top-1/2 -translate-y-1/2 w-4 h-4 text-gray-400" />
+                    <input
+                      type="text"
+                      placeholder={locale === 'ar' ? 'بحث...' : 'Search...'}
+                      value={search}
+                      onChange={(e) => setSearch(e.target.value)}
+                      className="w-full ps-10 pe-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-brand-500 focus:border-brand-500 outline-none"
+                    />
+                  </div>
+                </div>
+
+                {isLoading ? (
+                  <div className="text-center py-8">
+                    <p className="text-gray-500">
+                      {locale === 'ar' ? 'جاري التحميل...' : 'Loading...'}
+                    </p>
+                  </div>
+                ) : availableCodes.length === 0 ? (
+                  <div className="text-center py-8">
+                    <p className="text-gray-500">
+                      {locale === 'ar' ? 'لا توجد رموز متاحة' : 'No available codes'}
+                    </p>
+                  </div>
+                ) : (
+                  <div className="space-y-2">
+                    {availableCodes.map((code) => (
+                      <button
+                        key={code.id}
+                        onClick={() => handleAssignCode(code.id)}
+                        className="w-full flex items-center justify-between p-3 border rounded-lg hover:bg-green-50 transition-colors group text-start"
+                      >
+                        <div className="flex items-center gap-3">
+                          <div className="p-2 bg-blue-50 rounded group-hover:bg-green-100">
+                            <UserPlus className="w-4 h-4 text-blue-600 group-hover:text-green-600" />
+                          </div>
+                          <div>
+                            <p className="font-medium">{code.code}</p>
+                            <p className="text-sm text-gray-500">{code.role}</p>
+                          </div>
+                        </div>
+                        <div className="p-2 text-green-600 group-hover:text-green-700">
+                          <PlusIcon className="w-4 h-4" />
+                        </div>
+                      </button>
+                    ))}
+                  </div>
+                )}
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <div className="flex items-center justify-end gap-3 p-4 border-t">
+          <button
+            onClick={onClose}
+            className="px-4 py-2 text-gray-700 bg-gray-100 rounded-lg hover:bg-gray-200 transition-colors"
+          >
+            {locale === 'ar' ? 'إلغاء' : 'Cancel'}
+          </button>
+          <button
+            onClick={onClose}
+            className="px-4 py-2 text-white bg-blue-600 rounded-lg hover:bg-blue-700 transition-colors"
+          >
+            {locale === 'ar' ? 'حفظ' : 'Save'}
+          </button>
+        </div>
+      </div>
+    </div>
+  )
+}
 
 export function PhcCenterListPage() {
   const { locale } = useAppStore()
-  const navigate = useNavigate()
   const [data, setData] = useState<PhcCenter[]>([])
   const [isLoading, setIsLoading] = useState(true)
   const [search, setSearch] = useState('')
@@ -42,6 +374,8 @@ export function PhcCenterListPage() {
   const [pagination, setPagination] = useState({ pageIndex: 0, pageSize: 15 })
   const [totalCount, setTotalCount] = useState(0)
   const [zones, setZones] = useState<{ id: number; name: string }[]>([])
+  const [showAssignModal, setShowAssignModal] = useState(false)
+  const [assignPhcCenterId, setAssignPhcCenterId] = useState<number | null>(null)
 
   const fetchData = async () => {
     setIsLoading(true)
@@ -153,6 +487,11 @@ export function PhcCenterListPage() {
     }
   }
 
+  const openAssignModal = (id: number) => {
+    setAssignPhcCenterId(id)
+    setShowAssignModal(true)
+  }
+
   const columns = [
     columnHelper.display({
       id: 'select',
@@ -217,11 +556,11 @@ export function PhcCenterListPage() {
       cell: ({ row }) => (
         <div className="flex items-center gap-1">
           <button
-            onClick={() => navigate(`/phc-centers/${row.original.id}`)}
-            className="p-2 text-blue-600 hover:bg-blue-50 rounded"
-            title={locale === 'ar' ? 'تعديل' : 'Edit'}
+            onClick={() => openAssignModal(row.original.id)}
+            className="p-2 text-green-600 hover:bg-green-50 rounded"
+            title={locale === 'ar' ? 'تعيين الرموز' : 'Assign Codes'}
           >
-            <Edit2 className="w-4 h-4" />
+            <UserPlus className="w-4 h-4" />
           </button>
           <button
             onClick={() => handleDelete(row.original.id)}
@@ -264,7 +603,7 @@ export function PhcCenterListPage() {
             </Button>
             <Link to="/phc-centers/new">
               <Button size="sm">
-                <Plus className="w-4 h-4 me-2" />
+                <PlusIcon className="w-4 h-4 me-2" />
                 {locale === 'ar' ? 'إضافة مركز' : 'Add PHC Center'}
               </Button>
             </Link>
@@ -424,6 +763,16 @@ export function PhcCenterListPage() {
           selectedIds={selectedRows}
           type="phc-center"
           api={phcCenterApi}
+        />
+
+        <AssignCodesModal
+          isOpen={showAssignModal}
+          onClose={() => {
+            fetchData()
+            setShowAssignModal(false)
+            setAssignPhcCenterId(null)
+          }}
+          phcCenterId={assignPhcCenterId || 0}
         />
       </div>
     </Layout>

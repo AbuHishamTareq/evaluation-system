@@ -6,9 +6,12 @@ use Illuminate\Support\Facades\Schema;
 
 return new class extends Migration
 {
+    /**
+     * Run the migrations.
+     */
     public function up(): void
     {
-        Schema::create('incident_reports', static function (Blueprint $table) {
+        Schema::create('incident_reports', function (Blueprint $table) {
             $table->id();
             $table->foreignId('tenant_id')->constrained()->cascadeOnDelete();
             $table->foreignId('phc_center_id')->constrained()->cascadeOnDelete();
@@ -26,6 +29,7 @@ return new class extends Migration
             $table->date('due_date')->nullable();
             $table->enum('status', ['open', 'investigating', 'action_plan', 'resolved', 'closed'])->default('open');
             $table->timestamp('resolved_at')->nullable();
+            $table->softDeletes();
             $table->timestamps();
 
             $table->index('tenant_id');
@@ -36,6 +40,9 @@ return new class extends Migration
         });
     }
 
+    /**
+     * Reverse the migrations.
+     */
     public function down(): void
     {
         Schema::dropIfExists('incident_reports');

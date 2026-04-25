@@ -24,6 +24,7 @@ api.interceptors.response.use(
   (error) => {
     if (error.response?.status === 401) {
       localStorage.removeItem('token')
+      window.location.href = '/login'
     }
     return Promise.reject(error)
   }
@@ -80,23 +81,6 @@ export interface CreateStaffData {
 
 export type UpdateStaffData = Partial<CreateStaffData>
 
-export interface CreateIncidentData {
-  type: string;
-  severity: string;
-  title: string;
-  description: string;
-}
-
-export type UpdateIncidentData = Partial<CreateIncidentData>
-
-export interface CreateIssueData {
-  title: string;
-  description: string;
-  priority: string;
-}
-
-
-
 export const staffApi = {
   getAll: (params?: { page?: number; per_page?: number; search?: string; status?: string; department_id?: number }) =>
     api.get('/v1/staff-profiles', { params }),
@@ -107,18 +91,12 @@ export const staffApi = {
   deleteBulk: (ids: number[]) => api.post('/v1/staff-profiles/bulk-delete', { ids }),
   updateStatusBulk: (ids: number[], status: 'active' | 'suspended' | 'on_leave' | 'terminated') =>
     api.post('/v1/staff-profiles/bulk-update-status', { ids, status }),
-  toggleStatus: (id: number) => api.patch(`/v1/staff-profiles/${id}/toggle-status`, {}, {
-      headers: { 'Content-Type': 'application/json' },
-    }),
+  toggleStatus: (id: number) => api.patch(`/v1/staff-profiles/${id}/toggle-status`, {}, { headers: { 'Content-Type': 'application/json' } }),
   getNextEmployeeId: () => api.get('/v1/staff-profiles/next-id'),
   uploadPhoto: (id: number, formData: FormData) =>
-    api.post(`/v1/staff-profiles/${id}/photo`, formData, {
-      headers: { 'Content-Type': 'multipart/form-data' },
-    }),
+    api.post(`/v1/staff-profiles/${id}/photo`, formData, { headers: { 'Content-Type': 'multipart/form-data' } }),
   uploadCertificate: (id: number, formData: FormData) =>
-    api.post(`/v1/staff-profiles/${id}/certificate`, formData, {
-      headers: { 'Content-Type': 'multipart/form-data' },
-    }),
+    api.post(`/v1/staff-profiles/${id}/certificate`, formData, { headers: { 'Content-Type': 'multipart/form-data' } }),
   getEducations: (id: number) => api.get(`/v1/staff-profiles/${id}/educations`),
   addEducation: (id: number, data: { school_name: string; degree: string; field_of_study?: string; gpa?: number; start_date?: string; graduation_date?: string; notes?: string }) =>
     api.post(`/v1/staff-profiles/${id}/educations`, data),
@@ -143,21 +121,12 @@ export const staffApi = {
   importFile: (file: File) => {
     const formData = new FormData()
     formData.append('file', file)
-    return api.post('/v1/staff-profiles/import', formData, {
-      headers: { 'Content-Type': 'multipart/form-data' },
-    })
+    return api.post('/v1/staff-profiles/import', formData, { headers: { 'Content-Type': 'multipart/form-data' } })
   },
   exportFile: (format: 'csv' | 'excel' | 'pdf' = 'csv', params?: { status?: string; department_id?: number }) =>
-    api.get('/v1/staff-profiles/export', {
-      params: { ...params, format },
-      responseType: 'blob',
-    }),
+    api.get('/v1/staff-profiles/export', { params: { ...params, format }, responseType: 'blob' }),
   downloadTemplate: (format: 'csv' | 'excel' = 'csv') =>
-    api.get('/v1/staff-profiles/template', {
-      params: { format },
-      responseType: 'blob',
-    }),
-  getTemplates: () => api.get('/v1/staff-profiles/templates'),
+    api.get('/v1/staff-profiles/template', { params: { format }, responseType: 'blob' }),
 }
 
 export interface CreateDepartmentData {
@@ -177,21 +146,14 @@ export const departmentApi = {
   create: (data: CreateDepartmentData) => api.post('/v1/departments', data),
   update: (id: number, data: UpdateDepartmentData) => api.put(`/v1/departments/${id}`, data),
   delete: (id: number) => api.delete(`/v1/departments/${id}`),
-  toggleStatus: (id: number) => api.patch(`/v1/departments/${id}/toggle-status`, {}, {
-      headers: { 'Content-Type': 'application/json' },
-    }),
+  toggleStatus: (id: number) => api.patch(`/v1/departments/${id}/toggle-status`, {}, { headers: { 'Content-Type': 'application/json' } }),
   importFile: (file: File) => {
     const formData = new FormData()
     formData.append('file', file)
-    return api.post('/v1/departments/import', formData, {
-      headers: { 'Content-Type': 'multipart/form-data' },
-    })
+    return api.post('/v1/departments/import', formData, { headers: { 'Content-Type': 'multipart/form-data' } })
   },
   exportFile: (format: 'csv' | 'excel' | 'pdf' = 'csv', params?: { ids?: string }) =>
-    api.get('/v1/departments/export', {
-      params: { ...params, format },
-      responseType: 'blob',
-    }),
+    api.get('/v1/departments/export', { params: { ...params, format }, responseType: 'blob' }),
 }
 
 export interface CreateZoneData {
@@ -210,21 +172,14 @@ export const zoneApi = {
   create: (data: CreateZoneData) => api.post('/v1/zones', data),
   update: (id: number, data: UpdateZoneData) => api.put(`/v1/zones/${id}`, data),
   delete: (id: number) => api.delete(`/v1/zones/${id}`),
-  toggleStatus: (id: number) => api.patch(`/v1/zones/${id}/toggle-status`, {}, {
-    headers: { 'Content-Type': 'application/json' },
-  }),
-  importFile: (_file: File) => {
+  toggleStatus: (id: number) => api.patch(`/v1/zones/${id}/toggle-status`, {}, { headers: { 'Content-Type': 'application/json' } }),
+  importFile: (file: File) => {
     const formData = new FormData()
-    formData.append('file', _file)
-    return api.post('/v1/zones/import', formData, {
-      headers: { 'Content-Type': 'multipart/form-data' },
-    })
+    formData.append('file', file)
+    return api.post('/v1/zones/import', formData, { headers: { 'Content-Type': 'multipart/form-data' } })
   },
   exportFile: (format: 'csv' | 'excel' | 'pdf' = 'csv', params?: { ids?: string }) =>
-    api.get('/v1/zones/export', {
-      params: { ...params, format },
-      responseType: 'blob',
-    }),
+    api.get('/v1/zones/export', { params: { ...params, format }, responseType: 'blob' }),
 }
 
 export interface CreatePhcCenterData {
@@ -233,34 +188,43 @@ export interface CreatePhcCenterData {
   code: string
   address?: string
   phone?: string
-  region_id: number
+  region_id?: number
   is_active?: boolean
 }
 
-export type UpdatePhcCenterData = Partial<CreatePhcCenterData>
+export interface UpdatePhcCenterData extends Partial<CreatePhcCenterData> {}
 
 export const phcCenterApi = {
-  getAll: (params?: { region_id?: number; is_active?: boolean | string; search?: string; page?: number; per_page?: number }) =>
+  getAll: (params?: { region_id?: number | string; is_active?: boolean | string; search?: string; page?: number; per_page?: number }) =>
     api.get('/v1/phc-centers', { params }),
   getById: (id: number) => api.get(`/v1/phc-centers/${id}`),
   create: (data: CreatePhcCenterData) => api.post('/v1/phc-centers', data),
   update: (id: number, data: UpdatePhcCenterData) => api.put(`/v1/phc-centers/${id}`, data),
   delete: (id: number) => api.delete(`/v1/phc-centers/${id}`),
-  toggleStatus: (id: number) => api.patch(`/v1/phc-centers/${id}/toggle-status`, {}, {
-    headers: { 'Content-Type': 'application/json' },
-  }),
-  importFile: (file: File) => {
+  toggleStatus: (id: number) => api.patch(`/v1/phc-centers/${id}/toggle-status`),
+  importFile: (file: File, _format?: any) => {
     const formData = new FormData()
     formData.append('file', file)
-    return api.post('/v1/phc-centers/import', formData, {
-      headers: { 'Content-Type': 'multipart/form-data' },
-    })
+    return api.post('/v1/phc-centers/import', formData, { headers: { 'Content-Type': 'multipart/form-data' } })
   },
+  import: (file: File) => {
+    const formData = new FormData()
+    formData.append('file', file)
+    return api.post('/v1/phc-centers/import', formData, { headers: { 'Content-Type': 'multipart/form-data' } })
+  },
+  export: (params?: { ids?: string; format?: string }) => api.get('/v1/phc-centers/export', { params: { ...params, responseType: 'blob' } }),
   exportFile: (format: 'csv' | 'excel' | 'pdf' = 'csv', params?: { ids?: string }) =>
-    api.get('/v1/phc-centers/export', {
-      params: { ...params, format },
-      responseType: 'blob',
-    }),
+    api.get('/v1/phc-centers/export', { params: { ...params, format }, responseType: 'blob' }),
+  getAssignedTeamBasedCodes: (phcCenterId: number) =>
+    api.get(`/v1/phc-centers/${phcCenterId}/team-based-codes/assigned`),
+  getAvailableTeamBasedCodes: (phcCenterId: number, params?: { is_active?: boolean | string; search?: string; page?: number; per_page?: number }) =>
+    api.get(`/v1/phc-centers/${phcCenterId}/team-based-codes/available`, { params }),
+  assignTeamBasedCode: (phcCenterId: number, teamBasedCodeId: number) =>
+    api.post(`/v1/phc-centers/${phcCenterId}/team-based-codes/assign`, { team_based_code_ids: [teamBasedCodeId] }),
+  removeTeamBasedCode: (phcCenterId: number, teamBasedCodeId: number) =>
+    api.delete(`/v1/phc-centers/${phcCenterId}/team-based-codes/${teamBasedCodeId}`),
+  removeTeamBasedCodes: (phcCenterId: number, teamBasedCodeIds: number[]) =>
+    api.delete(`/v1/phc-centers/${phcCenterId}/team-based-codes`, { data: { team_based_code_ids: teamBasedCodeIds } }),
 }
 
 export interface CreateNationalityData {
@@ -279,21 +243,14 @@ export const nationalityApi = {
   create: (data: CreateNationalityData) => api.post('/v1/nationalities', data),
   update: (id: number, data: UpdateNationalityData) => api.put(`/v1/nationalities/${id}`, data),
   delete: (id: number) => api.delete(`/v1/nationalities/${id}`),
-  toggleStatus: (id: number) => api.patch(`/v1/nationalities/${id}/toggle-status`, {}, {
-    headers: { 'Content-Type': 'application/json' },
-  }),
+  toggleStatus: (id: number) => api.patch(`/v1/nationalities/${id}/toggle-status`, {}, { headers: { 'Content-Type': 'application/json' } }),
   importFile: (file: File) => {
     const formData = new FormData()
     formData.append('file', file)
-    return api.post('/v1/specialties/import', formData, {
-      headers: { 'Content-Type': 'multipart/form-data' },
-    })
+    return api.post('/v1/specialties/import', formData, { headers: { 'Content-Type': 'multipart/form-data' } })
   },
   exportFile: (format: 'csv' | 'excel' | 'pdf' = 'csv', params?: { ids?: string }) =>
-    api.get('/v1/nationalities/export', {
-      params: { ...params, format },
-      responseType: 'blob',
-    }),
+    api.get('/v1/nationalities/export', { params: { ...params, format }, responseType: 'blob' }),
 }
 
 export interface CreateMedicalFieldData {
@@ -312,21 +269,14 @@ export const medicalFieldApi = {
   create: (data: CreateMedicalFieldData) => api.post('/v1/medical-fields', data),
   update: (id: number, data: UpdateMedicalFieldData) => api.put(`/v1/medical-fields/${id}`, data),
   delete: (id: number) => api.delete(`/v1/medical-fields/${id}`),
-  toggleStatus: (id: number) => api.patch(`/v1/medical-fields/${id}/toggle-status`, {}, {
-    headers: { 'Content-Type': 'application/json' },
-  }),
+  toggleStatus: (id: number) => api.patch(`/v1/medical-fields/${id}/toggle-status`, {}, { headers: { 'Content-Type': 'application/json' } }),
   importFile: (file: File) => {
     const formData = new FormData()
     formData.append('file', file)
-    return api.post('/v1/medical-fields/import', formData, {
-      headers: { 'Content-Type': 'multipart/form-data' },
-    })
+    return api.post('/v1/medical-fields/import', formData, { headers: { 'Content-Type': 'multipart/form-data' } })
   },
   exportFile: (format: 'csv' | 'excel' | 'pdf' = 'csv', params?: { ids?: string }) =>
-    api.get('/v1/medical-fields/export', {
-      params: { ...params, format },
-      responseType: 'blob',
-    }),
+    api.get('/v1/medical-fields/export', { params: { ...params, format }, responseType: 'blob' }),
 }
 
 export interface CreateSpecialtyData {
@@ -346,21 +296,14 @@ export const specialtyApi = {
   create: (data: CreateSpecialtyData) => api.post('/v1/specialties', data),
   update: (id: number, data: UpdateSpecialtyData) => api.put(`/v1/specialties/${id}`, data),
   delete: (id: number) => api.delete(`/v1/specialties/${id}`),
-  toggleStatus: (id: number) => api.patch(`/v1/specialties/${id}/toggle-status`, {}, {
-    headers: { 'Content-Type': 'application/json' },
-  }),
+  toggleStatus: (id: number) => api.patch(`/v1/specialties/${id}/toggle-status`, {}, { headers: { 'Content-Type': 'application/json' } }),
   importFile: (file: File) => {
     const formData = new FormData()
     formData.append('file', file)
-    return api.post('/v1/specialties/import', formData, {
-      headers: { 'Content-Type': 'multipart/form-data' },
-    })
+    return api.post('/v1/specialties/import', formData, { headers: { 'Content-Type': 'multipart/form-data' } })
   },
   exportFile: (format: 'csv' | 'excel' | 'pdf' = 'csv', params?: { ids?: string }) =>
-    api.get('/v1/specialties/export', {
-      params: { ...params, format },
-      responseType: 'blob',
-    }),
+    api.get('/v1/specialties/export', { params: { ...params, format }, responseType: 'blob' }),
 }
 
 export interface CreateRankData {
@@ -380,21 +323,14 @@ export const rankApi = {
   create: (data: CreateRankData) => api.post('/v1/ranks', data),
   update: (id: number, data: UpdateRankData) => api.put(`/v1/ranks/${id}`, data),
   delete: (id: number) => api.delete(`/v1/ranks/${id}`),
-  toggleStatus: (id: number) => api.patch(`/v1/ranks/${id}/toggle-status`, {}, {
-    headers: { 'Content-Type': 'application/json' },
-  }),
+  toggleStatus: (id: number) => api.patch(`/v1/ranks/${id}/toggle-status`, {}, { headers: { 'Content-Type': 'application/json' } }),
   importFile: (file: File) => {
     const formData = new FormData()
     formData.append('file', file)
-    return api.post('/v1/ranks/import', formData, {
-      headers: { 'Content-Type': 'multipart/form-data' },
-    })
+    return api.post('/v1/ranks/import', formData, { headers: { 'Content-Type': 'multipart/form-data' } })
   },
   exportFile: (format: 'csv' | 'excel' | 'pdf' = 'csv', params?: { ids?: string }) =>
-    api.get('/v1/ranks/export', {
-      params: { ...params, format },
-      responseType: 'blob',
-    }),
+    api.get('/v1/ranks/export', { params: { ...params, format }, responseType: 'blob' }),
 }
 
 export interface CreateShcCategoryData {
@@ -416,22 +352,24 @@ export const shcCategoryApi = {
   create: (data: CreateShcCategoryData) => api.post('/v1/shc-categories', data),
   update: (id: number, data: UpdateShcCategoryData) => api.put(`/v1/shc-categories/${id}`, data),
   delete: (id: number) => api.delete(`/v1/shc-categories/${id}`),
-  toggleStatus: (id: number) => api.patch(`/v1/shc-categories/${id}/toggle-status`, {}, {
-    headers: { 'Content-Type': 'application/json' },
-  }),
+  toggleStatus: (id: number) => api.patch(`/v1/shc-categories/${id}/toggle-status`, {}, { headers: { 'Content-Type': 'application/json' } }),
   importFile: (file: File) => {
     const formData = new FormData()
     formData.append('file', file)
-    return api.post('/v1/shc-categories/import', formData, {
-      headers: { 'Content-Type': 'multipart/form-data' },
-    })
+    return api.post('/v1/shc-categories/import', formData, { headers: { 'Content-Type': 'multipart/form-data' } })
   },
   exportFile: (format: 'csv' | 'excel' | 'pdf' = 'csv', params?: { ids?: string }) =>
-    api.get('/v1/shc-categories/export', {
-      params: { ...params, format },
-      responseType: 'blob',
-    }),
+    api.get('/v1/shc-categories/export', { params: { ...params, format }, responseType: 'blob' }),
 }
+
+export interface CreateIncidentData {
+  type: string;
+  severity: string;
+  title: string;
+  description: string;
+}
+
+export type UpdateIncidentData = Partial<CreateIncidentData>
 
 export const incidentApi = {
   getAll: (params?: { page?: number; status?: string; type?: string }) =>
@@ -439,6 +377,12 @@ export const incidentApi = {
   getDashboard: () => api.get('/v1/incident-reports/dashboard'),
   create: (data: CreateIncidentData) => api.post('/v1/incident-reports', data),
   update: (id: number, data: UpdateIncidentData) => api.put(`/v1/incident-reports/${id}`, data),
+}
+
+export interface CreateIssueData {
+  title: string;
+  description: string;
+  priority: string;
 }
 
 export const issueApi = {
@@ -497,7 +441,7 @@ export const userApi = {
   getAvailableRoles: () => api.get('/v1/users/roles'),
 }
 
-export type CreateTeamBasedCodeData = {
+export interface CreateTeamBasedCodeData {
   code: string
   role: string
   is_active?: boolean
@@ -513,19 +457,12 @@ export const teamBasedCodeApi = {
   update: (id: number, data: UpdateTeamBasedCodeData) => api.put(`/v1/team-based-codes/${id}`, data),
   delete: (id: number) => api.delete(`/v1/team-based-codes/${id}`),
   toggleStatus: (id: number) => api.patch(`/v1/team-based-codes/${id}/toggle-status`),
-  export: (params?: { ids?: string; format?: string }) => api.get('/v1/team-based-codes/export', {
-    params: { ...params, responseType: 'blob' },
-  }),
+  export: (params?: { ids?: string; format?: string }) => api.get('/v1/team-based-codes/export', { params: { ...params, responseType: 'blob' } }),
   exportFile: (format: 'csv' | 'excel' | 'pdf' = 'csv', params?: { ids?: string }) =>
-    api.get('/v1/team-based-codes/export', {
-      params: { ...params, format },
-      responseType: 'blob',
-    }),
+    api.get('/v1/team-based-codes/export', { params: { ...params, format }, responseType: 'blob' }),
   importFile: (file: File) => {
     const formData = new FormData()
     formData.append('file', file)
-    return api.post('/v1/team-based-codes/import', formData, {
-      headers: { 'Content-Type': 'multipart/form-data' },
-    })
+    return api.post('/v1/team-based-codes/import', formData, { headers: { 'Content-Type': 'multipart/form-data' } })
   },
 }

@@ -8,7 +8,7 @@ return new class extends Migration
 {
     public function up(): void
     {
-        Schema::create('evaluation_templates', static function (Blueprint $table) {
+        Schema::create('evaluation_templates', function (Blueprint $table) {
             $table->id();
             $table->foreignId('tenant_id')->constrained()->cascadeOnDelete();
             $table->string('name');
@@ -16,12 +16,13 @@ return new class extends Migration
             $table->text('description')->nullable();
             $table->text('description_ar')->nullable();
             $table->boolean('is_active')->default(true);
+            $table->softDeletes();
             $table->timestamps();
 
             $table->index('tenant_id');
         });
 
-        Schema::create('evaluation_questions', static function (Blueprint $table) {
+        Schema::create('evaluation_questions', function (Blueprint $table) {
             $table->id();
             $table->foreignId('template_id')->constrained('evaluation_templates')->cascadeOnDelete();
             $table->foreignId('parent_id')->nullable()->constrained('evaluation_questions')->nullOnDelete();
@@ -32,10 +33,11 @@ return new class extends Migration
             $table->text('options')->nullable();
             $table->text('options_ar')->nullable();
             $table->boolean('is_required')->default(true);
+            $table->softDeletes();
             $table->timestamps();
         });
 
-        Schema::create('evaluations', static function (Blueprint $table) {
+        Schema::create('evaluations', function (Blueprint $table) {
             $table->id();
             $table->foreignId('tenant_id')->constrained()->cascadeOnDelete();
             $table->foreignId('template_id')->constrained('evaluation_templates')->cascadeOnDelete();
@@ -48,6 +50,7 @@ return new class extends Migration
             $table->enum('status', ['pending', 'in_progress', 'completed'])->default('pending');
             $table->text('comments')->nullable();
             $table->timestamp('completed_at')->nullable();
+            $table->softDeletes();
             $table->timestamps();
 
             $table->index('tenant_id');
@@ -55,16 +58,17 @@ return new class extends Migration
             $table->index('status');
         });
 
-        Schema::create('evaluation_responses', static function (Blueprint $table) {
+        Schema::create('evaluation_responses', function (Blueprint $table) {
             $table->id();
             $table->foreignId('evaluation_id')->constrained()->cascadeOnDelete();
             $table->foreignId('question_id')->constrained('evaluation_questions')->cascadeOnDelete();
             $table->text('answer')->nullable();
             $table->integer('score')->nullable();
+            $table->softDeletes();
             $table->timestamps();
         });
 
-        Schema::create('action_plans', static function (Blueprint $table) {
+        Schema::create('action_plans', function (Blueprint $table) {
             $table->id();
             $table->foreignId('evaluation_id')->constrained()->cascadeOnDelete();
             $table->foreignId('staff_profile_id')->constrained()->cascadeOnDelete();
@@ -74,6 +78,7 @@ return new class extends Migration
             $table->enum('status', ['pending', 'in_progress', 'completed'])->default('pending');
             $table->date('due_date')->nullable();
             $table->timestamp('completed_at')->nullable();
+            $table->softDeletes();
             $table->timestamps();
         });
     }

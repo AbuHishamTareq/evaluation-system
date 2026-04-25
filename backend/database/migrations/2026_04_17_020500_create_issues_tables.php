@@ -24,6 +24,7 @@ return new class extends Migration
             $table->timestamp('resolved_at')->nullable();
             $table->timestamp('closed_at')->nullable();
             $table->timestamps();
+            $table->softDeletes();
 
             $table->index('tenant_id');
             $table->index('phc_center_id');
@@ -37,6 +38,7 @@ return new class extends Migration
             $table->foreignId('user_id')->constrained()->cascadeOnDelete();
             $table->text('comment');
             $table->timestamps();
+            $table->softDeletes();
         });
 
         Schema::create('issue_attachments', static function (Blueprint $table) {
@@ -48,6 +50,7 @@ return new class extends Migration
             $table->string('mime_type');
             $table->integer('file_size');
             $table->timestamps();
+            $table->softDeletes();
         });
     }
 

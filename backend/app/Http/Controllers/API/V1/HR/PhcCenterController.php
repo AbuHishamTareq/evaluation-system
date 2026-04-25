@@ -8,6 +8,7 @@ use App\Http\Requests\UpdatePhcCenterRequest;
 use App\Http\Traits\CachesIndex;
 use App\Models\PhcCenter;
 use App\Models\Region;
+use App\Models\TeamBasedCode;
 use App\Services\Dashboard\ExportService;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
@@ -294,5 +295,130 @@ class PhcCenterController extends Controller
         }
 
         return collect($data);
+    }
+
+    /**
+     * Get assigned team based codes for a PHC center
+     */
+    public function getAssignedTeamBasedCodes(PhcCenter $phcCenter): JsonResponse
+    {
+        $assignedCodes = $phcCenter->teamBasedCodes()->get();
+
+        return response()->json([
+            'data' => $assignedCodes->map(function ($code) {
+                return [
+                    'id' => $code->id,
+                    'code' => $code->code,
+                    'role' => $code->role,
+                    'is_active' => $code->is_active,
+                    'pivot' => [
+                        'assigned_at' => $code->pivot->created_at,
+                    ]
+                ];
+            }),
+        ]);
+    }
+
+    /**
+     * Get team based codes that are NOT assigned to any PHC center
+     */
+    public function getAvailableTeamBasedCodes(PhcCenter $phcCenter, Request $request): JsonResponse
+    {
+        $query = TeamBasedCode::query();
+
+        if ($request->has('is_active')) {
+            $query->where('is_active', $request->boolean('is_active'));
+        }
+
+        if ($request->has('search')) {
+            $search = $request->input('search');
+            $query->where(function ($q) use ($search) {
+                $q->where('code', 'like', "%{$search}%")
+                    ->orWhere('role', 'like', "%{$search}%");
+            });
+        }
+
+        // Exclude codes assigned to ANY PHC center (prevents duplicate team codes between PHCs)
+        $query->whereDoesntHave('phcCenters');
+
+        $perPage = $request->input('per_page', 15);
+        $availableCodes = $query->orderByDesc('created_at')->paginate($perPage);
+
+        return response()->json([
+            'data' => $availableCodes->items(),
+            'meta' => [
+                'total' => $availableCodes->total(),
+                'current_page' => $availableCodes->currentPage(),
+                'last_page' => $availableCodes->lastPage(),
+                'per_page' => $availableCodes->perPage(),
+            ],
+        ]);
+    }
+
+    /**
+     * Assign team based codes to PHC center (accepts array in request body)
+     */
+    public function assignTeamBasedCodes(Request $request, PhcCenter $phcCenter): JsonResponse
+    {
+        $codeIds = $request->input('team_based_code_ids', []);
+
+        if (empty($codeIds)) {
+            return response()->json([
+                'message' => 'No team based codes provided',
+            ], 422);
+        }
+
+        $phcCenter->teamBasedCodes()->syncWithoutDetaching($codeIds);
+
+        return response()->json([
+            'message' => 'Team based codes assigned successfully',
+        ], 201);
+    }
+
+    /**
+     * Assign a team based code to PHC center (single, for backward compatibility)
+     */
+    public function assignTeamBasedCode(PhcCenter $phcCenter, TeamBasedCode $teamBasedCode): JsonResponse
+    {
+        // Attach the code to the PHC center
+        $phcCenter->teamBasedCodes()->attach($teamBasedCode->id);
+
+        return response()->json([
+            'message' => 'Team based code assigned successfully',
+        ], 201);
+    }
+
+    /**
+     * Remove a team based code from PHC center
+     */
+    public function removeTeamBasedCode(PhcCenter $phcCenter, TeamBasedCode $teamBasedCode): JsonResponse
+    {
+        $phcCenter->teamBasedCodes()->detach($teamBasedCode->id);
+
+        return response()->json([
+            'message' => 'Team based code removed successfully',
+        ]);
+    }
+
+    /**
+     * Remove multiple team based codes from PHC center
+     */
+    public function removeTeamBasedCodes(PhcCenter $phcCenter, Request $request): JsonResponse
+    {
+        $codeIds = $request->input('team_based_code_ids', []);
+
+        if (empty($codeIds)) {
+            return response()->json([
+                'message' => 'No team based codes provided for removal',
+            ], 422);
+        }
+
+        // Detach the codes from the PHC center
+        $phcCenter->teamBasedCodes()->detach($codeIds);
+
+        return response()->json([
+            'message' => 'Team based codes removed successfully',
+            'removed_count' => count($codeIds),
+        ]);
     }
 }

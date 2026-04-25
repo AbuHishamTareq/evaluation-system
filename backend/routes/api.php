@@ -76,6 +76,13 @@ Route::prefix('v1')->group(function () {
             Route::get('phc-centers/export', [PhcCenterController::class, 'export']);
             Route::patch('phc-centers/{phcCenter}/toggle-status', [PhcCenterController::class, 'toggleStatus']);
             Route::apiResource('phc-centers', PhcCenterController::class);
+            
+            // PHC Center Team Based Code Assignment Routes
+            Route::get('phc-centers/{phcCenter}/team-based-codes/assigned', [PhcCenterController::class, 'getAssignedTeamBasedCodes']);
+            Route::get('phc-centers/{phcCenter}/team-based-codes/available', [PhcCenterController::class, 'getAvailableTeamBasedCodes']);
+            Route::post('phc-centers/{phcCenter}/team-based-codes/assign', [PhcCenterController::class, 'assignTeamBasedCodes']);
+            Route::delete('phc-centers/{phcCenter}/team-based-codes/{teamBasedCode}', [PhcCenterController::class, 'removeTeamBasedCode']);
+            Route::delete('phc-centers/{phcCenter}/team-based-codes', [PhcCenterController::class, 'removeTeamBasedCodes']);
 
             Route::post('nationalities/import', [NationalityController::class, 'import']);
             Route::get('nationalities/export', [NationalityController::class, 'export']);
