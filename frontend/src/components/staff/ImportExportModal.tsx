@@ -70,6 +70,16 @@ export function ImportExportModal({
         downloadTemplate: locale === 'ar' ? 'تحميل قالب' : 'Download Template',
       }
     }
+    if (type === 'nationality') {
+      return {
+        title: locale === 'ar' ? 'استيراد/تصدير الجنسيات' : 'Import/Export Nationalities',
+        import: locale === 'ar' ? 'استيراد جنسيات' : 'Import Nationalities',
+        export: locale === 'ar' ? 'تصدير جنسيات' : 'Export Nationalities',
+        importSuccess: locale === 'ar' ? 'تم استيراد الجنسيات بنجاح' : 'Nationalities imported successfully',
+        exportSuccess: locale === 'ar' ? 'تم تصدير البيانات بنجاح' : 'Export completed',
+        downloadTemplate: locale === 'ar' ? 'تحميل قالب' : 'Download Template',
+      }
+    }
     if (type === 'teamBasedCode') {
       return {
         title: locale === 'ar' ? 'استيراد/تصدير الرمزية' : 'Import/Export Team Based Codes',
@@ -77,6 +87,46 @@ export function ImportExportModal({
         export: locale === 'ar' ? 'تصدير' : 'Export',
         importSuccess: locale === 'ar' ? 'تم الاستيراد بنجاح' : 'Imported successfully',
         exportSuccess: locale === 'ar' ? 'تم التصدير بنجاح' : 'Exported successfully',
+        downloadTemplate: locale === 'ar' ? 'تحميل قالب' : 'Download Template',
+      }
+    }
+    if (type === 'medicalField') {
+      return {
+        title: locale === 'ar' ? 'استيراد/تصدير الحقول الطبية' : 'Import/Export Medical Fields',
+        import: locale === 'ar' ? 'استيراد حقول طبية' : 'Import Medical Fields',
+        export: locale === 'ar' ? 'تصدير حقول طبية' : 'Export Medical Fields',
+        importSuccess: locale === 'ar' ? 'تم استيراد الحقول الطبية بنجاح' : 'Medical Fields imported successfully',
+        exportSuccess: locale === 'ar' ? 'تم تصدير البيانات بنجاح' : 'Export completed',
+        downloadTemplate: locale === 'ar' ? 'تحميل قالب' : 'Download Template',
+      }
+    }
+    if (type === 'specialty') {
+      return {
+        title: locale === 'ar' ? 'استيراد/تصدير التخصصات' : 'Import/Export Specialties',
+        import: locale === 'ar' ? 'استيراد تخصصات' : 'Import Specialties',
+        export: locale === 'ar' ? 'تصدير تخصصات' : 'Export Specialties',
+        importSuccess: locale === 'ar' ? 'تم استيراد التخصصات بنجاح' : 'Specialties imported successfully',
+        exportSuccess: locale === 'ar' ? 'تم تصدير البيانات بنجاح' : 'Export completed',
+        downloadTemplate: locale === 'ar' ? 'تحميل قالب' : 'Download Template',
+      }
+    }
+    if (type === 'rank') {
+      return {
+        title: locale === 'ar' ? 'استيراد/تصدير الرتب' : 'Import/Export Ranks',
+        import: locale === 'ar' ? 'استيراد رتب' : 'Import Ranks',
+        export: locale === 'ar' ? 'تصدير رتب' : 'Export Ranks',
+        importSuccess: locale === 'ar' ? 'تم استيراد الرتب بنجاح' : 'Ranks imported successfully',
+        exportSuccess: locale === 'ar' ? 'تم تصدير البيانات بنجاح' : 'Export completed',
+        downloadTemplate: locale === 'ar' ? 'تحميل قالب' : 'Download Template',
+      }
+    }
+    if (type === 'shcCategory') {
+      return {
+        title: locale === 'ar' ? 'استيراد/تصدير فئات العمل الصحي' : 'Import/Export SHC Categories',
+        import: locale === 'ar' ? 'استيراد فئات' : 'Import SHC Categories',
+        export: locale === 'ar' ? 'تصدير فئات' : 'Export SHC Categories',
+        importSuccess: locale === 'ar' ? 'تم استيراد الفئات بنجاح' : 'SHC Categories imported successfully',
+        exportSuccess: locale === 'ar' ? 'تم تصدير البيانات بنجاح' : 'Export completed',
         downloadTemplate: locale === 'ar' ? 'تحميل قالب' : 'Download Template',
       }
     }
@@ -137,7 +187,9 @@ export function ImportExportModal({
       await usedApi.importFile(file, importFormat)
       setSuccess(type === 'department'
         ? 'تم استيراد الأقسام بنجاح'
-        : 'تم استيراد الموظفين بنجاح')
+        : type === 'nationality'
+          ? 'تم استيراد الجنسيات بنجاح'
+          : 'تم استيراد الموظفين بنجاح')
       onComplete()
       setTimeout(onClose, 2000)
     } catch (err: unknown) {
@@ -171,6 +223,26 @@ export function ImportExportModal({
         const headers = ['Name', 'Name (Arabic)', 'Code', 'Region', 'Address', 'Phone', 'Status']
         const sampleData = ['North Riyadh PHC', 'مركز شمال الرياض الصحي', 'NR-PHC-001', 'Riyadh Region', 'Kingdom Avenue, Riyadh', '+966-11-123-4567', 'active']
         createTemplateFile(headers, sampleData, format, 'phc_center_import_template')
+        return
+      } else if (type === 'medicalField') {
+        const headers = ['Name', 'Name (Arabic)', 'Code', 'Status']
+        const sampleData = ['Medicine', 'طب عام', 'MED', 'active']
+        createTemplateFile(headers, sampleData, format, 'medical_field_import_template')
+        return
+      } else if (type === 'specialty') {
+        const headers = ['Name', 'Name (Arabic)', 'Code', 'Medical Field', 'Status']
+        const sampleData = ['Cardiology', 'أمراض القلب', 'CARD', 'Medicine', 'active']
+        createTemplateFile(headers, sampleData, format, 'specialty_import_template')
+        return
+      } else if (type === 'rank') {
+        const headers = ['Name', 'Name (Arabic)', 'Code', 'Medical Field', 'Specialty', 'Status']
+        const sampleData = ['Specialist', 'أخصائي', 'SPEC', 'Medicine and Surgery', 'Cardiology', 'active']
+        createTemplateFile(headers, sampleData, format, 'rank_import_template')
+        return
+      } else if (type === 'shcCategory') {
+        const headers = ['Code', 'Medical Field', 'Specialty', 'Rank', 'Status']
+        const sampleData = ['MED-SPEC-1', 'Medicine and Surgery', 'General', 'Specialist', 'active']
+        createTemplateFile(headers, sampleData, format, 'shc_category_import_template')
         return
       } else if (type === 'staff') {
         const response = await usedApi.downloadTemplate?.(format)

@@ -8,7 +8,7 @@ use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Illuminate\Database\Eloquent\SoftDeletes;
 
-#[Fillable(['medical_field_id', 'specialty_id', 'rank_id', 'code', 'description', 'description_ar', 'is_active'])]
+#[Fillable(['medical_field_id', 'specialty_id', 'rank_id', 'code', 'is_active'])]
 class ShcCategory extends Model
 {
     use HasFactory, SoftDeletes;

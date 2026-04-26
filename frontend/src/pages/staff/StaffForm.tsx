@@ -7,7 +7,7 @@ import { Button } from '@/components/ui/Button'
 import { Input } from '@/components/ui/Input'
 import { Select } from '@/components/ui/Select'
 import { SearchableSelect } from '@/components/ui/SearchableSelect'
-import { User, Phone, Briefcase, Award, FileText, Upload, X, Image as ImageIcon } from 'lucide-react'
+import { User, Phone, Briefcase, Award, FileText, Upload, X, Image as ImageIcon, Check } from 'lucide-react'
 
 interface FormData {
   employee_id: string
@@ -157,9 +157,13 @@ export function StaffForm() {
     }
   }, [])
 
-  const fetchRanks = useCallback(async (search?: string) => {
+  const fetchRanks = useCallback(async (specialtyId?: number, search?: string) => {
     try {
-      const res = await rankApi.getAll({ is_active: true, search, per_page: 100 })
+      const params: Record<string, unknown> = { is_active: true, search, per_page: 100 }
+      if (specialtyId) {
+        params.specialty_id = specialtyId
+      }
+      const res = await rankApi.getAll(params)
       setRanks(res.data.data || [])
     } catch {
       setRanks([])
@@ -170,13 +174,13 @@ export function StaffForm() {
     fetchZones()
     fetchNationalities()
     fetchMedicalFields()
-    fetchRanks()
+    fetchRanks(undefined)
     if (isEdit && id) {
       fetchStaff()
     } else {
       fetchNextEmployeeId()
     }
-  }, [id, fetchZones, fetchNationalities, fetchMedicalFields, fetchRanks])
+  }, [id])
 
   const fetchNextEmployeeId = async () => {
     try {
@@ -273,6 +277,11 @@ export function StaffForm() {
         setSelectedRankId(shc.rank_id || null)
         if (shc.medical_field_id) {
           await fetchSpecialties(shc.medical_field_id)
+        }
+        if (shc.medical_field_id && shc.rank_id) {
+          await fetchRanks(undefined)
+        } else if (shc.specialty_id) {
+          await fetchRanks(shc.specialty_id)
         }
         setShcCategories([shc])
       }
@@ -796,10 +805,15 @@ export function StaffForm() {
                   setSpecialties([])
                 }
               }}
-              options={medicalFields.map((m) => ({
-                value: m.id.toString(),
-                label: m.name,
-              }))}
+              options={[
+                ...(selectedMedicalFieldId && !medicalFields.find(m => m.id === selectedMedicalFieldId) 
+                  ? [{ value: selectedMedicalFieldId.toString(), label: 'Selected' }] 
+                  : []),
+                ...medicalFields.map((m) => ({
+                  value: m.id.toString(),
+                  label: m.name,
+                }))
+              ]}
               onSearch={fetchMedicalFields}
             />
             <SearchableSelect
@@ -811,15 +825,26 @@ export function StaffForm() {
                 setSelectedRankId(null)
                 updateField('shc_category_id', null)
                 setShcCategories([])
+                if (spId) {
+                  fetchRanks(spId)
+                } else {
+                  fetchRanks(undefined)
+                }
               }}
-              options={specialties.map((s) => ({
-                value: s.id.toString(),
-                label: s.name,
-              }))}
-              disabled={!selectedMedicalFieldId}
+              options={[
+                ...(selectedSpecialtyId && !specialties.find(s => s.id === selectedSpecialtyId)
+                  ? [{ value: selectedSpecialtyId.toString(), label: 'Selected' }]
+                  : []),
+                ...specialties.map((s) => ({
+                  value: s.id.toString(),
+                  label: s.name,
+                }))
+              ]}
               onSearch={(query) => {
                 if (selectedMedicalFieldId) {
                   fetchSpecialties(selectedMedicalFieldId, query)
+                } else {
+                  fetchMedicalFields(query)
                 }
               }}
             />
@@ -830,9 +855,11 @@ export function StaffForm() {
                 const rId = val ? Number(val) : null
                 setSelectedRankId(rId)
                 if (rId && selectedMedicalFieldId && selectedSpecialtyId) {
+                  const mfId = selectedMedicalFieldId
+                  const spId = selectedSpecialtyId
                   const res = await shcCategoryApi.getAll({
-                    medical_field_id: selectedMedicalFieldId,
-                    specialty_id: selectedSpecialtyId,
+                    medical_field_id: mfId,
+                    specialty_id: spId,
                     rank_id: rId,
                     is_active: true,
                     per_page: 1
@@ -850,19 +877,24 @@ export function StaffForm() {
                   setShcCategories([])
                 }
               }}
-              options={ranks.map((r) => ({
-                value: r.id.toString(),
-                label: r.name,
-              }))}
-              disabled={!selectedSpecialtyId}
-              onSearch={fetchRanks}
+              options={[
+                ...(selectedRankId && !ranks.find(r => r.id === selectedRankId)
+                  ? [{ value: selectedRankId.toString(), label: 'Selected' }]
+                  : []),
+                ...ranks.map((r) => ({
+                  value: r.id.toString(),
+                  label: r.name,
+                }))
+              ]}
+              onSearch={(query) => fetchRanks(selectedSpecialtyId || undefined, query)}
             />
             {shcCategories.length > 0 && (
-              <div className="md:col-span-2 p-3 bg-blue-50 border border-blue-200 rounded-lg">
+              <div className="md:col-span-2 p-3 bg-blue-50 border border-blue-200 rounded-lg flex items-center justify-between">
                 <p className="text-sm font-medium text-blue-800">
                   {locale === 'ar' ? 'فئة الهيئة المختارة' : 'Selected SHC Category'}: 
-                  <span className="font-bold mr-2">{shcCategories[0].code}</span>
+                  <span className="font-bold ml-2">{shcCategories[0].code}</span>
                 </p>
+                <Check className="w-5 h-5 text-green-600" />
               </div>
             )}
             <Select

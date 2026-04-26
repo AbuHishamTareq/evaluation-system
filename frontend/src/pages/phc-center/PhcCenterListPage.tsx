@@ -13,7 +13,7 @@ import { phcCenterApi, zoneApi } from '@/lib/api'
 import { Layout } from '@/components/Layout'
 import { Button } from '@/components/ui/Button'
 import { ImportExportModal } from '@/components/staff/ImportExportModal'
-import { Search, Trash2, Filter, ChevronLeft, ChevronRight, FileSpreadsheet, Building2, UserPlus, X, Plus as PlusIcon } from 'lucide-react'
+import { Search, Trash2, Filter, ChevronLeft, ChevronRight, ChevronFirst, ChevronLast, FileSpreadsheet, Building2, UserPlus, X, Plus as PlusIcon, Loader2 } from 'lucide-react'
 
 interface PhcCenter {
   id: number
@@ -55,9 +55,17 @@ function AssignCodesModal({
 
   useEffect(() => {
     if (isOpen && phcCenterId) {
+      setSearch('')
+      setSelectedForRemoval([])
       loadData()
     }
-  }, [isOpen, phcCenterId, search])
+  }, [isOpen, phcCenterId])
+
+  useEffect(() => {
+    if (isOpen && phcCenterId && search !== undefined) {
+      loadAvailableCodes()
+    }
+  }, [search])
 
   const loadData = async () => {
     setIsLoading(true)
@@ -68,12 +76,20 @@ function AssignCodesModal({
       const assignedRes = await phcCenterApi.getAssignedTeamBasedCodes(phcCenterId)
       setAssignedCodes(assignedRes.data.data || [])
 
-      const availableRes = await phcCenterApi.getAvailableTeamBasedCodes(phcCenterId, { search })
-      setAvailableCodes(availableRes.data.data || [])
+      await loadAvailableCodes()
     } catch (err) {
       console.error('Failed to load data:', err)
     } finally {
       setIsLoading(false)
+    }
+  }
+
+  const loadAvailableCodes = async () => {
+    try {
+      const availableRes = await phcCenterApi.getAvailableTeamBasedCodes(phcCenterId, { search })
+      setAvailableCodes(availableRes.data.data || [])
+    } catch (err) {
+      console.error('Failed to load available codes:', err)
     }
   }
 
@@ -176,87 +192,79 @@ function AssignCodesModal({
   if (!isOpen) return null
 
   return (
-    <div className="fixed inset-0 z-50 flex items-center justify-center">
+    <div className="fixed inset-0 z-50 flex items-center justify-center p-2 sm:p-4">
       <div className="absolute inset-0 bg-black/50" onClick={onClose} />
-      <div className="relative bg-white rounded-lg shadow-xl w-full max-w-4xl max-h-[90vh] overflow-hidden">
-        <div className="flex items-center justify-between p-4 border-b">
-          <h2 className="text-xl font-semibold text-gray-900">
-            {locale === 'ar' ? 'تعيين الرموز' : 'Assign Team Based Codes'}
-          </h2>
-          <button onClick={onClose} className="p-2 hover:bg-gray-100 rounded">
+      <div className="relative bg-white rounded-xl shadow-2xl w-full max-w-5xl h-full max-h-[90vh] sm:h-auto flex flex-col">
+        <div className="flex items-center justify-between px-4 py-3 border-b bg-gray-50 rounded-t-xl">
+          <div>
+            <h2 className="text-lg font-bold text-gray-900">
+              {locale === 'ar' ? 'تعيين الرموز للفريق' : 'Assign Team Codes'}
+            </h2>
+            {phcCenter && (
+              <p className="text-sm text-gray-500">
+                {phcCenter.name} ({phcCenter.code})
+              </p>
+            )}
+          </div>
+          <button onClick={onClose} className="p-2 hover:bg-gray-200 rounded-lg transition-colors">
             <X className="w-5 h-5" />
           </button>
         </div>
 
-        <div className="p-4 overflow-y-auto max-h-[calc(90vh-140px)]">
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-            {/* First Column - PHC Center Info & Assigned Codes */}
-            <div className="space-y-4">
-              {/* PHC Center Card */}
-              {phcCenter && (
-                <div className="bg-blue-50 border border-blue-200 rounded-lg p-4">
-                  <div className="flex items-center gap-3">
-                    <div className="p-3 bg-blue-100 rounded-lg">
-                      <Building2 className="w-6 h-6 text-blue-600" />
-                    </div>
-                    <div>
-                      <h3 className="font-semibold text-gray-900">{phcCenter.name}</h3>
-                      <p className="text-sm text-gray-600">
-                        {locale === 'ar' ? 'الرمز' : 'Code'}: {phcCenter.code}
-                      </p>
-                    </div>
-                  </div>
-                </div>
-              )}
+        <div className="flex-1 overflow-hidden p-4">
+          <div className="grid grid-cols-1 lg:grid-cols-2 gap-4 lg:gap-6 h-full">
+            {/* Assigned Codes Column */}
+            <div className="flex flex-col min-h-0">
+              <div className="flex items-center justify-between mb-3">
+                <h3 className="font-semibold text-gray-900 flex items-center gap-2">
+                  <UserPlus className="w-4 h-4" />
+                  {locale === 'ar' ? 'الرموز المخصصة' : 'Assigned Teams'}
+                  <span className="text-xs bg-blue-100 text-blue-700 px-2 py-0.5 rounded-full">
+                    {assignedCodes.length}
+                  </span>
+                </h3>
+                {selectedForRemoval.length > 0 ? (
+                  <button
+                    onClick={handleRemoveSelected}
+                    className="text-sm text-red-600 hover:bg-red-50 px-3 py-1.5 rounded-lg font-medium"
+                  >
+                    {locale === 'ar'
+                      ? `إزالة (${selectedForRemoval.length})`
+                      : `Remove (${selectedForRemoval.length})`}
+                  </button>
+                ) : (
+                  <button
+                    onClick={handleRemoveAll}
+                    disabled={assignedCodes.length === 0}
+                    className="text-sm text-red-600 hover:bg-red-50 px-3 py-1.5 rounded-lg font-medium disabled:opacity-40"
+                  >
+                    {locale === 'ar' ? 'إزالة الكل' : 'Remove All'}
+                  </button>
+                )}
+              </div>
 
-              {/* Assigned Codes */}
-              <div className="border rounded-lg p-4">
-                <div className="flex items-center justify-between mb-4">
-                  <h3 className="font-semibold text-gray-900">
-                    {locale === 'ar' ? 'الرموز الم.assigned Codes' : 'Assigned'}
-                  </h3>
-                  {selectedForRemoval.length > 0 ? (
-                    <button
-                      onClick={handleRemoveSelected}
-                      className="text-sm text-red-600 hover:bg-red-50 px-3 py-1 rounded"
-                    >
-                      {locale === 'ar'
-                        ? `إزالة (${selectedForRemoval.length})`
-                        : `Remove (${selectedForRemoval.length})`}
-                    </button>
-                  ) : (
-                    <button
-                      onClick={handleRemoveAll}
-                      disabled={assignedCodes.length === 0}
-                      className="text-sm text-red-600 hover:bg-red-50 px-3 py-1 rounded disabled:opacity-50"
-                    >
-                      {locale === 'ar' ? 'إزالة الكل' : 'Remove All'}
-                    </button>
-                  )}
-                </div>
-
+              <div className="flex-1 overflow-y-auto border rounded-xl bg-gray-50">
                 {isLoading ? (
-                  <div className="text-center py-8">
-                    <p className="text-gray-500">
-                      {locale === 'ar' ? 'جاري التحميل...' : 'Loading...'}
-                    </p>
+                  <div className="flex items-center justify-center h-full">
+                    <Loader2 className="w-8 h-8 animate-spin text-gray-400" />
                   </div>
                 ) : assignedCodes.length === 0 ? (
-                  <div className="text-center py-8">
-                    <p className="text-gray-500">
+                  <div className="flex flex-col items-center justify-center h-full text-gray-400 py-8">
+                    <UserPlus className="w-12 h-12 mb-2 opacity-50" />
+                    <p className="text-sm">
                       {locale === 'ar' ? 'لا توجد رموز مخصصة' : 'No codes assigned'}
                     </p>
                   </div>
                 ) : (
-                  <div className="space-y-2">
+                  <div className="p-2 space-y-2">
                     {assignedCodes.map((code) => (
                       <div
                         key={code.id}
                         onClick={() => handleRemoveCode(code.id)}
-                        className={`flex items-center justify-between p-3 border rounded-lg transition-colors cursor-pointer hover:bg-red-50 ${
+                        className={`flex items-center justify-between p-3 rounded-lg transition-all cursor-pointer hover:scale-[1.01] ${
                           selectedForRemoval.includes(code.id)
-                            ? 'bg-red-50 border-red-300'
-                            : 'bg-gray-50'
+                            ? 'bg-red-100 border-2 border-red-300'
+                            : 'bg-white border border-gray-200 hover:border-red-300 hover:bg-red-50'
                         }`}
                       >
                         <div className="flex items-center gap-3">
@@ -265,16 +273,14 @@ function AssignCodesModal({
                             checked={selectedForRemoval.includes(code.id)}
                             onChange={() => handleToggleSelection(code.id)}
                             onClick={(e) => e.stopPropagation()}
-                            className="w-4 h-4 rounded border-gray-300"
+                            className="w-4 h-4 rounded border-gray-300 text-red-600 focus:ring-red-500"
                           />
                           <div>
-                            <p className="font-medium">{code.code}</p>
-                            <p className="text-sm text-gray-500">{code.role}</p>
+                            <p className="font-medium text-gray-900">{code.code}</p>
+                            <p className="text-xs text-gray-500">{code.role}</p>
                           </div>
                         </div>
-                        <div className="p-2 text-red-600">
-                          <Trash2 className="w-4 h-4" />
-                        </div>
+                        <Trash2 className="w-4 h-4 text-red-400" />
                       </div>
                     ))}
                   </div>
@@ -282,58 +288,69 @@ function AssignCodesModal({
               </div>
             </div>
 
-            {/* Second Column - Search & Available Codes */}
-            <div className="space-y-4">
-              <div className="border rounded-lg p-4">
-                <h3 className="font-semibold text-gray-900 mb-4">
-                  {locale === 'ar' ? 'الرموز المتاحة' : 'Available Codes'}
+            {/* Available Codes Column */}
+            <div className="flex flex-col min-h-0">
+              <div className="flex items-center justify-between mb-3">
+                <h3 className="font-semibold text-gray-900 flex items-center gap-2">
+                  <Search className="w-4 h-4" />
+                  {locale === 'ar' ? 'الرموز المتاحة' : 'Available Teams'}
+                  <span className="text-xs bg-green-100 text-green-700 px-2 py-0.5 rounded-full">
+                    {availableCodes.length}
+                  </span>
                 </h3>
+              </div>
 
-                <div className="mb-4">
-                  <div className="relative">
-                    <Search className="absolute start-3 top-1/2 -translate-y-1/2 w-4 h-4 text-gray-400" />
-                    <input
-                      type="text"
-                      placeholder={locale === 'ar' ? 'بحث...' : 'Search...'}
-                      value={search}
-                      onChange={(e) => setSearch(e.target.value)}
-                      className="w-full ps-10 pe-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-brand-500 focus:border-brand-500 outline-none"
-                    />
-                  </div>
+              <div className="mb-3">
+                <div className="relative">
+                  <Search className="absolute start-3 top-1/2 -translate-y-1/2 w-4 h-4 text-gray-400" />
+                  <input
+                    type="text"
+                    placeholder={locale === 'ar' ? 'بحث...' : 'Search codes...'}
+                    value={search}
+                    onChange={(e) => setSearch(e.target.value)}
+                    className="w-full ps-10 pe-4 py-2.5 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 outline-none text-sm"
+                  />
                 </div>
+              </div>
 
+              <div className="flex-1 overflow-y-auto border rounded-xl bg-gray-50">
                 {isLoading ? (
-                  <div className="text-center py-8">
-                    <p className="text-gray-500">
-                      {locale === 'ar' ? 'جاري التحميل...' : 'Loading...'}
-                    </p>
+                  <div className="flex items-center justify-center h-full">
+                    <Loader2 className="w-8 h-8 animate-spin text-gray-400" />
                   </div>
                 ) : availableCodes.length === 0 ? (
-                  <div className="text-center py-8">
-                    <p className="text-gray-500">
+                  <div className="flex flex-col items-center justify-center h-full text-gray-400 py-8">
+                    <Search className="w-12 h-12 mb-2 opacity-50" />
+                    <p className="text-sm">
                       {locale === 'ar' ? 'لا توجد رموز متاحة' : 'No available codes'}
                     </p>
+                    {search && (
+                      <button
+                        onClick={() => setSearch('')}
+                        className="text-blue-500 text-sm mt-2 hover:underline"
+                      >
+                        {locale === 'ar' ? 'مسح البحث' : 'Clear search'}
+                      </button>
+                    )}
                   </div>
                 ) : (
-                  <div className="space-y-2">
+                  <div className="p-2 space-y-2">
                     {availableCodes.map((code) => (
                       <button
                         key={code.id}
                         onClick={() => handleAssignCode(code.id)}
-                        className="w-full flex items-center justify-between p-3 border rounded-lg hover:bg-green-50 transition-colors group text-start"
+                        className="w-full flex items-center justify-between p-3 bg-white border border-gray-200 rounded-lg transition-all hover:scale-[1.01] hover:border-green-400 hover:bg-green-50 text-start"
                       >
                         <div className="flex items-center gap-3">
-                          <div className="p-2 bg-blue-50 rounded group-hover:bg-green-100">
-                            <UserPlus className="w-4 h-4 text-blue-600 group-hover:text-green-600" />
+                          <div className="p-2 bg-green-100 rounded-lg">
+                            <UserPlus className="w-4 h-4 text-green-600" />
                           </div>
                           <div>
-                            <p className="font-medium">{code.code}</p>
-                            <p className="text-sm text-gray-500">{code.role}</p>
+                            <p className="font-medium text-gray-900">{code.code}</p>
+                            <p className="text-xs text-gray-500">{code.role}</p>
                           </div>
                         </div>
-                        <div className="p-2 text-green-600 group-hover:text-green-700">
-                          <PlusIcon className="w-4 h-4" />
-                        </div>
+                        <PlusIcon className="w-4 h-4 text-green-500" />
                       </button>
                     ))}
                   </div>
@@ -343,18 +360,18 @@ function AssignCodesModal({
           </div>
         </div>
 
-        <div className="flex items-center justify-end gap-3 p-4 border-t">
+        <div className="flex items-center justify-end gap-3 px-4 py-3 border-t bg-gray-50 rounded-b-xl">
           <button
             onClick={onClose}
-            className="px-4 py-2 text-gray-700 bg-gray-100 rounded-lg hover:bg-gray-200 transition-colors"
+            className="px-5 py-2.5 text-gray-700 bg-white border border-gray-300 rounded-lg hover:bg-gray-100 transition-colors font-medium"
           >
-            {locale === 'ar' ? 'إلغاء' : 'Cancel'}
+            {locale === 'ar' ? 'إغلاق' : 'Close'}
           </button>
           <button
             onClick={onClose}
-            className="px-4 py-2 text-white bg-blue-600 rounded-lg hover:bg-blue-700 transition-colors"
+            className="px-5 py-2.5 text-white bg-blue-600 rounded-lg hover:bg-blue-700 transition-colors font-medium"
           >
-            {locale === 'ar' ? 'حفظ' : 'Save'}
+            {locale === 'ar' ? 'حفظ' : 'Done'}
           </button>
         </div>
       </div>
@@ -373,6 +390,7 @@ export function PhcCenterListPage() {
   const [showImportExport, setShowImportExport] = useState(false)
   const [pagination, setPagination] = useState({ pageIndex: 0, pageSize: 15 })
   const [totalCount, setTotalCount] = useState(0)
+  const [gotoPage, setGotoPage] = useState('')
   const [zones, setZones] = useState<{ id: number; name: string }[]>([])
   const [showAssignModal, setShowAssignModal] = useState(false)
   const [assignPhcCenterId, setAssignPhcCenterId] = useState<number | null>(null)
@@ -584,6 +602,20 @@ export function PhcCenterListPage() {
 
   const totalPages = Math.ceil(totalCount / pagination.pageSize) || 1
 
+  const handleGotoPage = () => {
+    const page = Number(gotoPage)
+    if (page >= 1 && page <= totalPages) {
+      setPagination(p => ({ ...p, pageIndex: page - 1 }))
+      setGotoPage('')
+    }
+  }
+
+  const handleKeyDown = (e: React.KeyboardEvent) => {
+    if (e.key === 'Enter') {
+      handleGotoPage()
+    }
+  }
+
   return (
     <Layout>
       <div className={`space-y-4 ${locale === 'ar' ? 'font-ar' : 'font-en'}`}>
@@ -734,6 +766,14 @@ export function PhcCenterListPage() {
               </span>
               <div className="flex items-center gap-1">
                 <button
+                  onClick={() => setPagination(p => ({ ...p, pageIndex: 0 }))}
+                  disabled={pagination.pageIndex === 0}
+                  className="p-1.5 rounded hover:bg-gray-100 disabled:opacity-50 disabled:cursor-not-allowed"
+                  title="First page"
+                >
+                  <ChevronFirst className="w-5 h-5" />
+                </button>
+                <button
                   onClick={() =>
                     setPagination((p) => ({ ...p, pageIndex: p.pageIndex - 1 }))
                   }
@@ -751,6 +791,33 @@ export function PhcCenterListPage() {
                 >
                   <ChevronRight className="w-5 h-5" />
                 </button>
+                <button
+                  onClick={() => setPagination(p => ({ ...p, pageIndex: totalPages - 1 }))}
+                  disabled={pagination.pageIndex >= totalPages - 1}
+                  className="p-1.5 rounded hover:bg-gray-100 disabled:opacity-50 disabled:cursor-not-allowed"
+                  title="Last page"
+                >
+                  <ChevronLast className="w-5 h-5" />
+                </button>
+                <div className="flex items-center gap-1 ms-2 border-s border-gray-300 ps-2">
+                  <input
+                    type="number"
+                    value={gotoPage}
+                    onChange={(e) => setGotoPage(e.target.value)}
+                    onKeyDown={handleKeyDown}
+                    placeholder="#"
+                    min={1}
+                    max={totalPages}
+                    className="w-12 px-2 py-1 text-sm border border-gray-200 rounded text-center focus:ring-2 focus:ring-brand-500 focus:border-brand-500 outline-none"
+                  />
+                  <button
+                    onClick={handleGotoPage}
+                    disabled={!gotoPage || Number(gotoPage) < 1 || Number(gotoPage) > totalPages}
+                    className="px-2 py-1 text-sm bg-brand-500 text-white rounded hover:bg-brand-600 disabled:opacity-50 disabled:cursor-not-allowed"
+                  >
+                    Go
+                  </button>
+                </div>
               </div>
             </div>
           </div>

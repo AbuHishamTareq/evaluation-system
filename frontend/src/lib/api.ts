@@ -16,6 +16,7 @@ api.interceptors.request.use((config) => {
   if (token) {
     config.headers.Authorization = `Bearer ${token}`
   }
+  config.params = { ...config.params, _t: Date.now() }
   return config
 })
 
@@ -116,7 +117,7 @@ export const staffApi = {
     api.post(`/v1/staff-profiles/${id}/experiences`, data),
   updateExperience: (id: number, experienceId: number, data: { company_name?: string; position?: string; start_date?: string; end_date?: string; is_current?: boolean; responsibilities?: string }) =>
     api.put(`/v1/staff-profiles/${id}/experiences/${experienceId}`, data),
-  deleteExperience: (id: number, experienceId: number) =>
+deleteExperience: (id: number, experienceId: number) =>
     api.delete(`/v1/staff-profiles/${id}/experiences/${experienceId}`),
   importFile: (file: File) => {
     const formData = new FormData()
@@ -247,7 +248,7 @@ export const nationalityApi = {
   importFile: (file: File) => {
     const formData = new FormData()
     formData.append('file', file)
-    return api.post('/v1/specialties/import', formData, { headers: { 'Content-Type': 'multipart/form-data' } })
+    return api.post('/v1/nationalities/import', formData, { headers: { 'Content-Type': 'multipart/form-data' } })
   },
   exportFile: (format: 'csv' | 'excel' | 'pdf' = 'csv', params?: { ids?: string }) =>
     api.get('/v1/nationalities/export', { params: { ...params, format }, responseType: 'blob' }),
@@ -310,14 +311,15 @@ export interface CreateRankData {
   name: string
   name_ar?: string
   code?: string
-  level?: number
+  medical_field_id?: number | null
+  specialty_id?: number | null
   is_active?: boolean
 }
 
 export type UpdateRankData = Partial<CreateRankData>
 
 export const rankApi = {
-  getAll: (params?: { is_active?: boolean | string; search?: string; page?: number; per_page?: number }) =>
+  getAll: (params?: { medical_field_id?: number; specialty_id?: number; is_active?: boolean | string; search?: string; page?: number; per_page?: number }) =>
     api.get('/v1/ranks', { params }),
   getById: (id: number) => api.get(`/v1/ranks/${id}`),
   create: (data: CreateRankData) => api.post('/v1/ranks', data),

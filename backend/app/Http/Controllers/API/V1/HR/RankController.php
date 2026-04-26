@@ -26,14 +26,18 @@ class RankController extends Controller
 
     public function index(Request $request): JsonResponse
     {
-        $filters = $request->only(['level', 'is_active', 'search', 'per_page', 'page']);
+        $filters = $request->only(['medical_field_id', 'specialty_id', 'is_active', 'search', 'per_page', 'page']);
         $cacheKey = $this->getIndexCacheKey(md5(json_encode($filters)));
 
         $data = Cache::remember($cacheKey, now()->addMinutes(static::$cacheTtl), function () use ($request) {
-            $query = Rank::query();
+            $query = Rank::with(['medicalField', 'specialty']);
 
-            if ($request->has('level')) {
-                $query->where('level', $request->input('level'));
+            if ($request->has('medical_field_id')) {
+                $query->where('medical_field_id', $request->input('medical_field_id'));
+            }
+
+            if ($request->has('specialty_id')) {
+                $query->where('specialty_id', $request->input('specialty_id'));
             }
 
             if ($request->has('is_active')) {
@@ -72,13 +76,10 @@ class RankController extends Controller
             'name' => 'required|string|max:255',
             'name_ar' => 'nullable|string|max:255',
             'code' => 'nullable|string|max:50',
-            'level' => 'nullable|integer|min:1',
+            'medical_field_id' => 'nullable|exists:medical_fields,id',
+            'specialty_id' => 'nullable|exists:specialties,id',
             'is_active' => 'nullable|boolean',
         ]);
-
-        if (! isset($validated['level'])) {
-            $validated['level'] = 1;
-        }
 
         $rank = Rank::create($validated);
 
@@ -95,6 +96,7 @@ class RankController extends Controller
         $cacheKey = static::$cachePrefix.'show:'.$rank->id;
 
         $data = Cache::remember($cacheKey, now()->addMinutes(static::$cacheTtl), function () use ($rank) {
+            $rank->load(['medicalField', 'specialty']);
             return ['data' => $rank->toArray()];
         });
 
@@ -107,7 +109,8 @@ class RankController extends Controller
             'name' => 'sometimes|string|max:255',
             'name_ar' => 'nullable|string|max:255',
             'code' => 'nullable|string|max:50',
-            'level' => 'nullable|integer|min:1',
+            'medical_field_id' => 'nullable|exists:medical_fields,id',
+            'specialty_id' => 'nullable|exists:specialties,id',
             'is_active' => 'nullable|boolean',
         ]);
 
@@ -156,21 +159,28 @@ class RankController extends Controller
             'Name' => 'name',
             'Name (Arabic)' => 'name_ar',
             'Code' => 'code',
-            'Level' => 'level',
+            'Medical Field' => 'medical_field_id',
+            'Specialty' => 'specialty_id',
             'Status' => 'is_active',
         ];
 
         $data = $this->processFile($file, $columnMapping);
+        $medicalFieldMap = \App\Models\MedicalField::pluck('id', 'name')->toArray();
+        $specialtyMap = \App\Models\Specialty::pluck('id', 'name')->toArray();
 
-        $processedData = $data->map(function ($row) {
+        $processedData = $data->map(function ($row) use ($medicalFieldMap, $specialtyMap) {
             if (isset($row['is_active'])) {
                 $row['is_active'] = in_array(strtolower($row['is_active']), ['active', 'نشط', '1', 'yes']) ? true : false;
             }
             if (! isset($row['is_active'])) {
                 $row['is_active'] = true;
             }
-            if (! isset($row['level'])) {
-                $row['level'] = 1;
+
+            if (! empty($row['medical_field_id'])) {
+                $row['medical_field_id'] = $medicalFieldMap[$row['medical_field_id']] ?? null;
+            }
+            if (! empty($row['specialty_id'])) {
+                $row['specialty_id'] = $specialtyMap[$row['specialty_id']] ?? null;
             }
 
             return $row;
@@ -197,7 +207,7 @@ class RankController extends Controller
         $format = $request->input('format', 'csv');
         $ids = $request->input('ids');
 
-        $query = Rank::query();
+        $query = Rank::with(['medicalField', 'specialty']);
 
         if ($ids) {
             $idArray = array_map('intval', explode(',', $ids));
@@ -210,7 +220,8 @@ class RankController extends Controller
                 'Name' => $rank->name,
                 'Name (Arabic)' => $rank->name_ar,
                 'Code' => $rank->code,
-                'Level' => $rank->level,
+                'Medical Field' => $rank->medicalField?->name,
+                'Specialty' => $rank->specialty?->name,
                 'Status' => $rank->is_active ? 'Active' : 'Inactive',
             ];
         })->toArray();

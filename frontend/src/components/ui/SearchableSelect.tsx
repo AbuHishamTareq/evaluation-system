@@ -34,7 +34,7 @@ export function SearchableSelect({
   const selectRef = useRef<HTMLDivElement>(null)
 
   const selectedOption = options.find((opt) => 
-    opt.value === value || String(opt.value) === String(value)
+    String(opt.value) === String(value)
   )
 
   const handleSearch = useCallback((query: string) => {

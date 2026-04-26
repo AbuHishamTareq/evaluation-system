@@ -5,6 +5,7 @@ import { shcCategoryApi, medicalFieldApi, specialtyApi, rankApi } from '@/lib/ap
 import { Layout } from '@/components/Layout'
 import { Button } from '@/components/ui/Button'
 import { Input } from '@/components/ui/Input'
+import { Select } from '@/components/ui/Select'
 
 interface MedicalField {
   id: number
@@ -16,18 +17,19 @@ interface Specialty {
   id: number
   name: string
   name_ar: string
+  medical_field_id: number
 }
 
 interface Rank {
   id: number
   name: string
   name_ar: string
+  medical_field_id: number
+  specialty_id: number
 }
 
 interface FormData {
   code: string
-  description: string
-  description_ar: string
   medical_field_id: number | null
   specialty_id: number | null
   rank_id: number | null
@@ -36,8 +38,6 @@ interface FormData {
 
 const initialFormData: FormData = {
   code: '',
-  description: '',
-  description_ar: '',
   medical_field_id: null,
   specialty_id: null,
   rank_id: null,
@@ -53,19 +53,21 @@ export function ShcCategoryForm() {
   const [error, setError] = useState<string | null>(null)
   const [formData, setFormData] = useState<FormData>(initialFormData)
   const [medicalFields, setMedicalFields] = useState<MedicalField[]>([])
-  const [specialties, setSpecialties] = useState<Specialty[]>([])
-  const [ranks, setRanks] = useState<Rank[]>([])
+  const [allSpecialties, setAllSpecialties] = useState<Specialty[]>([])
+  const [allRanks, setAllRanks] = useState<Rank[]>([])
+  const [filteredSpecialties, setFilteredSpecialties] = useState<Specialty[]>([])
+  const [filteredRanks, setFilteredRanks] = useState<Rank[]>([])
 
   const fetchDropdowns = async () => {
     try {
       const [mfRes, spRes, rRes] = await Promise.all([
-        medicalFieldApi.getAll({ is_active: true }),
-        specialtyApi.getAll({ is_active: true }),
-        rankApi.getAll({ is_active: true }),
+        medicalFieldApi.getAll({ per_page: 200 }),
+        specialtyApi.getAll({ per_page: 200 }),
+        rankApi.getAll({ per_page: 200 }),
       ])
       setMedicalFields(mfRes.data.data || [])
-      setSpecialties(spRes.data.data || [])
-      setRanks(rRes.data.data || [])
+      setAllSpecialties(spRes.data.data || [])
+      setAllRanks(rRes.data.data || [])
     } catch (err) {
       console.error('Failed to load dropdowns:', err)
     }
@@ -79,8 +81,6 @@ export function ShcCategoryForm() {
       const category = res.data.data
       setFormData({
         code: category.code || '',
-        description: category.description || '',
-        description_ar: category.description_ar || '',
         medical_field_id: category.medical_field_id ?? null,
         specialty_id: category.specialty_id ?? null,
         rank_id: category.rank_id ?? null,
@@ -103,8 +103,42 @@ export function ShcCategoryForm() {
     }
   }, [id])
 
+  useEffect(() => {
+    if (formData.medical_field_id) {
+      const filtered = allSpecialties.filter(s => s.medical_field_id === formData.medical_field_id)
+      setFilteredSpecialties(filtered)
+      if (formData.specialty_id && !filtered.find(s => s.id === formData.specialty_id)) {
+        setFormData(prev => ({ ...prev, specialty_id: null, rank_id: null }))
+      }
+    } else {
+      setFilteredSpecialties([])
+      setFormData(prev => ({ ...prev, specialty_id: null, rank_id: null }))
+    }
+  }, [formData.medical_field_id, allSpecialties])
+
+  useEffect(() => {
+    if (formData.specialty_id) {
+      const filtered = allRanks.filter(r => r.specialty_id === formData.specialty_id)
+      setFilteredRanks(filtered)
+      if (formData.rank_id && !filtered.find(r => r.id === formData.rank_id)) {
+        setFormData(prev => ({ ...prev, rank_id: null }))
+      }
+    } else if (formData.medical_field_id) {
+      const filtered = allRanks.filter(r => r.medical_field_id === formData.medical_field_id && !r.specialty_id)
+      setFilteredRanks(filtered)
+    } else {
+      setFilteredRanks([])
+    }
+  }, [formData.specialty_id, formData.medical_field_id, allRanks])
+
   const updateField = (field: keyof FormData, value: string | number | boolean | null) => {
-    setFormData(prev => ({ ...prev, [field]: value }))
+    if (field === 'medical_field_id') {
+      setFormData(prev => ({ ...prev, [field]: value, specialty_id: null, rank_id: null }))
+    } else if (field === 'specialty_id') {
+      setFormData(prev => ({ ...prev, [field]: value, rank_id: null }))
+    } else {
+      setFormData(prev => ({ ...prev, [field]: value }))
+    }
   }
 
   const handleSubmit = async () => {
@@ -119,8 +153,6 @@ export function ShcCategoryForm() {
       if (isEdit && id) {
         await shcCategoryApi.update(Number(id), {
           code: formData.code,
-          description: formData.description,
-          description_ar: formData.description_ar,
           medical_field_id: formData.medical_field_id ?? undefined,
           specialty_id: formData.specialty_id ?? undefined,
           rank_id: formData.rank_id ?? undefined,
@@ -129,8 +161,6 @@ export function ShcCategoryForm() {
       } else {
         await shcCategoryApi.create({
           code: formData.code,
-          description: formData.description,
-          description_ar: formData.description_ar,
           medical_field_id: formData.medical_field_id ?? undefined,
           specialty_id: formData.specialty_id ?? undefined,
           rank_id: formData.rank_id ?? undefined,
@@ -144,18 +174,6 @@ export function ShcCategoryForm() {
     } finally {
       setIsLoading(false)
     }
-  }
-
-  const getMedicalFieldName = (item: MedicalField) => {
-    return locale === 'ar' ? item.name_ar || item.name : item.name
-  }
-
-  const getSpecialtyName = (item: Specialty) => {
-    return locale === 'ar' ? item.name_ar || item.name : item.name
-  }
-
-  const getRankName = (item: Rank) => {
-    return locale === 'ar' ? item.name_ar || item.name : item.name
   }
 
   return (
@@ -181,73 +199,39 @@ export function ShcCategoryForm() {
               onChange={(e) => updateField('code', e.target.value)}
               required
             />
-            <Input
-              label={locale === 'ar' ? 'الوصف' : 'Description'}
-              value={formData.description}
-              onChange={(e) => updateField('description', e.target.value)}
+            <Select
+              label={locale === 'ar' ? 'المجال الطبي' : 'Medical Field'}
+              value={formData.medical_field_id ?? ''}
+              onChange={(val) => updateField('medical_field_id', val ? Number(val) : null)}
+              options={[
+                { value: '', label: locale === 'ar' ? 'اختر المجال الطبي' : 'Select Medical Field' },
+                ...medicalFields.map(mf => ({ value: mf.id, label: mf.name }))
+              ]}
+              searchable
+              searchPlaceholder={locale === 'ar' ? 'بحث...' : 'Search...'}
             />
-            <Input
-              label={locale === 'ar' ? 'الوصف بالعربي' : 'Arabic Description'}
-              value={formData.description_ar}
-              onChange={(e) => updateField('description_ar', e.target.value)}
+            <Select
+              label={locale === 'ar' ? 'التخصص' : 'Specialty'}
+              value={formData.specialty_id ?? ''}
+              onChange={(val) => updateField('specialty_id', val ? Number(val) : null)}
+              options={[
+                { value: '', label: locale === 'ar' ? 'اختر التخصص' : 'Select Specialty' },
+                ...filteredSpecialties.map(sp => ({ value: sp.id, label: sp.name }))
+              ]}
+              searchable
+              searchPlaceholder={locale === 'ar' ? 'بحث...' : 'Search...'}
             />
-            <div>
-              <label className="block text-sm font-medium text-gray-700 mb-1">
-                {locale === 'ar' ? 'المجال الطبي' : 'Medical Field'}
-              </label>
-              <select
-                value={formData.medical_field_id ?? ''}
-                onChange={(e) => updateField('medical_field_id', e.target.value ? Number(e.target.value) : null)}
-                className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-brand-500 focus:border-brand-500 outline-none"
-              >
-                <option value="">
-                  {locale === 'ar' ? 'اختر المجال الطبي' : 'Select Medical Field'}
-                </option>
-                {medicalFields.map((mf) => (
-                  <option key={mf.id} value={mf.id}>
-                    {getMedicalFieldName(mf)}
-                  </option>
-                ))}
-              </select>
-            </div>
-            <div>
-              <label className="block text-sm font-medium text-gray-700 mb-1">
-                {locale === 'ar' ? 'التخصص' : 'Specialty'}
-              </label>
-              <select
-                value={formData.specialty_id ?? ''}
-                onChange={(e) => updateField('specialty_id', e.target.value ? Number(e.target.value) : null)}
-                className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-brand-500 focus:border-brand-500 outline-none"
-              >
-                <option value="">
-                  {locale === 'ar' ? 'اختر التخصص' : 'Select Specialty'}
-                </option>
-                {specialties.map((sp) => (
-                  <option key={sp.id} value={sp.id}>
-                    {getSpecialtyName(sp)}
-                  </option>
-                ))}
-              </select>
-            </div>
-            <div>
-              <label className="block text-sm font-medium text-gray-700 mb-1">
-                {locale === 'ar' ? 'الرتبة' : 'Rank'}
-              </label>
-              <select
-                value={formData.rank_id ?? ''}
-                onChange={(e) => updateField('rank_id', e.target.value ? Number(e.target.value) : null)}
-                className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-brand-500 focus:border-brand-500 outline-none"
-              >
-                <option value="">
-                  {locale === 'ar' ? 'اختر الرتبة' : 'Select Rank'}
-                </option>
-                {ranks.map((r) => (
-                  <option key={r.id} value={r.id}>
-                    {getRankName(r)}
-                  </option>
-                ))}
-              </select>
-            </div>
+            <Select
+              label={locale === 'ar' ? 'الرتبة' : 'Rank'}
+              value={formData.rank_id ?? ''}
+              onChange={(val) => updateField('rank_id', val ? Number(val) : null)}
+              options={[
+                { value: '', label: locale === 'ar' ? 'اختر الرتبة' : 'Select Rank' },
+                ...filteredRanks.map(r => ({ value: r.id, label: r.name }))
+              ]}
+              searchable
+              searchPlaceholder={locale === 'ar' ? 'بحث...' : 'Search...'}
+            />
             <div className="flex items-center gap-2">
               <input
                 type="checkbox"

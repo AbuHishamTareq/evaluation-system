@@ -16,7 +16,7 @@ import { userApi, roleApi } from "@/lib/api";
 import { Layout } from "@/components/Layout";
 import { Button } from "@/components/ui/Button";
 import { Modal } from "@/components/ui/Modal";
-import { Search, Plus, ChevronLeft, ChevronRight, User, Shield, Trash2 } from "lucide-react";
+import { Search, Plus, ChevronLeft, ChevronRight, ChevronFirst, ChevronLast, User, Shield, Trash2 } from "lucide-react";
 
 interface UserData {
   id: number;
@@ -43,6 +43,7 @@ export function UserListPage() {
   const [search, setSearch] = useState("");
   const [pagination, setPagination] = useState({ pageIndex: 0, pageSize: 15 });
   const [totalCount, setTotalCount] = useState(0);
+  const [gotoPage, setGotoPage] = useState("");
 
   const [showRolesModal, setShowRolesModal] = useState(false);
   const [selectedUser, setSelectedUser] = useState<UserData | null>(null);
@@ -245,6 +246,20 @@ export function UserListPage() {
   });
 
   const totalPages = Math.ceil(totalCount / pagination.pageSize) || 1;
+
+  const handleGotoPage = () => {
+    const page = Number(gotoPage);
+    if (page >= 1 && page <= totalPages) {
+      setPagination((p) => ({ ...p, pageIndex: page - 1 }));
+      setGotoPage("");
+    }
+  };
+
+  const handleKeyDown = (e: React.KeyboardEvent) => {
+    if (e.key === "Enter") {
+      handleGotoPage();
+    }
+  };
 
   return (
     <Layout>

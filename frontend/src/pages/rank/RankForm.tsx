@@ -1,16 +1,18 @@
 import { useState, useEffect } from 'react'
 import { useParams, useNavigate } from 'react-router-dom'
 import { useAppStore } from '@/stores/appStore'
-import { rankApi } from '@/lib/api'
+import { rankApi, medicalFieldApi, specialtyApi } from '@/lib/api'
 import { Layout } from '@/components/Layout'
 import { Button } from '@/components/ui/Button'
 import { Input } from '@/components/ui/Input'
+import { Select } from '@/components/ui/Select'
 
 interface FormData {
   name: string
   name_ar: string
   code: string
-  level: number
+  medical_field_id: number | null
+  specialty_id: number | null
   is_active: boolean
 }
 
@@ -18,7 +20,8 @@ const initialFormData: FormData = {
   name: '',
   name_ar: '',
   code: '',
-  level: 1,
+  medical_field_id: null,
+  specialty_id: null,
   is_active: true,
 }
 
@@ -30,6 +33,9 @@ export function RankForm() {
   const [isLoading, setIsLoading] = useState(false)
   const [error, setError] = useState<string | null>(null)
   const [formData, setFormData] = useState<FormData>(initialFormData)
+  const [medicalFields, setMedicalFields] = useState<{ id: number; name: string }[]>([])
+  const [specialties, setSpecialties] = useState<{ id: number; name: string }[]>([])
+  const [filteredSpecialties, setFilteredSpecialties] = useState<{ id: number; name: string }[]>([])
 
   const fetchData = async () => {
     if (!id) return
@@ -41,7 +47,8 @@ export function RankForm() {
         name: rank.name || '',
         name_ar: rank.name_ar || '',
         code: rank.code || '',
-        level: rank.level ?? 1,
+        medical_field_id: rank.medical_field_id || null,
+        specialty_id: rank.specialty_id || null,
         is_active: rank.is_active ?? true,
       })
     } catch {
@@ -57,8 +64,48 @@ export function RankForm() {
     }
   }, [id])
 
-  const updateField = (field: keyof FormData, value: string | number | boolean) => {
-    setFormData(prev => ({ ...prev, [field]: value }))
+  useEffect(() => {
+    const fetchMedicalFields = async () => {
+      try {
+        const res = await medicalFieldApi.getAll({ per_page: 100 })
+        setMedicalFields(res.data.data || [])
+      } catch (err) {
+        console.error('Failed to load medical fields:', err)
+      }
+    }
+    fetchMedicalFields()
+  }, [])
+
+  useEffect(() => {
+    const fetchSpecialties = async () => {
+      try {
+        const res = await specialtyApi.getAll({ per_page: 200 })
+        setSpecialties(res.data.data || [])
+      } catch (err) {
+        console.error('Failed to load specialties:', err)
+      }
+    }
+    fetchSpecialties()
+  }, [])
+
+  useEffect(() => {
+    if (formData.medical_field_id) {
+      setFilteredSpecialties(specialties.filter(s => s.medical_field_id === formData.medical_field_id))
+      if (formData.specialty_id && !specialties.find(s => s.id === formData.specialty_id && s.medical_field_id === formData.medical_field_id)) {
+        setFormData(prev => ({ ...prev, specialty_id: null }))
+      }
+    } else {
+      setFilteredSpecialties([])
+      setFormData(prev => ({ ...prev, specialty_id: null }))
+    }
+  }, [formData.medical_field_id, specialties])
+
+  const updateField = (field: keyof FormData, value: string | number | boolean | null) => {
+    if (field === 'medical_field_id') {
+      setFormData(prev => ({ ...prev, [field]: value, specialty_id: null }))
+    } else {
+      setFormData(prev => ({ ...prev, [field]: value }))
+    }
   }
 
   const handleSubmit = async () => {
@@ -75,7 +122,8 @@ export function RankForm() {
           name: formData.name,
           name_ar: formData.name_ar,
           code: formData.code,
-          level: formData.level,
+          medical_field_id: formData.medical_field_id,
+          specialty_id: formData.specialty_id,
           is_active: formData.is_active,
         })
       } else {
@@ -83,7 +131,8 @@ export function RankForm() {
           name: formData.name,
           name_ar: formData.name_ar,
           code: formData.code,
-          level: formData.level,
+          medical_field_id: formData.medical_field_id,
+          specialty_id: formData.specialty_id,
           is_active: formData.is_active,
         })
       }
@@ -129,11 +178,27 @@ export function RankForm() {
               value={formData.code}
               onChange={(e) => updateField('code', e.target.value)}
             />
-            <Input
-              label={locale === 'ar' ? 'المستوى' : 'Level'}
-              type="number"
-              value={formData.level}
-              onChange={(e) => updateField('level', Number(e.target.value))}
+            <Select
+              label={locale === 'ar' ? 'الحقل الطبي' : 'Medical Field'}
+              value={formData.medical_field_id ?? ''}
+              onChange={(val) => updateField('medical_field_id', val ? Number(val) : null)}
+              options={[
+                { value: '', label: locale === 'ar' ? 'اختر الحقل الطبي' : 'Select Medical Field' },
+                ...medicalFields.map(mf => ({ value: mf.id, label: mf.name }))
+              ]}
+              searchable
+              searchPlaceholder={locale === 'ar' ? 'بحث...' : 'Search...'}
+            />
+            <Select
+              label={locale === 'ar' ? 'التخصص' : 'Specialty'}
+              value={formData.specialty_id ?? ''}
+              onChange={(val) => updateField('specialty_id', val ? Number(val) : null)}
+              options={[
+                { value: '', label: locale === 'ar' ? 'اختر التخصص' : 'Select Specialty' },
+                ...filteredSpecialties.map(s => ({ value: s.id, label: s.name }))
+              ]}
+              searchable
+              searchPlaceholder={locale === 'ar' ? 'بحث...' : 'Search...'}
             />
             <div className="flex items-center gap-2">
               <input

@@ -15,7 +15,7 @@ import { zoneApi } from '@/lib/api'
 import { Layout } from '@/components/Layout'
 import { Button } from '@/components/ui/Button'
 import { ImportExportModal } from '@/components/staff/ImportExportModal'
-import { Search, Plus, Edit2, Trash2, Map, Filter, ChevronLeft, ChevronRight, FileSpreadsheet, Building2 } from 'lucide-react'
+import { Search, Plus, Edit2, Trash2, Map, Filter, ChevronLeft, ChevronRight, ChevronFirst, ChevronLast, FileSpreadsheet, Building2 } from 'lucide-react'
 
 interface Zone {
   id: number
@@ -38,6 +38,7 @@ export function ZoneListPage() {
   const [showImportExport, setShowImportExport] = useState(false)
   const [pagination, setPagination] = useState({ pageIndex: 0, pageSize: 15 })
   const [totalCount, setTotalCount] = useState(0)
+  const [gotoPage, setGotoPage] = useState('')
 
   const fetchData = async () => {
     setIsLoading(true)
@@ -219,6 +220,20 @@ export function ZoneListPage() {
   })
 
   const totalPages = Math.ceil(totalCount / pagination.pageSize) || 1
+
+  const handleGotoPage = () => {
+    const page = Number(gotoPage)
+    if (page >= 1 && page <= totalPages) {
+      setPagination(p => ({ ...p, pageIndex: page - 1 }))
+      setGotoPage('')
+    }
+  }
+
+  const handleKeyDown = (e: React.KeyboardEvent) => {
+    if (e.key === 'Enter') {
+      handleGotoPage()
+    }
+  }
 
   return (
     <Layout>

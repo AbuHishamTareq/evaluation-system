@@ -55,8 +55,15 @@ class ShcCategoryController extends Controller
                 $search = $request->input('search');
                 $query->where(function ($q) use ($search) {
                     $q->where('code', 'like', "%{$search}%")
-                        ->orWhere('description', 'like', "%{$search}%")
-                        ->orWhere('description_ar', 'like', "%{$search}%");
+                        ->orWhereHas('medicalField', function ($sq) use ($search) {
+                            $sq->where('name', 'like', "%{$search}%")->orWhere('name_ar', 'like', "%{$search}%");
+                        })
+                        ->orWhereHas('specialty', function ($sq) use ($search) {
+                            $sq->where('name', 'like', "%{$search}%")->orWhere('name_ar', 'like', "%{$search}%");
+                        })
+                        ->orWhereHas('rank', function ($sq) use ($search) {
+                            $sq->where('name', 'like', "%{$search}%")->orWhere('name_ar', 'like', "%{$search}%");
+                        });
                 });
             }
 
@@ -83,9 +90,7 @@ class ShcCategoryController extends Controller
             'medical_field_id' => 'nullable|exists:medical_fields,id',
             'specialty_id' => 'nullable|exists:specialties,id',
             'rank_id' => 'nullable|exists:ranks,id',
-            'code' => 'required|string|max:50|unique:shc_categories,code',
-            'description' => 'nullable|string|max:500',
-            'description_ar' => 'nullable|string|max:500',
+            'code' => 'required|string|max:50',
             'is_active' => 'nullable|boolean',
         ]);
 
@@ -118,9 +123,7 @@ class ShcCategoryController extends Controller
             'medical_field_id' => 'nullable|exists:medical_fields,id',
             'specialty_id' => 'nullable|exists:specialties,id',
             'rank_id' => 'nullable|exists:ranks,id',
-            'code' => 'sometimes|string|max:50|unique:shc_categories,code,'.$shcCategory->id,
-            'description' => 'nullable|string|max:500',
-            'description_ar' => 'nullable|string|max:500',
+            'code' => 'sometimes|string|max:50',
             'is_active' => 'nullable|boolean',
         ]);
 
@@ -167,8 +170,6 @@ class ShcCategoryController extends Controller
         $file = $request->file('file');
         $columnMapping = [
             'Code' => 'code',
-            'Description' => 'description',
-            'Description (Arabic)' => 'description_ar',
             'Medical Field' => 'medical_field_id',
             'Specialty' => 'specialty_id',
             'Rank' => 'rank_id',
@@ -232,8 +233,6 @@ class ShcCategoryController extends Controller
         $data = $shcCategories->map(function ($shcCategory) {
             return [
                 'Code' => $shcCategory->code,
-                'Description' => $shcCategory->description,
-                'Description (Arabic)' => $shcCategory->description_ar,
                 'Medical Field' => $shcCategory->medicalField?->name,
                 'Medical Field ID' => $shcCategory->medical_field_id,
                 'Specialty' => $shcCategory->specialty?->name,

@@ -13,7 +13,7 @@ import { medicalFieldApi } from '@/lib/api'
 import { Layout } from '@/components/Layout'
 import { Button } from '@/components/ui/Button'
 import { ImportExportModal } from '@/components/staff/ImportExportModal'
-import { Search, Plus, Edit2, Trash2, MapPin, ChevronLeft, ChevronRight, FileSpreadsheet, Stethoscope } from 'lucide-react'
+import { Search, Plus, Edit2, Trash2, MapPin, ChevronLeft, ChevronRight, ChevronFirst, ChevronLast, FileSpreadsheet, Stethoscope } from 'lucide-react'
 
 interface MedicalField {
   id: number
@@ -35,6 +35,7 @@ export function MedicalFieldListPage() {
   const [showImportExport, setShowImportExport] = useState(false)
   const [pagination, setPagination] = useState({ pageIndex: 0, pageSize: 15 })
   const [totalCount, setTotalCount] = useState(0)
+  const [gotoPage, setGotoPage] = useState('')
 
   const fetchData = async () => {
     setIsLoading(true)
@@ -217,6 +218,20 @@ export function MedicalFieldListPage() {
   })
 
   const totalPages = Math.ceil(totalCount / pagination.pageSize) || 1
+
+  const handleGotoPage = () => {
+    const page = Number(gotoPage)
+    if (page >= 1 && page <= totalPages) {
+      setPagination(p => ({ ...p, pageIndex: page - 1 }))
+      setGotoPage('')
+    }
+  }
+
+  const handleKeyDown = (e: React.KeyboardEvent) => {
+    if (e.key === 'Enter') {
+      handleGotoPage()
+    }
+  }
 
   return (
     <Layout>

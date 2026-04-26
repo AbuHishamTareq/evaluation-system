@@ -162,9 +162,94 @@ class SpecialtyController extends Controller
         $data = $this->processFile($file, $columnMapping);
         $medicalFieldMap = MedicalField::pluck('id', 'name')->toArray();
 
-        $processedData = $data->map(function ($row) use ($medicalFieldMap) {
+        $keywordToFieldMap = [
+            'nursing' => 'Nursing and Midwifery',
+            'midwifery' => 'Nursing and Midwifery',
+            'midwife' => 'Nursing and Midwifery',
+            'critical care nursing' => 'Nursing and Midwifery',
+            'cardiovascular nursing' => 'Nursing and Midwifery',
+            'pediatric nursing' => 'Nursing and Midwifery',
+            'emergency nursing' => 'Nursing and Midwifery',
+            'intensive care nursing' => 'Nursing and Midwifery',
+            'neonatal nursing' => 'Nursing and Midwifery',
+            'obstetric' => 'Nursing and Midwifery',
+            'dental' => 'Dentistry and Related Specialties',
+            'dentist' => 'Dentistry and Related Specialties',
+            'oral' => 'Dentistry and Related Specialties',
+            'orthodont' => 'Dentistry and Related Specialties',
+            'pharmacy' => 'Pharmacists and Pharmacy Technicians',
+            'pharmacist' => 'Pharmacists and Pharmacy Technicians',
+            'clinical pharmacy' => 'Pharmacists and Pharmacy Technicians',
+            'pharmacology' => 'Pharmacists and Pharmacy Technicians',
+            'therapy' => 'Therapy and Rehabilitation',
+            'rehabilitation' => 'Therapy and Rehabilitation',
+            'physical therapy' => 'Therapy and Rehabilitation',
+            'occupational therapy' => 'Therapy and Rehabilitation',
+            'speech therapy' => 'Therapy and Rehabilitation',
+            'respiratory therapy' => 'Therapy and Rehabilitation',
+            'laboratory' => 'Laboratories and Medical Technology',
+            'lab' => 'Laboratories and Medical Technology',
+            'medical technology' => 'Laboratories and Medical Technology',
+            'pathology' => 'Laboratories and Medical Technology',
+            'clinical pathology' => 'Laboratories and Medical Technology',
+            'anesthesia' => 'Medicine and Surgery',
+            'anesthesiology' => 'Medicine and Surgery',
+            'surgery' => 'Medicine and Surgery',
+            'surgical' => 'Medicine and Surgery',
+            'medicine' => 'Medicine and Surgery',
+            'medical' => 'Medicine and Surgery',
+            'clinical' => 'Medicine and Surgery',
+            'health administration' => 'Health Administration and Community Health',
+            'community health' => 'Health Administration and Community Health',
+            'public health' => 'Health Administration and Community Health',
+            'health education' => 'Health Administration and Community Health',
+            'epidemiology' => 'Health Administration and Community Health',
+        ];
+
+        $processedData = $data->map(function ($row) use ($medicalFieldMap, $keywordToFieldMap) {
             if (! empty($row['medical_field_id'])) {
-                $row['medical_field_id'] = $medicalFieldMap[$row['medical_field_id']] ?? null;
+                $inputField = $row['medical_field_id'];
+                $matchedId = null;
+
+                if (isset($medicalFieldMap[$inputField])) {
+                    $matchedId = $medicalFieldMap[$inputField];
+                } else {
+                    $inputLower = strtolower($inputField);
+                    foreach ($medicalFieldMap as $name => $id) {
+                        if (strtolower($name) === $inputLower) {
+                            $matchedId = $id;
+                            break;
+                        }
+                    }
+                }
+
+                if ($matchedId === null) {
+                    foreach ($medicalFieldMap as $name => $id) {
+                        if (stripos($name, $inputField) !== false || stripos($inputField, $name) !== false) {
+                            $matchedId = $id;
+                            break;
+                        }
+                    }
+                }
+
+                if ($matchedId === null) {
+                    foreach ($keywordToFieldMap as $keyword => $fieldName) {
+                        if (stripos($inputField, $keyword) !== false) {
+                            if (isset($medicalFieldMap[$fieldName])) {
+                                $matchedId = $medicalFieldMap[$fieldName];
+                                break;
+                            }
+                            foreach ($medicalFieldMap as $name => $id) {
+                                if (strtolower($name) === strtolower($fieldName)) {
+                                    $matchedId = $id;
+                                    break 2;
+                                }
+                            }
+                        }
+                    }
+                }
+
+                $row['medical_field_id'] = $matchedId;
             }
             if (isset($row['is_active'])) {
                 $row['is_active'] = in_array(strtolower($row['is_active']), ['active', 'نشط', '1', 'yes']) ? true : false;

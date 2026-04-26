@@ -24,6 +24,8 @@ import {
   Trash2,
   ChevronLeft,
   ChevronRight,
+  ChevronFirst,
+  ChevronLast,
 } from "lucide-react";
 
 interface Role {
@@ -48,6 +50,7 @@ export function RoleListPage() {
   const [sorting, setSorting] = useState<SortingState>([]);
   const [pagination, setPagination] = useState({ pageIndex: 0, pageSize: 15 });
   const [totalCount, setTotalCount] = useState(0);
+  const [gotoPage, setGotoPage] = useState("");
 
   useEffect(() => {
     fetchData();
@@ -182,6 +185,20 @@ export function RoleListPage() {
   });
 
   const totalPages = Math.ceil(totalCount / pagination.pageSize) || 1;
+
+  const handleGotoPage = () => {
+    const page = Number(gotoPage);
+    if (page >= 1 && page <= totalPages) {
+      setPagination((p) => ({ ...p, pageIndex: page - 1 }));
+      setGotoPage("");
+    }
+  };
+
+  const handleKeyDown = (e: React.KeyboardEvent) => {
+    if (e.key === "Enter") {
+      handleGotoPage();
+    }
+  };
 
   return (
     <Layout>

@@ -13,7 +13,7 @@ import { nationalityApi } from '@/lib/api'
 import { Layout } from '@/components/Layout'
 import { Button } from '@/components/ui/Button'
 import { ImportExportModal } from '@/components/staff/ImportExportModal'
-import { Search, Plus, Edit2, Trash2, MapPin, ChevronLeft, ChevronRight, FileSpreadsheet, Globe } from 'lucide-react'
+import { Search, Plus, Edit2, Trash2, MapPin, ChevronLeft, ChevronRight, ChevronFirst, ChevronLast, FileSpreadsheet, Globe } from 'lucide-react'
 
 interface Nationality {
   id: number
@@ -35,6 +35,7 @@ export function NationalityListPage() {
   const [showImportExport, setShowImportExport] = useState(false)
   const [pagination, setPagination] = useState({ pageIndex: 0, pageSize: 15 })
   const [totalCount, setTotalCount] = useState(0)
+  const [gotoPage, setGotoPage] = useState('')
 
   const fetchData = async () => {
     setIsLoading(true)
@@ -42,6 +43,7 @@ export function NationalityListPage() {
       const params: Record<string, unknown> = {
         page: pagination.pageIndex + 1,
         per_page: pagination.pageSize,
+        _t: Date.now(),
       }
       if (search) params.search = search
 
@@ -218,6 +220,20 @@ export function NationalityListPage() {
 
   const totalPages = Math.ceil(totalCount / pagination.pageSize) || 1
 
+  const handleGotoPage = () => {
+    const page = Number(gotoPage)
+    if (page >= 1 && page <= totalPages) {
+      setPagination(p => ({ ...p, pageIndex: page - 1 }))
+      setGotoPage('')
+    }
+  }
+
+  const handleKeyDown = (e: React.KeyboardEvent) => {
+    if (e.key === 'Enter') {
+      handleGotoPage()
+    }
+  }
+
   return (
     <Layout>
       <div className={`space-y-4 ${locale === 'ar' ? 'font-ar' : 'font-en'}`}>
@@ -336,6 +352,14 @@ export function NationalityListPage() {
               </span>
               <div className="flex items-center gap-1">
                 <button
+                  onClick={() => setPagination(p => ({ ...p, pageIndex: 0 }))}
+                  disabled={pagination.pageIndex === 0}
+                  className="p-1.5 rounded hover:bg-gray-100 disabled:opacity-50 disabled:cursor-not-allowed"
+                  title="First page"
+                >
+                  <ChevronFirst className="w-5 h-5" />
+                </button>
+                <button
                   onClick={() =>
                     setPagination((p) => ({ ...p, pageIndex: p.pageIndex - 1 }))
                   }
@@ -353,6 +377,33 @@ export function NationalityListPage() {
                 >
                   <ChevronRight className="w-5 h-5" />
                 </button>
+                <button
+                  onClick={() => setPagination(p => ({ ...p, pageIndex: totalPages - 1 }))}
+                  disabled={pagination.pageIndex >= totalPages - 1}
+                  className="p-1.5 rounded hover:bg-gray-100 disabled:opacity-50 disabled:cursor-not-allowed"
+                  title="Last page"
+                >
+                  <ChevronLast className="w-5 h-5" />
+                </button>
+                <div className="flex items-center gap-1 ms-2 border-s border-gray-300 ps-2">
+                  <input
+                    type="number"
+                    value={gotoPage}
+                    onChange={(e) => setGotoPage(e.target.value)}
+                    onKeyDown={handleKeyDown}
+                    placeholder="#"
+                    min={1}
+                    max={totalPages}
+                    className="w-12 px-2 py-1 text-sm border border-gray-200 rounded text-center focus:ring-2 focus:ring-brand-500 focus:border-brand-500 outline-none"
+                  />
+                  <button
+                    onClick={handleGotoPage}
+                    disabled={!gotoPage || Number(gotoPage) < 1 || Number(gotoPage) > totalPages}
+                    className="px-2 py-1 text-sm bg-brand-500 text-white rounded hover:bg-brand-600 disabled:opacity-50 disabled:cursor-not-allowed"
+                  >
+                    Go
+                  </button>
+                </div>
               </div>
             </div>
           </div>
