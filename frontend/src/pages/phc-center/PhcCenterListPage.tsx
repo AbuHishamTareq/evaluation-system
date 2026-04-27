@@ -1,5 +1,5 @@
 import { useState, useEffect } from 'react'
-import { Link } from 'react-router-dom'
+import { Link, useNavigate } from 'react-router-dom'
 import Swal from 'sweetalert2'
 import {
   useReactTable,
@@ -9,6 +9,7 @@ import {
   createColumnHelper,
 } from '@tanstack/react-table'
 import { useAppStore } from '@/stores/appStore'
+import { useAuthStore } from '@/stores/authStore'
 import { phcCenterApi, zoneApi } from '@/lib/api'
 import { Layout } from '@/components/Layout'
 import { Button } from '@/components/ui/Button'
@@ -381,6 +382,18 @@ function AssignCodesModal({
 
 export function PhcCenterListPage() {
   const { locale } = useAppStore()
+  const navigate = useNavigate()
+  const { hasPermission, refreshPermissions } = useAuthStore()
+
+  useEffect(() => {
+    refreshPermissions()
+  }, [])
+
+  const canCreate = hasPermission('phc_centers.create')
+  const canEdit = hasPermission('phc_centers.edit')
+  const canDelete = hasPermission('phc_centers.delete')
+  const canToggle = hasPermission('phc_centers.toggle')
+  const canImportExport = hasPermission('phc_centers.import_export')
   const [data, setData] = useState<PhcCenter[]>([])
   const [isLoading, setIsLoading] = useState(true)
   const [search, setSearch] = useState('')
@@ -408,7 +421,12 @@ export function PhcCenterListPage() {
       const res = await phcCenterApi.getAll(params)
       setData(res.data.data || [])
       setTotalCount(res.data.meta?.total || res.data.total || 0)
-    } catch (err) {
+    } catch (err: unknown) {
+      const error = err as { response?: { status?: number } }
+      if (error.response?.status === 403) {
+        navigate('/forbidden')
+        return
+      }
       console.error('Failed to load PHC centers:', err)
     } finally {
       setIsLoading(false)
@@ -552,41 +570,59 @@ export function PhcCenterListPage() {
     ),
     columnHelper.accessor('is_active', {
       header: locale === 'ar' ? 'الحالة' : 'Status',
-      cell: ({ row }) => (
-        <button
-          onClick={() => handleToggleStatus(row.original.id, row.original.is_active)}
-          className={`inline-flex items-center gap-1 px-2 py-1 rounded-full text-xs font-medium cursor-pointer ${
-            row.original.is_active
-              ? 'bg-green-100 text-green-800 hover:bg-green-200'
-              : 'bg-red-100 text-red-800 hover:bg-red-200'
-          }`}
-        >
-          <Building2 className="w-3 h-3" />
-          {row.original.is_active
-            ? locale === 'ar' ? 'نشط' : 'Active'
-            : locale === 'ar' ? 'غير نشط' : 'Inactive'}
-        </button>
-      ),
+      cell: ({ row }) => {
+        const isActive = row.original.is_active
+        if (!canToggle) {
+          return (
+            <span className={`inline-flex items-center gap-1 px-2 py-1 rounded-full text-xs font-medium ${
+              isActive ? 'bg-green-100 text-green-800' : 'bg-red-100 text-red-800'
+            }`}>
+              {isActive
+                ? locale === 'ar' ? 'نشط' : 'Active'
+                : locale === 'ar' ? 'غير نشط' : 'Inactive'}
+            </span>
+          )
+        }
+        return (
+          <button
+            onClick={() => handleToggleStatus(row.original.id, row.original.is_active)}
+            className={`inline-flex items-center gap-1 px-2 py-1 rounded-full text-xs font-medium cursor-pointer ${
+              isActive
+                ? 'bg-green-100 text-green-800 hover:bg-green-200'
+                : 'bg-red-100 text-red-800 hover:bg-red-200'
+            }`}
+          >
+            <Building2 className="w-3 h-3" />
+            {isActive
+              ? locale === 'ar' ? 'نشط' : 'Active'
+              : locale === 'ar' ? 'غير نشط' : 'Inactive'}
+          </button>
+        )
+      },
     }),
     columnHelper.display({
       id: 'actions',
       header: locale === 'ar' ? 'الإجراءات' : 'Actions',
       cell: ({ row }) => (
         <div className="flex items-center gap-1">
-          <button
-            onClick={() => openAssignModal(row.original.id)}
-            className="p-2 text-green-600 hover:bg-green-50 rounded"
-            title={locale === 'ar' ? 'تعيين الرموز' : 'Assign Codes'}
-          >
-            <UserPlus className="w-4 h-4" />
-          </button>
-          <button
-            onClick={() => handleDelete(row.original.id)}
-            className="p-2 text-red-600 hover:bg-red-50 rounded"
-            title={locale === 'ar' ? 'حذف' : 'Delete'}
-          >
-            <Trash2 className="w-4 h-4" />
-          </button>
+          {canEdit && (
+            <button
+              onClick={() => openAssignModal(row.original.id)}
+              className="p-2 text-green-600 hover:bg-green-50 rounded"
+              title={locale === 'ar' ? 'تعيين الرموز' : 'Assign Codes'}
+            >
+              <UserPlus className="w-4 h-4" />
+            </button>
+          )}
+          {canDelete && (
+            <button
+              onClick={() => handleDelete(row.original.id)}
+              className="p-2 text-red-600 hover:bg-red-50 rounded"
+              title={locale === 'ar' ? 'حذف' : 'Delete'}
+            >
+              <Trash2 className="w-4 h-4" />
+            </button>
+          )}
         </div>
       ),
     }),
@@ -629,16 +665,20 @@ export function PhcCenterListPage() {
             </p>
           </div>
           <div className="flex items-center gap-2">
-            <Button variant="outline" size="sm" onClick={() => setShowImportExport(true)}>
-              <FileSpreadsheet className="w-4 h-4 me-2" />
-              {locale === 'ar' ? 'استيراد / تصدير' : 'Import / Export'}
-            </Button>
+            {canImportExport && (
+              <Button variant="outline" size="sm" onClick={() => setShowImportExport(true)}>
+                <FileSpreadsheet className="w-4 h-4 me-2" />
+                {locale === 'ar' ? 'استيراد / تصدير' : 'Import / Export'}
+              </Button>
+            )}
+            {canCreate && (
             <Link to="/phc-centers/new">
               <Button size="sm">
                 <PlusIcon className="w-4 h-4 me-2" />
                 {locale === 'ar' ? 'إضافة مركز' : 'Add PHC Center'}
               </Button>
             </Link>
+          )}
           </div>
         </div>
 

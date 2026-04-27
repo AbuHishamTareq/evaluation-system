@@ -29,6 +29,10 @@ class ShcCategoryController extends Controller
 
     public function index(Request $request): JsonResponse
     {
+        if (! auth()->user() || ! auth()->user()->hasPermissionTo('shc_categories.view', 'web')) {
+            return response()->json(['error' => 'Unauthorized'], 403);
+        }
+
         $filters = $request->only(['medical_field_id', 'specialty_id', 'rank_id', 'is_active', 'search', 'per_page', 'page']);
         $cacheKey = $this->getIndexCacheKey(md5(json_encode($filters)));
 
@@ -86,6 +90,10 @@ class ShcCategoryController extends Controller
 
     public function store(Request $request): JsonResponse
     {
+        if (! auth()->user() || ! auth()->user()->hasPermissionTo('shc_categories.create', 'web')) {
+            return response()->json(['error' => 'Unauthorized'], 403);
+        }
+
         $validated = $request->validate([
             'medical_field_id' => 'nullable|exists:medical_fields,id',
             'specialty_id' => 'nullable|exists:specialties,id',
@@ -106,6 +114,10 @@ class ShcCategoryController extends Controller
 
     public function show(ShcCategory $shcCategory): JsonResponse
     {
+        if (! auth()->user() || ! auth()->user()->hasPermissionTo('shc_categories.view', 'web')) {
+            return response()->json(['error' => 'Unauthorized'], 403);
+        }
+
         $cacheKey = static::$cachePrefix.'show:'.$shcCategory->id;
 
         $data = Cache::remember($cacheKey, now()->addMinutes(static::$cacheTtl), function () use ($shcCategory) {
@@ -119,6 +131,10 @@ class ShcCategoryController extends Controller
 
     public function update(Request $request, ShcCategory $shcCategory): JsonResponse
     {
+        if (! auth()->user() || ! auth()->user()->hasPermissionTo('shc_categories.edit', 'web')) {
+            return response()->json(['error' => 'Unauthorized'], 403);
+        }
+
         $validated = $request->validate([
             'medical_field_id' => 'nullable|exists:medical_fields,id',
             'specialty_id' => 'nullable|exists:specialties,id',
@@ -140,6 +156,10 @@ class ShcCategoryController extends Controller
 
     public function destroy(ShcCategory $shcCategory): JsonResponse
     {
+        if (! auth()->user() || ! auth()->user()->hasPermissionTo('shc_categories.delete', 'web')) {
+            return response()->json(['error' => 'Unauthorized'], 403);
+        }
+
         $shcCategory->delete();
 
         $this->clearIndexCache();
@@ -150,6 +170,10 @@ class ShcCategoryController extends Controller
 
     public function toggleStatus(ShcCategory $shcCategory): JsonResponse
     {
+        if (! auth()->user() || ! auth()->user()->hasPermissionTo('shc_categories.edit', 'web')) {
+            return response()->json(['error' => 'Unauthorized'], 403);
+        }
+
         $shcCategory->update(['is_active' => ! $shcCategory->is_active]);
 
         $this->clearIndexCache();
@@ -163,6 +187,10 @@ class ShcCategoryController extends Controller
 
     public function import(Request $request): JsonResponse
     {
+        if (! auth()->user() || ! auth()->user()->hasPermissionTo('shc_categories.create', 'web')) {
+            return response()->json(['error' => 'Unauthorized'], 403);
+        }
+
         $request->validate([
             'file' => 'required|file|mimes:csv,txt,xlsx,xls,application/vnd.ms-excel,application/vnd.openxmlformats-officedocument.spreadsheetml.sheet|max:10240',
         ]);
@@ -219,6 +247,10 @@ class ShcCategoryController extends Controller
 
     public function export(Request $request): Response
     {
+        if (! auth()->user() || ! auth()->user()->hasPermissionTo('shc_categories.view', 'web')) {
+            return response()->json(['error' => 'Unauthorized'], 403);
+        }
+
         $format = $request->input('format', 'csv');
         $ids = $request->input('ids');
 

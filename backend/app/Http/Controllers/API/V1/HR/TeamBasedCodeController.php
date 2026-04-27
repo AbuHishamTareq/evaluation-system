@@ -18,6 +18,10 @@ class TeamBasedCodeController extends Controller
 
     public function index(Request $request): JsonResponse
     {
+        if (! auth()->user() || ! auth()->user()->hasPermissionTo('team_based_codes.view', 'web')) {
+            return response()->json(['error' => 'Unauthorized'], 403);
+        }
+
         $query = TeamBasedCode::query();
 
         if ($request->has('is_active')) {
@@ -48,6 +52,10 @@ class TeamBasedCodeController extends Controller
 
     public function store(Request $request): JsonResponse
     {
+        if (! auth()->user() || ! auth()->user()->hasPermissionTo('team_based_codes.create', 'web')) {
+            return response()->json(['error' => 'Unauthorized'], 403);
+        }
+
         $validated = $request->validate([
             'code' => 'required|string|max:255|unique:team_based_codes,code',
             'role' => 'required|string|max:255',
@@ -64,6 +72,10 @@ class TeamBasedCodeController extends Controller
 
     public function show(TeamBasedCode $teamBasedCode): JsonResponse
     {
+        if (! auth()->user() || ! auth()->user()->hasPermissionTo('team_based_codes.view', 'web')) {
+            return response()->json(['error' => 'Unauthorized'], 403);
+        }
+
         return response()->json([
             'data' => $teamBasedCode->toArray(),
         ]);
@@ -71,6 +83,10 @@ class TeamBasedCodeController extends Controller
 
     public function update(Request $request, TeamBasedCode $teamBasedCode): JsonResponse
     {
+        if (! auth()->user() || ! auth()->user()->hasPermissionTo('team_based_codes.edit', 'web')) {
+            return response()->json(['error' => 'Unauthorized'], 403);
+        }
+
         $validated = $request->validate([
             'code' => 'sometimes|string|max:255|unique:team_based_codes,code,'.$teamBasedCode->id,
             'role' => 'sometimes|string|max:255',
@@ -87,6 +103,10 @@ class TeamBasedCodeController extends Controller
 
     public function destroy(TeamBasedCode $teamBasedCode): JsonResponse
     {
+        if (! auth()->user() || ! auth()->user()->hasPermissionTo('team_based_codes.delete', 'web')) {
+            return response()->json(['error' => 'Unauthorized'], 403);
+        }
+
         $teamBasedCode->delete();
 
         return response()->json([
@@ -96,6 +116,10 @@ class TeamBasedCodeController extends Controller
 
     public function toggleStatus(TeamBasedCode $teamBasedCode): JsonResponse
     {
+        if (! auth()->user() || ! auth()->user()->hasPermissionTo('team_based_codes.edit', 'web')) {
+            return response()->json(['error' => 'Unauthorized'], 403);
+        }
+
         $teamBasedCode->update(['is_active' => ! $teamBasedCode->is_active]);
 
         return response()->json([
@@ -106,6 +130,10 @@ class TeamBasedCodeController extends Controller
 
     public function export(Request $request)
     {
+        if (! auth()->user() || ! auth()->user()->hasPermissionTo('team_based_codes.view', 'web')) {
+            return response()->json(['error' => 'Unauthorized'], 403);
+        }
+
         $query = TeamBasedCode::query();
 
         $ids = $request->input('ids');
@@ -138,6 +166,10 @@ class TeamBasedCodeController extends Controller
 
     public function import(Request $request)
     {
+        if (! auth()->user() || ! auth()->user()->hasPermissionTo('team_based_codes.create', 'web')) {
+            return response()->json(['error' => 'Unauthorized'], 403);
+        }
+
         $request->validate([
             'file' => 'required|file|mimes:csv,xlsx,xls',
         ]);

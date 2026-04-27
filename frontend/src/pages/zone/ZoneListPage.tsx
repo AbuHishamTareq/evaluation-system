@@ -11,6 +11,7 @@ import {
   createColumnHelper,
 } from '@tanstack/react-table'
 import { useAppStore } from '@/stores/appStore'
+import { useAuthStore } from '@/stores/authStore'
 import { zoneApi } from '@/lib/api'
 import { Layout } from '@/components/Layout'
 import { Button } from '@/components/ui/Button'
@@ -30,6 +31,17 @@ const columnHelper = createColumnHelper<Zone>()
 export function ZoneListPage() {
   const { locale } = useAppStore()
   const navigate = useNavigate()
+  const { hasPermission, refreshPermissions } = useAuthStore()
+
+  useEffect(() => {
+    refreshPermissions()
+  }, [])
+
+  const canCreate = hasPermission('zones.create')
+  const canEdit = hasPermission('zones.edit')
+  const canDelete = hasPermission('zones.delete')
+  const canToggle = hasPermission('zones.toggle')
+  const canImportExport = hasPermission('zones.import_export')
   const [data, setData] = useState<Zone[]>([])
   const [isLoading, setIsLoading] = useState(true)
   const [search, setSearch] = useState('')
@@ -52,7 +64,12 @@ export function ZoneListPage() {
       const res = await zoneApi.getAll(params)
       setData(res.data.data || [])
       setTotalCount(res.data.meta?.total || res.data.total || 0)
-    } catch (err) {
+    } catch (err: unknown) {
+      const error = err as { response?: { status?: number } }
+      if (error.response?.status === 403) {
+        navigate('/forbidden')
+        return
+      }
       console.error('Failed to load zones:', err)
     } finally {
       setIsLoading(false)
@@ -171,41 +188,59 @@ export function ZoneListPage() {
     }),
     columnHelper.accessor('is_active', {
       header: locale === 'ar' ? 'الحالة' : 'Status',
-      cell: ({ row }) => (
-        <button
-          onClick={() => handleToggleStatus(row.original.id, row.original.is_active)}
-          className={`inline-flex items-center gap-1 px-2 py-1 rounded-full text-xs font-medium cursor-pointer ${
-            row.original.is_active
-              ? 'bg-green-100 text-green-800 hover:bg-green-200'
-              : 'bg-red-100 text-red-800 hover:bg-red-200'
-          }`}
-        >
-          <Building2 className="w-3 h-3" />
-          {row.original.is_active
-            ? locale === 'ar' ? 'نشط' : 'Active'
-            : locale === 'ar' ? 'غير نشط' : 'Inactive'}
-        </button>
-      ),
+      cell: ({ row }) => {
+        const isActive = row.original.is_active
+        if (!canToggle) {
+          return (
+            <span className={`inline-flex items-center gap-1 px-2 py-1 rounded-full text-xs font-medium ${
+              isActive ? 'bg-green-100 text-green-800' : 'bg-red-100 text-red-800'
+            }`}>
+              {isActive
+                ? locale === 'ar' ? 'نشط' : 'Active'
+                : locale === 'ar' ? 'غير نشط' : 'Inactive'}
+            </span>
+          )
+        }
+        return (
+          <button
+            onClick={() => handleToggleStatus(row.original.id, row.original.is_active)}
+            className={`inline-flex items-center gap-1 px-2 py-1 rounded-full text-xs font-medium cursor-pointer ${
+              isActive
+                ? 'bg-green-100 text-green-800 hover:bg-green-200'
+                : 'bg-red-100 text-red-800 hover:bg-red-200'
+            }`}
+          >
+            <Building2 className="w-3 h-3" />
+            {isActive
+              ? locale === 'ar' ? 'نشط' : 'Active'
+              : locale === 'ar' ? 'غير نشط' : 'Inactive'}
+          </button>
+        )
+      },
     }),
     columnHelper.display({
       id: 'actions',
       header: locale === 'ar' ? 'الإجراءات' : 'Actions',
       cell: ({ row }) => (
         <div className="flex items-center gap-1">
-          <button
-            onClick={() => navigate(`/zones/${row.original.id}`)}
-            className="p-2 text-blue-600 hover:bg-blue-50 rounded"
-            title={locale === 'ar' ? 'تعديل' : 'Edit'}
-          >
-            <Edit2 className="w-4 h-4" />
-          </button>
-          <button
-            onClick={() => handleDelete(row.original.id)}
-            className="p-2 text-red-600 hover:bg-red-50 rounded"
-            title={locale === 'ar' ? 'حذف' : 'Delete'}
-          >
-            <Trash2 className="w-4 h-4" />
-          </button>
+          {canEdit && (
+            <button
+              onClick={() => navigate(`/zones/${row.original.id}`)}
+              className="p-2 text-blue-600 hover:bg-blue-50 rounded"
+              title={locale === 'ar' ? 'تعديل' : 'Edit'}
+            >
+              <Edit2 className="w-4 h-4" />
+            </button>
+          )}
+          {canDelete && (
+            <button
+              onClick={() => handleDelete(row.original.id)}
+              className="p-2 text-red-600 hover:bg-red-50 rounded"
+              title={locale === 'ar' ? 'حذف' : 'Delete'}
+            >
+              <Trash2 className="w-4 h-4" />
+            </button>
+          )}
         </div>
       ),
     }),
@@ -248,16 +283,20 @@ export function ZoneListPage() {
             </p>
           </div>
           <div className="flex items-center gap-2">
-            <Button variant="outline" size="sm" onClick={() => setShowImportExport(true)}>
-              <FileSpreadsheet className="w-4 h-4 me-2" />
-              {locale === 'ar' ? 'استيراد / تصدير' : 'Import / Export'}
-            </Button>
+            {canImportExport && (
+              <Button variant="outline" size="sm" onClick={() => setShowImportExport(true)}>
+                <FileSpreadsheet className="w-4 h-4 me-2" />
+                {locale === 'ar' ? 'استيراد / تصدير' : 'Import / Export'}
+              </Button>
+            )}
+            {canCreate && (
             <Link to="/zones/new">
               <Button size="sm">
                 <Plus className="w-4 h-4 me-2" />
                 {locale === 'ar' ? 'إضافة منطقة' : 'Add Zone'}
               </Button>
             </Link>
+          )}
           </div>
         </div>
 
@@ -363,23 +402,54 @@ export function ZoneListPage() {
               </span>
               <div className="flex items-center gap-1">
                 <button
-                  onClick={() =>
-                    setPagination((p) => ({ ...p, pageIndex: p.pageIndex - 1 }))
-                  }
+                  onClick={() => setPagination(p => ({ ...p, pageIndex: 0 }))}
+                  disabled={pagination.pageIndex === 0}
+                  className="p-1.5 rounded hover:bg-gray-100 disabled:opacity-50 disabled:cursor-not-allowed"
+                  title="First page"
+                >
+                  <ChevronFirst className="w-5 h-5" />
+                </button>
+                <button
+                  onClick={() => setPagination((p) => ({ ...p, pageIndex: p.pageIndex - 1 }))}
                   disabled={pagination.pageIndex === 0}
                   className="p-1.5 rounded hover:bg-gray-100 disabled:opacity-50 disabled:cursor-not-allowed"
                 >
                   <ChevronLeft className="w-5 h-5" />
                 </button>
                 <button
-                  onClick={() =>
-                    setPagination((p) => ({ ...p, pageIndex: p.pageIndex + 1 }))
-                  }
+                  onClick={() => setPagination((p) => ({ ...p, pageIndex: p.pageIndex + 1 }))}
                   disabled={pagination.pageIndex >= totalPages - 1}
                   className="p-1.5 rounded hover:bg-gray-100 disabled:opacity-50 disabled:cursor-not-allowed"
                 >
                   <ChevronRight className="w-5 h-5" />
                 </button>
+                <button
+                  onClick={() => setPagination(p => ({ ...p, pageIndex: totalPages - 1 }))}
+                  disabled={pagination.pageIndex >= totalPages - 1}
+                  className="p-1.5 rounded hover:bg-gray-100 disabled:opacity-50 disabled:cursor-not-allowed"
+                  title="Last page"
+                >
+                  <ChevronLast className="w-5 h-5" />
+                </button>
+                <div className="flex items-center gap-1 ms-2 border-s border-gray-300 ps-2">
+                  <input
+                    type="number"
+                    value={gotoPage}
+                    onChange={(e) => setGotoPage(e.target.value)}
+                    onKeyDown={handleKeyDown}
+                    placeholder="#"
+                    min={1}
+                    max={totalPages}
+                    className="w-12 px-2 py-1 text-sm border border-gray-200 rounded text-center focus:ring-2 focus:ring-brand-500 focus:border-brand-500 outline-none"
+                  />
+                  <button
+                    onClick={handleGotoPage}
+                    disabled={!gotoPage || Number(gotoPage) < 1 || Number(gotoPage) > totalPages}
+                    className="px-2 py-1 text-sm bg-brand-500 text-white rounded hover:bg-brand-600 disabled:opacity-50 disabled:cursor-not-allowed"
+                  >
+                    {locale === 'ar' ? 'انتقال' : 'Go'}
+                  </button>
+                </div>
               </div>
             </div>
           </div>

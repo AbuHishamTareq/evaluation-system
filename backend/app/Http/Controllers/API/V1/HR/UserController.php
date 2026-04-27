@@ -20,6 +20,10 @@ class UserController extends Controller
 
     public function index(Request $request): JsonResponse
     {
+        if (! auth()->user() || ! auth()->user()->hasPermissionTo('users.view', 'web')) {
+            return response()->json(['error' => 'Unauthorized'], 403);
+        }
+
         $filters = $request->only(['search', 'is_active', 'per_page', 'page']);
         $cacheKey = $this->getIndexCacheKey(md5(json_encode($filters)));
 
@@ -57,6 +61,10 @@ class UserController extends Controller
 
     public function store(Request $request): JsonResponse
     {
+        if (! auth()->user() || ! auth()->user()->hasPermissionTo('users.create', 'web')) {
+            return response()->json(['error' => 'Unauthorized'], 403);
+        }
+
         $validated = $request->validate([
             'name' => 'required|string|max:255',
             'email' => 'required|email|max:255|unique:users,email',
@@ -87,6 +95,10 @@ class UserController extends Controller
 
     public function show(User $user): JsonResponse
     {
+        if (! auth()->user() || ! auth()->user()->hasPermissionTo('users.view', 'web')) {
+            return response()->json(['error' => 'Unauthorized'], 403);
+        }
+
         $cacheKey = static::$cachePrefix.'show:'.$user->id;
 
         $data = Cache::remember($cacheKey, now()->addMinutes(static::$cacheTtl), function () use ($user) {
@@ -100,6 +112,10 @@ class UserController extends Controller
 
     public function update(Request $request, User $user): JsonResponse
     {
+        if (! auth()->user() || ! auth()->user()->hasPermissionTo('users.edit', 'web')) {
+            return response()->json(['error' => 'Unauthorized'], 403);
+        }
+
         $validated = $request->validate([
             'name' => 'sometimes|string|max:255',
             'email' => 'sometimes|email|max:255|unique:users,email,'.$user->id,
@@ -119,6 +135,10 @@ class UserController extends Controller
 
     public function assignRole(Request $request, User $user): JsonResponse
     {
+        if (! auth()->user() || ! auth()->user()->hasPermissionTo('users.edit', 'web')) {
+            return response()->json(['error' => 'Unauthorized'], 403);
+        }
+
         $validated = $request->validate([
             'role_id' => 'required|exists:roles,id',
         ]);
@@ -137,6 +157,10 @@ class UserController extends Controller
 
     public function removeRole(Request $request, User $user): JsonResponse
     {
+        if (! auth()->user() || ! auth()->user()->hasPermissionTo('users.edit', 'web')) {
+            return response()->json(['error' => 'Unauthorized'], 403);
+        }
+
         $validated = $request->validate([
             'role_id' => 'required|exists:roles,id',
         ]);
@@ -155,6 +179,10 @@ class UserController extends Controller
 
     public function syncRoles(Request $request, User $user): JsonResponse
     {
+        if (! auth()->user() || ! auth()->user()->hasPermissionTo('users.edit', 'web')) {
+            return response()->json(['error' => 'Unauthorized'], 403);
+        }
+
         $validated = $request->validate([
             'role_ids' => 'required|array',
             'role_ids.*' => 'exists:roles,id',
@@ -174,6 +202,10 @@ class UserController extends Controller
 
     public function getAvailableRoles(): JsonResponse
     {
+        if (! auth()->user() || ! auth()->user()->hasPermissionTo('users.view', 'web')) {
+            return response()->json(['error' => 'Unauthorized'], 403);
+        }
+
         $cacheKey = static::$cachePrefix.'available-roles';
 
         $data = Cache::remember($cacheKey, now()->addMinutes(static::$cacheTtl), function () {
@@ -187,6 +219,10 @@ class UserController extends Controller
 
     public function destroy(User $user): JsonResponse
     {
+        if (! auth()->user() || ! auth()->user()->hasPermissionTo('users.delete', 'web')) {
+            return response()->json(['error' => 'Unauthorized'], 403);
+        }
+
         $user->delete();
 
         $this->clearIndexCache();

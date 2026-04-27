@@ -20,6 +20,10 @@ class RoleController extends Controller
 
     public function index(Request $request): JsonResponse
     {
+        if (! auth()->user() || ! auth()->user()->hasPermissionTo('roles.view', 'web')) {
+            return response()->json(['error' => 'Unauthorized'], 403);
+        }
+
         $filters = $request->only(['search', 'per_page', 'page']);
         $cacheKey = $this->getIndexCacheKey(md5(json_encode($filters)));
 
@@ -50,6 +54,10 @@ class RoleController extends Controller
 
     public function store(Request $request): JsonResponse
     {
+        if (! auth()->user() || ! auth()->user()->hasPermissionTo('roles.create', 'web')) {
+            return response()->json(['error' => 'Unauthorized'], 403);
+        }
+
         $validated = $request->validate([
             'name' => 'required|string|max:255|unique:roles,name',
             'name_ar' => 'nullable|string|max:255',
@@ -78,6 +86,10 @@ class RoleController extends Controller
 
     public function show(Role $role): JsonResponse
     {
+        if (! auth()->user() || ! auth()->user()->hasPermissionTo('roles.view', 'web')) {
+            return response()->json(['error' => 'Unauthorized'], 403);
+        }
+
         $cacheKey = static::$cachePrefix.'show:'.$role->id;
 
         $data = Cache::remember($cacheKey, now()->addMinutes(static::$cacheTtl), function () use ($role) {
@@ -91,6 +103,10 @@ class RoleController extends Controller
 
     public function update(Request $request, Role $role): JsonResponse
     {
+        if (! auth()->user() || ! auth()->user()->hasPermissionTo('roles.edit', 'web')) {
+            return response()->json(['error' => 'Unauthorized'], 403);
+        }
+
         $validated = $request->validate([
             'name' => 'sometimes|string|max:255|unique:roles,name,'.$role->id,
             'name_ar' => 'nullable|string|max:255',
@@ -120,6 +136,10 @@ class RoleController extends Controller
 
     public function destroy(Role $role): JsonResponse
     {
+        if (! auth()->user() || ! auth()->user()->hasPermissionTo('roles.delete', 'web')) {
+            return response()->json(['error' => 'Unauthorized'], 403);
+        }
+
         if ($role->name === 'Main Office') {
             return response()->json([
                 'error' => 'Cannot delete the Main Office role',
@@ -138,10 +158,20 @@ class RoleController extends Controller
 
     public function permissions(): JsonResponse
     {
+        if (! auth()->user() || ! auth()->user()->hasPermissionTo('roles.view', 'web')) {
+            return response()->json(['error' => 'Unauthorized'], 403);
+        }
+
         $cacheKey = static::$cachePrefix.'permissions';
 
         $data = Cache::remember($cacheKey, now()->addMinutes(static::$cacheTtl), function () {
-            $permissions = Permission::orderBy('name')->get();
+            $permissions = Permission::whereNotNull('id')
+                ->whereNot(function ($query) {
+                    $query->where('name', 'like', '%.import')
+                        ->orWhere('name', 'like', '%.export');
+                })
+                ->orderBy('name')
+                ->get();
 
             $grouped = $permissions->groupBy(function ($permission) {
                 $parts = explode('.', $permission->name);

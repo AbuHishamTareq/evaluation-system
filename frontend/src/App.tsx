@@ -29,6 +29,7 @@ import { UserListPage } from '@/pages/user/UserListPage'
 import { PasswordChangePage } from '@/pages/PasswordChangePage'
 import { TeamBasedCodeListPage } from '@/pages/team-based-code/TeamBasedCodeListPage'
 import { TeamBasedCodeForm } from '@/pages/team-based-code/TeamBasedCodeForm'
+import { ForbiddenPage } from '@/pages/ForbiddenPage'
 
 function App() {
   const { isAuthenticated } = useAuthStore()
@@ -348,6 +349,7 @@ function App() {
           }
         />
         <Route path="*" element={<Navigate to="/" replace />} />
+        <Route path="/forbidden" element={<ForbiddenPage />} />
       </Routes>
     </div>
   )

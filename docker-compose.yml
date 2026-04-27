@@ -37,6 +37,24 @@ services:
       timeout: 3s
       retries: 3
 
+  phpmyadmin:
+    image: phpmyadmin/phpmyadmin
+    container_name: phc-phpmyadmin
+    restart: unless-stopped
+    environment:
+      PMA_HOST: phc-mysql
+      PMA_PORT: 3306
+      PMA_DATABASE: phc_eval
+      PMA_USER: phc_user
+      PMA_PASSWORD: phc_pass
+    ports:
+      - "8081:80"
+    networks:
+      - phc-network
+    depends_on:
+      mysql:
+        condition: service_healthy
+
   php-fpm:
     build:
       context: ./docker/php

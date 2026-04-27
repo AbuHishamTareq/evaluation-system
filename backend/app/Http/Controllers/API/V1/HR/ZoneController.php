@@ -28,6 +28,10 @@ class ZoneController extends Controller
 
     public function index(Request $request): JsonResponse
     {
+        if (! $request->user() || ! $request->user()->hasPermissionTo('zones.view', 'web')) {
+            return response()->json(['error' => 'Unauthorized'], 403);
+        }
+
         $filters = $request->only(['is_active', 'search', 'per_page', 'page']);
         $cacheKey = $this->getIndexCacheKey(md5(json_encode($filters)));
 
@@ -66,6 +70,10 @@ class ZoneController extends Controller
 
     public function store(StoreZoneRequest $request): JsonResponse
     {
+        if (! $request->user() || ! $request->user()->hasPermissionTo('zones.create', 'web')) {
+            return response()->json(['error' => 'Unauthorized'], 403);
+        }
+
         $data = $request->validated();
         $data['tenant_id'] = $request->user()?->tenant_id ?? 1;
         $zone = Region::create($data);
@@ -80,6 +88,10 @@ class ZoneController extends Controller
 
     public function show(Region $zone): JsonResponse
     {
+        if (! auth()->user() || ! auth()->user()->hasPermissionTo('zones.view', 'web')) {
+            return response()->json(['error' => 'Unauthorized'], 403);
+        }
+
         $cacheKey = static::$cachePrefix.'show:'.$zone->id;
 
         $data = Cache::remember($cacheKey, now()->addMinutes(static::$cacheTtl), function () use ($zone) {
@@ -93,6 +105,10 @@ class ZoneController extends Controller
 
     public function update(UpdateZoneRequest $request, Region $zone): JsonResponse
     {
+        if (! auth()->user() || ! auth()->user()->hasPermissionTo('zones.edit', 'web')) {
+            return response()->json(['error' => 'Unauthorized'], 403);
+        }
+
         $zone->update($request->validated());
 
         $this->clearIndexCache();
@@ -106,6 +122,10 @@ class ZoneController extends Controller
 
     public function destroy(Region $zone): JsonResponse
     {
+        if (! auth()->user() || ! auth()->user()->hasPermissionTo('zones.delete', 'web')) {
+            return response()->json(['error' => 'Unauthorized'], 403);
+        }
+
         $zone->delete();
 
         $this->clearIndexCache();
@@ -116,6 +136,10 @@ class ZoneController extends Controller
 
     public function toggleStatus(Region $zone): JsonResponse
     {
+        if (! auth()->user() || ! auth()->user()->hasPermissionTo('zones.edit', 'web')) {
+            return response()->json(['error' => 'Unauthorized'], 403);
+        }
+
         $zone->update(['is_active' => ! $zone->is_active]);
 
         $this->clearIndexCache();

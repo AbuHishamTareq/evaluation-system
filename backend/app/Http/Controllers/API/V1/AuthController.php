@@ -35,8 +35,22 @@ class AuthController extends Controller
 
         $token = $user->createToken('auth-token')->plainTextToken;
 
+        $user->load(['tenant', 'phcCenter', 'department', 'roles']);
+
+        $permissions = \DB::table('permissions')
+            ->join('role_has_permissions', 'permissions.id', '=', 'role_has_permissions.permission_id')
+            ->join('model_has_roles', 'role_has_permissions.role_id', '=', 'model_has_roles.role_id')
+            ->where('model_has_roles.model_type', 'App\\Models\\User')
+            ->where('model_has_roles.model_id', $user->id)
+            ->pluck('permissions.name')
+            ->unique()
+            ->values()
+            ->toArray();
+
+        $user->setAttribute('permissions', $permissions);
+
         return response()->json([
-            'user' => $user->load(['tenant', 'phcCenter', 'department', 'roles']),
+            'user' => $user,
             'token' => $token,
         ]);
     }
@@ -52,8 +66,23 @@ class AuthController extends Controller
 
     public function me(Request $request): JsonResponse
     {
+        $user = $request->user();
+        $user->load(['tenant', 'phcCenter', 'department', 'roles']);
+
+        $permissions = \DB::table('permissions')
+            ->join('role_has_permissions', 'permissions.id', '=', 'role_has_permissions.permission_id')
+            ->join('model_has_roles', 'role_has_permissions.role_id', '=', 'model_has_roles.role_id')
+            ->where('model_has_roles.model_type', 'App\\Models\\User')
+            ->where('model_has_roles.model_id', $user->id)
+            ->pluck('permissions.name')
+            ->unique()
+            ->values()
+            ->toArray();
+
+        $user->setAttribute('permissions', $permissions);
+
         return response()->json([
-            'user' => $request->user()->load(['tenant', 'phcCenter', 'department', 'roles', 'permissions']),
+            'user' => $user,
         ]);
     }
 

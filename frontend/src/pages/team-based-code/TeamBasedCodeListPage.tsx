@@ -9,6 +9,7 @@ import {
   createColumnHelper,
 } from '@tanstack/react-table'
 import { useAppStore } from '@/stores/appStore'
+import { useAuthStore } from '@/stores/authStore'
 import { teamBasedCodeApi } from '@/lib/api'
 import { Layout } from '@/components/Layout'
 import { Button } from '@/components/ui/Button'
@@ -26,6 +27,7 @@ const columnHelper = createColumnHelper<TeamBasedCode>()
 
 export function TeamBasedCodeListPage() {
   const { locale } = useAppStore()
+  const { hasPermission, refreshPermissions } = useAuthStore()
   const navigate = useNavigate()
   const [data, setData] = useState<TeamBasedCode[]>([])
   const [isLoading, setIsLoading] = useState(true)
@@ -35,6 +37,16 @@ export function TeamBasedCodeListPage() {
   const [pagination, setPagination] = useState({ pageIndex: 0, pageSize: 15 })
   const [totalCount, setTotalCount] = useState(0)
   const [gotoPage, setGotoPage] = useState('')
+
+  useEffect(() => {
+    refreshPermissions()
+  }, [])
+
+  const canCreate = hasPermission('team_based_codes.create')
+  const canEdit = hasPermission('team_based_codes.edit')
+  const canDelete = hasPermission('team_based_codes.delete')
+  const canToggle = hasPermission('team_based_codes.toggle')
+  const canImportExport = hasPermission('team_based_codes.import_export')
 
   const fetchData = async () => {
     setIsLoading(true)
@@ -48,7 +60,12 @@ export function TeamBasedCodeListPage() {
       const res = await teamBasedCodeApi.getAll(params)
       setData(res.data.data || [])
       setTotalCount(res.data.meta?.total || res.data.total || 0)
-    } catch (err) {
+    } catch (err: unknown) {
+      const error = err as { response?: { status?: number } }
+      if (error.response?.status === 403) {
+        navigate('/forbidden')
+        return
+      }
       console.error('Failed to load team based codes:', err)
     } finally {
       setIsLoading(false)
@@ -164,41 +181,59 @@ export function TeamBasedCodeListPage() {
     }),
     columnHelper.accessor('is_active', {
       header: locale === 'ar' ? 'الحالة' : 'Status',
-      cell: ({ row }) => (
-        <button
-          onClick={() => handleToggleStatus(row.original.id, row.original.is_active)}
-          className={`inline-flex items-center gap-1 px-2 py-1 rounded-full text-xs font-medium cursor-pointer ${
-            row.original.is_active
-              ? 'bg-green-100 text-green-800 hover:bg-green-200'
-              : 'bg-red-100 text-red-800 hover:bg-red-200'
-          }`}
-        >
-          <UsersRound className="w-3 h-3" />
-          {row.original.is_active
-            ? locale === 'ar' ? 'نشط' : 'Active'
-            : locale === 'ar' ? 'غير نشط' : 'Inactive'}
-        </button>
-      ),
+      cell: ({ row }) => {
+        const isActive = row.original.is_active
+        if (!canToggle) {
+          return (
+            <span className={`inline-flex items-center gap-1 px-2 py-1 rounded-full text-xs font-medium ${
+              isActive ? 'bg-green-100 text-green-800' : 'bg-red-100 text-red-800'
+            }`}>
+              {isActive
+                ? locale === 'ar' ? 'نشط' : 'Active'
+                : locale === 'ar' ? 'غير نشط' : 'Inactive'}
+            </span>
+          )
+        }
+        return (
+          <button
+            onClick={() => handleToggleStatus(row.original.id, row.original.is_active)}
+            className={`inline-flex items-center gap-1 px-2 py-1 rounded-full text-xs font-medium cursor-pointer ${
+              isActive
+                ? 'bg-green-100 text-green-800 hover:bg-green-200'
+                : 'bg-red-100 text-red-800 hover:bg-red-200'
+            }`}
+          >
+            <UsersRound className="w-3 h-3" />
+            {isActive
+              ? locale === 'ar' ? 'نشط' : 'Active'
+              : locale === 'ar' ? 'غير نشط' : 'Inactive'}
+          </button>
+        )
+      },
     }),
     columnHelper.display({
       id: 'actions',
       header: locale === 'ar' ? 'الإجراءات' : 'Actions',
       cell: ({ row }) => (
         <div className="flex items-center gap-1">
-          <button
-            onClick={() => navigate(`/team-based-codes/${row.original.id}`)}
-            className="p-2 text-blue-600 hover:bg-blue-50 rounded"
-            title={locale === 'ar' ? 'تعديل' : 'Edit'}
-          >
-            <Edit2 className="w-4 h-4" />
-          </button>
-          <button
-            onClick={() => handleDelete(row.original.id)}
-            className="p-2 text-red-600 hover:bg-red-50 rounded"
-            title={locale === 'ar' ? 'حذف' : 'Delete'}
-          >
-            <Trash2 className="w-4 h-4" />
-          </button>
+          {canEdit && (
+            <button
+              onClick={() => navigate(`/team-based-codes/${row.original.id}`)}
+              className="p-2 text-blue-600 hover:bg-blue-50 rounded"
+              title={locale === 'ar' ? 'تعديل' : 'Edit'}
+            >
+              <Edit2 className="w-4 h-4" />
+            </button>
+          )}
+          {canDelete && (
+            <button
+              onClick={() => handleDelete(row.original.id)}
+              className="p-2 text-red-600 hover:bg-red-50 rounded"
+              title={locale === 'ar' ? 'حذف' : 'Delete'}
+            >
+              <Trash2 className="w-4 h-4" />
+            </button>
+          )}
         </div>
       ),
     }),
@@ -241,16 +276,20 @@ export function TeamBasedCodeListPage() {
             </p>
           </div>
           <div className="flex items-center gap-2">
-            <Button variant="outline" size="sm" onClick={() => setShowImportExport(true)}>
-              <FileSpreadsheet className="w-4 h-4 me-2" />
-              {locale === 'ar' ? 'استيراد / تصدير' : 'Import / Export'}
-            </Button>
-            <Link to="/team-based-codes/new">
-              <Button size="sm">
-                <Plus className="w-4 h-4 me-2" />
-                {locale === 'ar' ? 'إضافة رمز' : 'Add Code'}
+            {canImportExport && (
+              <Button variant="outline" size="sm" onClick={() => setShowImportExport(true)}>
+                <FileSpreadsheet className="w-4 h-4 me-2" />
+                {locale === 'ar' ? 'استيراد / تصدير' : 'Import / Export'}
               </Button>
-            </Link>
+            )}
+            {canCreate && (
+              <Link to="/team-based-codes/new">
+                <Button size="sm">
+                  <Plus className="w-4 h-4 me-2" />
+                  {locale === 'ar' ? 'إضافة رمز' : 'Add Code'}
+                </Button>
+              </Link>
+            )}
           </div>
         </div>
 

@@ -13,13 +13,14 @@ import {
   type SortingState,
 } from '@tanstack/react-table'
 import { useAppStore } from '@/stores/appStore'
+import { useAuthStore } from '@/stores/authStore'
 import { getTranslation } from '@/i18n'
 import { Layout } from '@/components/Layout'
 import { staffApi } from '@/lib/api'
 import { useDebounce } from '@/hooks/useDebounce'
 import { useStaffFilters } from '@/stores/filtersStore'
 import {
-  Search, Plus, ChevronLeft, ChevronRight,
+  Search, Plus, ChevronLeft, ChevronRight, ChevronFirst, ChevronLast,
   Edit2, Trash2, Eye, UserCheck, UserX, Filter, FileSpreadsheet
 } from 'lucide-react'
 import { Button } from '@/components/ui/Button'
@@ -46,7 +47,12 @@ const columnHelper = createColumnHelper<StaffMember>()
 
 export function StaffListPage() {
   const { locale, direction } = useAppStore()
+  const { hasPermission, refreshPermissions } = useAuthStore()
   const fontClass = locale === 'ar' ? 'font-ar' : 'font-en'
+
+  useEffect(() => {
+    refreshPermissions()
+  }, [])
 
   const [data, setData] = useState<StaffMember[]>([])
   const [isLoading, setIsLoading] = useState(true)
@@ -58,6 +64,14 @@ export function StaffListPage() {
   const [showFilters, setShowFilters] = useState(false)
   const [departments] = useState<{ id: number; name: string }[]>([])
   const [showImportExport, setShowImportExport] = useState(false)
+  const [gotoPage, setGotoPage] = useState('')
+
+  const canCreate = hasPermission('staff.create')
+  const canView = hasPermission('staff.view')
+  const canEdit = hasPermission('staff.edit')
+  const canDelete = hasPermission('staff.delete')
+  const canToggle = hasPermission('staff.toggle')
+  const canImportExport = hasPermission('staff.import_export')
   const [selectedRows, setSelectedRows] = useState<number[]>([])
 
   const { status, department_id, license_expiry } = useStaffFilters()
@@ -173,6 +187,20 @@ export function StaffListPage() {
     }
   }
 
+  const handleKeyDown = (e: React.KeyboardEvent) => {
+    if (e.key === 'Enter') {
+      handleGotoPage()
+    }
+  }
+
+  const handleGotoPage = () => {
+    const page = Number(gotoPage)
+    if (page >= 1 && page <= totalPages) {
+      setPagination((p) => ({ ...p, pageIndex: page - 1 }))
+      setGotoPage('')
+    }
+  }
+
   const columns = [
     {
       id: 'select',
@@ -253,6 +281,15 @@ export function StaffListPage() {
         if (!row.original?.id) return null
         const empStatus = row.original!.employment_status
         const isActive = empStatus === 'active'
+        if (!canToggle) {
+          return (
+            <span className={`inline-flex items-center gap-1 px-2.5 py-0.5 rounded-full text-xs font-medium ${
+              isActive ? 'bg-green-100 text-green-800' : 'bg-red-100 text-red-800'
+            }`}>
+              {locale === 'ar' ? (isActive ? 'نشط' : 'منتهي') : (isActive ? 'Active' : 'Terminated')}
+            </span>
+          )
+        }
         return (
           <button
             onClick={() => handleToggleStatus(row.original!.id, empStatus)}
@@ -277,27 +314,33 @@ export function StaffListPage() {
         if (!row.original?.id) return null
         return (
           <div className="flex items-center gap-2">
-            <Link
-              to={`/staff/${row.original!.id}`}
-              className="p-2 text-amber-600 hover:bg-amber-50 rounded"
-              title={locale === 'ar' ? 'عرض' : 'View'}
-            >
-              <Eye className="w-4 h-4" />
-            </Link>
-            <Link
-              to={`/staff/${row.original!.id}/edit`}
-              className="p-2 text-blue-600 hover:bg-blue-50 rounded"
-              title={locale === 'ar' ? 'تعديل' : 'Edit'}
-            >
-              <Edit2 className="w-4 h-4" />
-            </Link>
-            <button
-              className="p-2 text-red-600 hover:bg-red-50 rounded"
-              title={locale === 'ar' ? 'حذف' : 'Delete'}
-              onClick={() => handleDelete(row.original!.id)}
-            >
-              <Trash2 className="w-4 h-4" />
-            </button>
+            {canView && (
+              <Link
+                to={`/staff/${row.original!.id}`}
+                className="p-2 text-amber-600 hover:bg-amber-50 rounded"
+                title={locale === 'ar' ? 'عرض' : 'View'}
+              >
+                <Eye className="w-4 h-4" />
+              </Link>
+            )}
+            {canEdit && (
+              <Link
+                to={`/staff/${row.original!.id}/edit`}
+                className="p-2 text-blue-600 hover:bg-blue-50 rounded"
+                title={locale === 'ar' ? 'تعديل' : 'Edit'}
+              >
+                <Edit2 className="w-4 h-4" />
+              </Link>
+            )}
+            {canDelete && (
+              <button
+                className="p-2 text-red-600 hover:bg-red-50 rounded"
+                title={locale === 'ar' ? 'حذف' : 'Delete'}
+                onClick={() => handleDelete(row.original!.id)}
+              >
+                <Trash2 className="w-4 h-4" />
+              </button>
+            )}
           </div>
         )
       },
@@ -332,16 +375,20 @@ export function StaffListPage() {
             </p>
           </div>
           <div className="flex items-center gap-2">
-            <Button variant="outline" size="sm" onClick={() => setShowImportExport(true)}>
-              <FileSpreadsheet className="w-4 h-4 me-2" />
-              {locale === 'ar' ? 'استيراد / تصدير' : 'Import / Export'}
-            </Button>
-            <Link to="/staff/new">
-              <Button size="sm">
-                <Plus className="w-4 h-4 me-2" />
-                {locale === 'ar' ? 'إضافة موظف' : 'Add Staff'}
+            {canImportExport && (
+              <Button variant="outline" size="sm" onClick={() => setShowImportExport(true)}>
+                <FileSpreadsheet className="w-4 h-4 me-2" />
+                {locale === 'ar' ? 'استيراد / تصدير' : 'Import / Export'}
               </Button>
-            </Link>
+            )}
+            {canCreate && (
+              <Link to="/staff/new">
+                <Button size="sm">
+                  <Plus className="w-4 h-4 me-2" />
+                  {locale === 'ar' ? 'إضافة موظف' : 'Add Staff'}
+                </Button>
+              </Link>
+            )}
           </div>
         </div>
 
@@ -461,23 +508,54 @@ export function StaffListPage() {
                   </span>
                   <div className="flex items-center gap-1">
                     <button
-                      onClick={() =>
-                        setPagination((p) => ({ ...p, pageIndex: p.pageIndex - 1 }))
-                      }
+                      onClick={() => setPagination(p => ({ ...p, pageIndex: 0 }))}
+                      disabled={pagination.pageIndex === 0}
+                      className="p-1.5 rounded hover:bg-gray-100 disabled:opacity-50 disabled:cursor-not-allowed"
+                      title="First page"
+                    >
+                      <ChevronFirst className="w-4 h-4" />
+                    </button>
+                    <button
+                      onClick={() => setPagination((p) => ({ ...p, pageIndex: p.pageIndex - 1 }))}
                       disabled={pagination.pageIndex === 0}
                       className="p-1.5 rounded hover:bg-gray-100 disabled:opacity-50 disabled:cursor-not-allowed"
                     >
                       <ChevronLeft className="w-4 h-4" />
                     </button>
                     <button
-                      onClick={() =>
-                        setPagination((p) => ({ ...p, pageIndex: p.pageIndex + 1 }))
-                      }
+                      onClick={() => setPagination((p) => ({ ...p, pageIndex: p.pageIndex + 1 }))}
                       disabled={pagination.pageIndex >= totalPages - 1}
                       className="p-1.5 rounded hover:bg-gray-100 disabled:opacity-50 disabled:cursor-not-allowed"
                     >
                       <ChevronRight className="w-4 h-4" />
                     </button>
+                    <button
+                      onClick={() => setPagination(p => ({ ...p, pageIndex: totalPages - 1 }))}
+                      disabled={pagination.pageIndex >= totalPages - 1}
+                      className="p-1.5 rounded hover:bg-gray-100 disabled:opacity-50 disabled:cursor-not-allowed"
+                      title="Last page"
+                    >
+                      <ChevronLast className="w-4 h-4" />
+                    </button>
+                    <div className="flex items-center gap-1 ms-2 border-s border-gray-300 ps-2">
+                      <input
+                        type="number"
+                        value={gotoPage}
+                        onChange={(e) => setGotoPage(e.target.value)}
+                        onKeyDown={handleKeyDown}
+                        placeholder="#"
+                        min={1}
+                        max={totalPages}
+                        className="w-12 px-2 py-1 text-sm border border-gray-200 rounded text-center focus:ring-2 focus:ring-brand-500 focus:border-brand-500 outline-none"
+                      />
+                      <button
+                        onClick={handleGotoPage}
+                        disabled={!gotoPage || Number(gotoPage) < 1 || Number(gotoPage) > totalPages}
+                        className="px-2 py-1 text-sm bg-brand-500 text-white rounded hover:bg-brand-600 disabled:opacity-50 disabled:cursor-not-allowed"
+                      >
+                        {locale === 'ar' ? 'انتقال' : 'Go'}
+                      </button>
+                    </div>
                   </div>
                 </div>
               </div>

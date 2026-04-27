@@ -26,6 +26,10 @@ class NationalityController extends Controller
 
     public function index(Request $request): JsonResponse
     {
+        if (! auth()->user() || ! auth()->user()->hasPermissionTo('nationalities.view', 'web')) {
+            return response()->json(['error' => 'Unauthorized'], 403);
+        }
+
         $filters = $request->only(['is_active', 'search', 'per_page', 'page']);
         $cacheKey = $this->getIndexCacheKey(md5(json_encode($filters)));
 
@@ -68,6 +72,10 @@ class NationalityController extends Controller
 
     public function store(Request $request): JsonResponse
     {
+        if (! auth()->user() || ! auth()->user()->hasPermissionTo('nationalities.create', 'web')) {
+            return response()->json(['error' => 'Unauthorized'], 403);
+        }
+
         $validated = $request->validate([
             'name' => 'required|string|max:255',
             'name_ar' => 'nullable|string|max:255',
@@ -87,6 +95,10 @@ class NationalityController extends Controller
 
     public function show(Nationality $nationality): JsonResponse
     {
+        if (! auth()->user() || ! auth()->user()->hasPermissionTo('nationalities.view', 'web')) {
+            return response()->json(['error' => 'Unauthorized'], 403);
+        }
+
         $cacheKey = static::$cachePrefix.'show:'.$nationality->id;
 
         $data = Cache::remember($cacheKey, now()->addMinutes(static::$cacheTtl), function () use ($nationality) {
@@ -98,6 +110,10 @@ class NationalityController extends Controller
 
     public function update(Request $request, Nationality $nationality): JsonResponse
     {
+        if (! auth()->user() || ! auth()->user()->hasPermissionTo('nationalities.edit', 'web')) {
+            return response()->json(['error' => 'Unauthorized'], 403);
+        }
+
         $validated = $request->validate([
             'name' => 'sometimes|string|max:255',
             'name_ar' => 'nullable|string|max:255',
@@ -118,6 +134,10 @@ class NationalityController extends Controller
 
     public function destroy(Nationality $nationality): JsonResponse
     {
+        if (! auth()->user() || ! auth()->user()->hasPermissionTo('nationalities.delete', 'web')) {
+            return response()->json(['error' => 'Unauthorized'], 403);
+        }
+
         $nationality->delete();
 
         $this->clearIndexCache();
@@ -128,6 +148,10 @@ class NationalityController extends Controller
 
     public function toggleStatus(Nationality $nationality): JsonResponse
     {
+        if (! auth()->user() || ! auth()->user()->hasPermissionTo('nationalities.edit', 'web')) {
+            return response()->json(['error' => 'Unauthorized'], 403);
+        }
+
         $nationality->update(['is_active' => ! $nationality->is_active]);
 
         $this->clearIndexCache();
@@ -141,6 +165,10 @@ class NationalityController extends Controller
 
     public function import(Request $request): JsonResponse
     {
+        if (! auth()->user() || ! auth()->user()->hasPermissionTo('nationalities.create', 'web')) {
+            return response()->json(['error' => 'Unauthorized'], 403);
+        }
+
         $request->validate([
             'file' => 'required|file|mimes:csv,txt,xlsx,xls,application/vnd.ms-excel,application/vnd.openxmlformats-officedocument.spreadsheetml.sheet|max:10240',
         ]);
@@ -185,6 +213,10 @@ class NationalityController extends Controller
 
     public function export(Request $request): Response
     {
+        if (! auth()->user() || ! auth()->user()->hasPermissionTo('nationalities.view', 'web')) {
+            return response()->json(['error' => 'Unauthorized'], 403);
+        }
+
         $format = $request->input('format', 'csv');
         $ids = $request->input('ids');
 

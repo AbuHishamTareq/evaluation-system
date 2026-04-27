@@ -143,7 +143,7 @@ const navGroups: (NavGroup | NavItem)[] = [
 ]
 
 export function Layout({ children }: LayoutProps) {
-  const { user } = useAuthStore()
+  const { user, refreshPermissions } = useAuthStore()
   const { locale, setLocale, direction } = useAppStore()
   const location = useLocation()
   const [isSidebarCollapsed, setIsSidebarCollapsed] = useState(() => {
@@ -157,6 +157,10 @@ export function Layout({ children }: LayoutProps) {
   const [showUserMenu, setShowUserMenu] = useState(false)
   const userMenuRef = useRef<HTMLDivElement>(null)
   const fontClass = locale === 'ar' ? 'font-ar' : 'font-en'
+
+  useEffect(() => {
+    refreshPermissions()
+  }, [location.pathname, refreshPermissions])
 
   useEffect(() => {
     const handleClickOutside = (event: MouseEvent) => {

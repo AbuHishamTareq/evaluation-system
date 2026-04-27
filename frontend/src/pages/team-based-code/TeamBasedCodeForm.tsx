@@ -83,23 +83,15 @@ export function TeamBasedCodeForm() {
   return (
     <Layout>
       <div className="max-w-xl mx-auto">
-        <div className="flex items-center gap-4 mb-6">
-          <Link
-            to="/team-based-codes"
-            className="p-2 hover:bg-primary/10 rounded-lg transition-colors"
-          >
-            <ArrowLeft className="w-5 h-5" />
-          </Link>
-          <h1 className="text-xl font-bold text-text">
-            {isEdit
-              ? locale === 'ar'
-                ? 'تعديل الرمز'
-                : 'Edit Code'
-              : locale === 'ar'
-              ? 'إضافة رمز جديد'
-              : 'Add New Code'}
-          </h1>
-        </div>
+        <h1 className="text-xl font-bold text-text mb-6">
+          {isEdit
+            ? locale === 'ar'
+              ? 'تعديل الرمز'
+              : 'Edit Code'
+            : locale === 'ar'
+            ? 'إضافة رمز جديد'
+            : 'Add New Code'}
+        </h1>
 
         <div className="bg-surface border border-primary/10 rounded-2xl p-6 space-y-4">
           {error && (

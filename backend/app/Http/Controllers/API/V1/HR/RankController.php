@@ -4,7 +4,9 @@ namespace App\Http\Controllers\API\V1\HR;
 
 use App\Http\Controllers\Controller;
 use App\Http\Traits\CachesIndex;
+use App\Models\MedicalField;
 use App\Models\Rank;
+use App\Models\Specialty;
 use App\Services\Dashboard\ExportService;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
@@ -26,6 +28,10 @@ class RankController extends Controller
 
     public function index(Request $request): JsonResponse
     {
+        if (! auth()->user() || ! auth()->user()->hasPermissionTo('ranks.view', 'web')) {
+            return response()->json(['error' => 'Unauthorized'], 403);
+        }
+
         $filters = $request->only(['medical_field_id', 'specialty_id', 'is_active', 'search', 'per_page', 'page']);
         $cacheKey = $this->getIndexCacheKey(md5(json_encode($filters)));
 
@@ -72,6 +78,10 @@ class RankController extends Controller
 
     public function store(Request $request): JsonResponse
     {
+        if (! auth()->user() || ! auth()->user()->hasPermissionTo('ranks.create', 'web')) {
+            return response()->json(['error' => 'Unauthorized'], 403);
+        }
+
         $validated = $request->validate([
             'name' => 'required|string|max:255',
             'name_ar' => 'nullable|string|max:255',
@@ -93,10 +103,15 @@ class RankController extends Controller
 
     public function show(Rank $rank): JsonResponse
     {
+        if (! auth()->user() || ! auth()->user()->hasPermissionTo('ranks.view', 'web')) {
+            return response()->json(['error' => 'Unauthorized'], 403);
+        }
+
         $cacheKey = static::$cachePrefix.'show:'.$rank->id;
 
         $data = Cache::remember($cacheKey, now()->addMinutes(static::$cacheTtl), function () use ($rank) {
             $rank->load(['medicalField', 'specialty']);
+
             return ['data' => $rank->toArray()];
         });
 
@@ -105,6 +120,10 @@ class RankController extends Controller
 
     public function update(Request $request, Rank $rank): JsonResponse
     {
+        if (! auth()->user() || ! auth()->user()->hasPermissionTo('ranks.edit', 'web')) {
+            return response()->json(['error' => 'Unauthorized'], 403);
+        }
+
         $validated = $request->validate([
             'name' => 'sometimes|string|max:255',
             'name_ar' => 'nullable|string|max:255',
@@ -127,6 +146,10 @@ class RankController extends Controller
 
     public function destroy(Rank $rank): JsonResponse
     {
+        if (! auth()->user() || ! auth()->user()->hasPermissionTo('ranks.delete', 'web')) {
+            return response()->json(['error' => 'Unauthorized'], 403);
+        }
+
         $rank->delete();
 
         $this->clearIndexCache();
@@ -137,6 +160,10 @@ class RankController extends Controller
 
     public function toggleStatus(Rank $rank): JsonResponse
     {
+        if (! auth()->user() || ! auth()->user()->hasPermissionTo('ranks.edit', 'web')) {
+            return response()->json(['error' => 'Unauthorized'], 403);
+        }
+
         $rank->update(['is_active' => ! $rank->is_active]);
 
         $this->clearIndexCache();
@@ -150,6 +177,10 @@ class RankController extends Controller
 
     public function import(Request $request): JsonResponse
     {
+        if (! auth()->user() || ! auth()->user()->hasPermissionTo('ranks.create', 'web')) {
+            return response()->json(['error' => 'Unauthorized'], 403);
+        }
+
         $request->validate([
             'file' => 'required|file|mimes:csv,txt,xlsx,xls,application/vnd.ms-excel,application/vnd.openxmlformats-officedocument.spreadsheetml.sheet|max:10240',
         ]);
@@ -165,8 +196,8 @@ class RankController extends Controller
         ];
 
         $data = $this->processFile($file, $columnMapping);
-        $medicalFieldMap = \App\Models\MedicalField::pluck('id', 'name')->toArray();
-        $specialtyMap = \App\Models\Specialty::pluck('id', 'name')->toArray();
+        $medicalFieldMap = MedicalField::pluck('id', 'name')->toArray();
+        $specialtyMap = Specialty::pluck('id', 'name')->toArray();
 
         $processedData = $data->map(function ($row) use ($medicalFieldMap, $specialtyMap) {
             if (isset($row['is_active'])) {
@@ -204,6 +235,10 @@ class RankController extends Controller
 
     public function export(Request $request): Response
     {
+        if (! auth()->user() || ! auth()->user()->hasPermissionTo('ranks.view', 'web')) {
+            return response()->json(['error' => 'Unauthorized'], 403);
+        }
+
         $format = $request->input('format', 'csv');
         $ids = $request->input('ids');
 

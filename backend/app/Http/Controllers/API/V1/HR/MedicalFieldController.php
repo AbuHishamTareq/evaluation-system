@@ -26,6 +26,10 @@ class MedicalFieldController extends Controller
 
     public function index(Request $request): JsonResponse
     {
+        if (! auth()->user() || ! auth()->user()->hasPermissionTo('medical_fields.view', 'web')) {
+            return response()->json(['error' => 'Unauthorized'], 403);
+        }
+
         $filters = $request->only(['is_active', 'search', 'per_page', 'page']);
         $cacheKey = $this->getIndexCacheKey(md5(json_encode($filters)));
 
@@ -64,6 +68,10 @@ class MedicalFieldController extends Controller
 
     public function store(Request $request): JsonResponse
     {
+        if (! auth()->user() || ! auth()->user()->hasPermissionTo('medical_fields.create', 'web')) {
+            return response()->json(['error' => 'Unauthorized'], 403);
+        }
+
         $validated = $request->validate([
             'name' => 'required|string|max:255',
             'name_ar' => 'nullable|string|max:255',
@@ -83,6 +91,10 @@ class MedicalFieldController extends Controller
 
     public function show(MedicalField $medicalField): JsonResponse
     {
+        if (! auth()->user() || ! auth()->user()->hasPermissionTo('medical_fields.view', 'web')) {
+            return response()->json(['error' => 'Unauthorized'], 403);
+        }
+
         $cacheKey = static::$cachePrefix.'show:'.$medicalField->id;
 
         $data = Cache::remember($cacheKey, now()->addMinutes(static::$cacheTtl), function () use ($medicalField) {
@@ -94,6 +106,10 @@ class MedicalFieldController extends Controller
 
     public function update(Request $request, MedicalField $medicalField): JsonResponse
     {
+        if (! auth()->user() || ! auth()->user()->hasPermissionTo('medical_fields.edit', 'web')) {
+            return response()->json(['error' => 'Unauthorized'], 403);
+        }
+
         $validated = $request->validate([
             'name' => 'sometimes|string|max:255',
             'name_ar' => 'nullable|string|max:255',
@@ -114,6 +130,10 @@ class MedicalFieldController extends Controller
 
     public function destroy(MedicalField $medicalField): JsonResponse
     {
+        if (! auth()->user() || ! auth()->user()->hasPermissionTo('medical_fields.delete', 'web')) {
+            return response()->json(['error' => 'Unauthorized'], 403);
+        }
+
         $medicalField->delete();
 
         $this->clearIndexCache();
@@ -124,6 +144,10 @@ class MedicalFieldController extends Controller
 
     public function toggleStatus(MedicalField $medicalField): JsonResponse
     {
+        if (! auth()->user() || ! auth()->user()->hasPermissionTo('medical_fields.edit', 'web')) {
+            return response()->json(['error' => 'Unauthorized'], 403);
+        }
+
         $medicalField->update(['is_active' => ! $medicalField->is_active]);
 
         $this->clearIndexCache();
@@ -137,6 +161,10 @@ class MedicalFieldController extends Controller
 
     public function import(Request $request): JsonResponse
     {
+        if (! auth()->user() || ! auth()->user()->hasPermissionTo('medical_fields.create', 'web')) {
+            return response()->json(['error' => 'Unauthorized'], 403);
+        }
+
         $request->validate([
             'file' => 'required|file|mimes:csv,txt,xlsx,xls,application/vnd.ms-excel,application/vnd.openxmlformats-officedocument.spreadsheetml.sheet|max:10240',
         ]);
@@ -180,6 +208,10 @@ class MedicalFieldController extends Controller
 
     public function export(Request $request): Response
     {
+        if (! auth()->user() || ! auth()->user()->hasPermissionTo('medical_fields.view', 'web')) {
+            return response()->json(['error' => 'Unauthorized'], 403);
+        }
+
         $format = $request->input('format', 'csv');
         $ids = $request->input('ids');
 

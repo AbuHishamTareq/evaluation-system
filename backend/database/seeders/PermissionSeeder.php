@@ -110,7 +110,81 @@ class PermissionSeeder extends Seeder
             'roles.create',
             'roles.delete',
             'roles.edit',
+            'roles.import_export',
+            'roles.toggle',
             'roles.view',
+
+            // Departments
+            'departments.create',
+            'departments.delete',
+            'departments.edit',
+            'departments.import_export',
+            'departments.toggle',
+            'departments.view',
+
+            // Zones
+            'zones.create',
+            'zones.delete',
+            'zones.edit',
+            'zones.import_export',
+            'zones.toggle',
+            'zones.view',
+
+            // Phc Centers
+            'phc_centers.create',
+            'phc_centers.delete',
+            'phc_centers.edit',
+            'phc_centers.import_export',
+            'phc_centers.toggle',
+            'phc_centers.view',
+
+            // Nationalities
+            'nationalities.create',
+            'nationalities.delete',
+            'nationalities.edit',
+            'nationalities.import_export',
+            'nationalities.toggle',
+            'nationalities.view',
+
+            // Medical Fields
+            'medical_fields.create',
+            'medical_fields.delete',
+            'medical_fields.edit',
+            'medical_fields.import_export',
+            'medical_fields.toggle',
+            'medical_fields.view',
+
+            // Specialties
+            'specialties.create',
+            'specialties.delete',
+            'specialties.edit',
+            'specialties.import_export',
+            'specialties.toggle',
+            'specialties.view',
+
+            // Ranks
+            'ranks.create',
+            'ranks.delete',
+            'ranks.edit',
+            'ranks.import_export',
+            'ranks.toggle',
+            'ranks.view',
+
+            // Shc Categories
+            'shc_categories.create',
+            'shc_categories.delete',
+            'shc_categories.edit',
+            'shc_categories.import_export',
+            'shc_categories.toggle',
+            'shc_categories.view',
+
+            // Team Based Codes
+            'team_based_codes.create',
+            'team_based_codes.delete',
+            'team_based_codes.edit',
+            'team_based_codes.import_export',
+            'team_based_codes.toggle',
+            'team_based_codes.view',
 
             // Settings
             'settings.edit',
@@ -129,8 +203,7 @@ class PermissionSeeder extends Seeder
             'staff.create',
             'staff.delete',
             'staff.edit',
-            'staff.export',
-            'staff.import',
+            'staff.import_export',
             'staff.toggle',
             'staff.view',
 
@@ -148,7 +221,7 @@ class PermissionSeeder extends Seeder
         $rolesConfig = [
             'Main Office' => Permission::all()->pluck('id')->toArray(),
             'Regional Supervisor' => [
-                'staff.view', 'staff.edit', 'staff.export',
+                'staff.view', 'staff.edit', 'staff.import_export',
                 'shifts.view', 'shifts.create', 'shift_requests.view', 'shift_requests.approve',
                 'departments.view', 'zones.view', 'phc_centers.view', 'nationalities.view',
                 'medical_fields.view', 'specialties.view', 'ranks.view', 'shc_categories.view',
@@ -160,7 +233,7 @@ class PermissionSeeder extends Seeder
                 'alerts.view', 'audit_logs.view', 'dashboard.view',
             ],
             'PHC Manager' => [
-                'staff.view', 'staff.create', 'staff.edit', 'staff.export', 'staff.import',
+                'staff.view', 'staff.create', 'staff.edit', 'staff.import_export',
                 'shifts.view', 'shifts.create', 'shift_requests.view', 'shift_requests.approve',
                 'departments.view', 'departments.create', 'departments.edit',
                 'zones.view', 'zones.create', 'zones.edit',
@@ -212,7 +285,7 @@ class PermissionSeeder extends Seeder
                 'audit_logs.view',
             ],
             'HR Administrator' => [
-                'staff.view', 'staff.create', 'staff.edit', 'staff.export', 'staff.import',
+                'staff.view', 'staff.create', 'staff.edit', 'staff.import_export',
                 'shifts.view', 'shifts.create',
                 'shift_requests.view', 'shift_requests.approve',
                 'departments.view', 'departments.create', 'departments.edit',

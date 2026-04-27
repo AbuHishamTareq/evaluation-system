@@ -14,6 +14,7 @@ use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Cache;
 use PhpOffice\PhpSpreadsheet\IOFactory;
+use Symfony\Component\HttpFoundation\Response;
 
 class PhcCenterController extends Controller
 {
@@ -29,10 +30,6 @@ class PhcCenterController extends Controller
 
     public function index(Request $request): JsonResponse
     {
-        if (! auth()->user() || ! auth()->user()->hasPermissionTo('phc_centers.view', 'web')) {
-            return response()->json(['error' => 'Unauthorized'], 403);
-        }
-
         $filters = $request->only(['region_id', 'is_active', 'search', 'per_page', 'page']);
         $cacheKey = $this->getIndexCacheKey(md5(json_encode($filters)));
 
@@ -75,10 +72,6 @@ class PhcCenterController extends Controller
 
     public function store(StorePhcCenterRequest $request): JsonResponse
     {
-        if (! auth()->user() || ! auth()->user()->hasPermissionTo('phc_centers.create', 'web')) {
-            return response()->json(['error' => 'Unauthorized'], 403);
-        }
-
         $data = $request->validated();
         $data['tenant_id'] = $request->user()?->tenant_id ?? 1;
 
@@ -94,10 +87,6 @@ class PhcCenterController extends Controller
 
     public function show(PhcCenter $phcCenter): JsonResponse
     {
-        if (! auth()->user() || ! auth()->user()->hasPermissionTo('phc_centers.view', 'web')) {
-            return response()->json(['error' => 'Unauthorized'], 403);
-        }
-
         $cacheKey = static::$cachePrefix.'show:'.$phcCenter->id;
 
         $data = Cache::remember($cacheKey, now()->addMinutes(static::$cacheTtl), function () use ($phcCenter) {
@@ -111,10 +100,6 @@ class PhcCenterController extends Controller
 
     public function update(UpdatePhcCenterRequest $request, PhcCenter $phcCenter): JsonResponse
     {
-        if (! auth()->user() || ! auth()->user()->hasPermissionTo('phc_centers.edit', 'web')) {
-            return response()->json(['error' => 'Unauthorized'], 403);
-        }
-
         $phcCenter->update($request->validated());
 
         $this->clearIndexCache();
@@ -128,10 +113,6 @@ class PhcCenterController extends Controller
 
     public function destroy(PhcCenter $phcCenter): JsonResponse
     {
-        if (! auth()->user() || ! auth()->user()->hasPermissionTo('phc_centers.delete', 'web')) {
-            return response()->json(['error' => 'Unauthorized'], 403);
-        }
-
         $phcCenter->delete();
 
         $this->clearIndexCache();
@@ -142,10 +123,6 @@ class PhcCenterController extends Controller
 
     public function toggleStatus(PhcCenter $phcCenter): JsonResponse
     {
-        if (! auth()->user() || ! auth()->user()->hasPermissionTo('phc_centers.edit', 'web')) {
-            return response()->json(['error' => 'Unauthorized'], 403);
-        }
-
         $phcCenter->update(['is_active' => ! $phcCenter->is_active]);
 
         $this->clearIndexCache();
@@ -172,6 +149,7 @@ class PhcCenterController extends Controller
             'Address' => 'address',
             'Phone' => 'phone',
             'Region' => 'region_id',
+            'Zone' => 'zone_id',
             'Status' => 'is_active',
         ];
 
@@ -181,6 +159,9 @@ class PhcCenterController extends Controller
         $processedData = $data->map(function ($row) use ($regionMap) {
             if (! empty($row['region_id'])) {
                 $row['region_id'] = $regionMap[$row['region_id']] ?? null;
+            }
+            if (! empty($row['zone_id'])) {
+                $row['zone_id'] = is_numeric($row['zone_id']) ? (int) $row['zone_id'] : ($regionMap[$row['zone_id']] ?? null);
             }
             if (isset($row['is_active'])) {
                 $row['is_active'] = in_array(strtolower($row['is_active']), ['active', 'نشط', '1', 'yes']) ? true : false;
@@ -336,7 +317,7 @@ class PhcCenterController extends Controller
                     'is_active' => $code->is_active,
                     'pivot' => [
                         'assigned_at' => $code->pivot->created_at,
-                    ],
+                    ]
                 ];
             }),
         ]);

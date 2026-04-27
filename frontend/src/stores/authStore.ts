@@ -24,7 +24,9 @@ interface AuthState {
   login: (email: string, password: string) => Promise<void>
   logout: () => Promise<void>
   fetchUser: () => Promise<void>
+  refreshPermissions: () => Promise<void>
   setUser: (user: User | null) => void
+  hasPermission: (permission: string) => boolean
 }
 
 const getInitialToken = () => {
@@ -99,6 +101,23 @@ export const useAuthStore = create<AuthState>()(
       },
 
       setUser: (user) => set({ user }),
+
+      refreshPermissions: async () => {
+        const currentToken = get().token || localStorage.getItem('token')
+        if (!currentToken) return
+        try {
+          const { data } = await authApi.me()
+          set({ user: data.user })
+        } catch {
+          // Ignore errors
+        }
+      },
+
+      hasPermission: (permission: string) => {
+        const user = get().user
+        if (!user) return false
+        return user.permissions.includes(permission)
+      },
     }),
     {
       name: 'auth-storage',

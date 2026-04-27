@@ -1,6 +1,7 @@
 /* eslint-disable react-hooks/exhaustive-deps */
 /* eslint-disable @typescript-eslint/no-unused-vars */
 import { useState, useEffect } from "react";
+import { useNavigate } from "react-router-dom";
 import Swal from "sweetalert2";
 import {
   useReactTable,
@@ -11,6 +12,7 @@ import {
   createColumnHelper,
 } from "@tanstack/react-table";
 import { useAppStore } from "@/stores/appStore";
+import { useAuthStore } from "@/stores/authStore";
 import { getTranslation } from "@/i18n";
 import { userApi, roleApi } from "@/lib/api";
 import { Layout } from "@/components/Layout";
@@ -36,7 +38,12 @@ const columnHelper = createColumnHelper<UserData>();
 
 export function UserListPage() {
   const { locale, direction } = useAppStore();
+  const navigate = useNavigate();
   const fontClass = locale === "ar" ? "font-ar" : "font-en";
+  const { hasPermission } = useAuthStore();
+  const canCreate = hasPermission('users.create');
+  const canEdit = hasPermission('users.edit');
+  const canDelete = hasPermission('users.delete');
 
   const [data, setData] = useState<UserData[]>([]);
   const [isLoading, setIsLoading] = useState(true);
@@ -71,7 +78,12 @@ export function UserListPage() {
       const res = await userApi.getAll(params);
       setData(res.data.data || []);
       setTotalCount(res.data.meta?.total || res.data.total || 0);
-    } catch (err) {
+    } catch (err: unknown) {
+      const error = err as { response?: { status?: number } }
+      if (error.response?.status === 403) {
+        navigate('/forbidden')
+        return
+      }
       console.error("Failed to load users:", err);
     } finally {
       setIsLoading(false);
@@ -222,12 +234,16 @@ export function UserListPage() {
       header: locale === "ar" ? "الإجراءات" : "Actions",
       cell: ({ row }) => (
         <div className="flex items-center gap-2">
-          <Button variant="ghost" size="sm" onClick={() => openRolesModal(row.original)} title={locale === "ar" ? "تخصيص الأدوار" : "Assign Roles"}>
-            <Shield className="w-4 h-4" />
-          </Button>
-          <Button variant="ghost" size="sm" onClick={() => handleDelete(row.original.id)} title={locale === "ar" ? "حذف" : "Delete"} className="text-red-600 hover:bg-red-50">
-            <Trash2 className="w-4 h-4" />
-          </Button>
+          {canEdit && (
+            <Button variant="ghost" size="sm" onClick={() => openRolesModal(row.original)} title={locale === "ar" ? "تخصيص الأدوار" : "Assign Roles"}>
+              <Shield className="w-4 h-4" />
+            </Button>
+          )}
+          {canDelete && (
+            <Button variant="ghost" size="sm" onClick={() => handleDelete(row.original.id)} title={locale === "ar" ? "حذف" : "Delete"} className="text-red-600 hover:bg-red-50">
+              <Trash2 className="w-4 h-4" />
+            </Button>
+          )}
         </div>
       ),
     }),
@@ -273,6 +289,7 @@ export function UserListPage() {
               {totalCount} {locale === "ar" ? "مستخدم" : "users"}
             </p>
           </div>
+          {canCreate && (
           <Button onClick={() => {
             if (availableRoles.length === 0) {
               roleApi.getAll({ per_page: 100 }).then((res) => setAvailableRoles(res.data.data || []));
@@ -282,6 +299,7 @@ export function UserListPage() {
             <Plus className="w-4 h-4 me-2" />
             {locale === "ar" ? "إضافة مستخدم" : "Add User"}
           </Button>
+          )}
         </div>
 
         <div className="bg-white rounded-lg shadow-sm border border-gray-200">
@@ -361,19 +379,54 @@ export function UserListPage() {
               </span>
               <div className="flex items-center gap-1">
                 <button
-                  onClick={() => setPagination((p) => ({ ...p, pageIndex: Math.max(0, p.pageIndex - 1) }))}
+                  onClick={() => setPagination(p => ({ ...p, pageIndex: 0 }))}
+                  disabled={pagination.pageIndex === 0}
+                  className="p-1.5 rounded hover:bg-gray-100 disabled:opacity-50 disabled:cursor-not-allowed"
+                  title="First page"
+                >
+                  <ChevronFirst className="w-5 h-5" />
+                </button>
+                <button
+                  onClick={() => setPagination((p) => ({ ...p, pageIndex: p.pageIndex - 1 }))}
                   disabled={pagination.pageIndex === 0}
                   className="p-1.5 rounded hover:bg-gray-100 disabled:opacity-50 disabled:cursor-not-allowed"
                 >
                   <ChevronLeft className="w-5 h-5" />
                 </button>
                 <button
-                  onClick={() => setPagination((p) => ({ ...p, pageIndex: Math.min(totalPages - 1, p.pageIndex + 1) }))}
+                  onClick={() => setPagination((p) => ({ ...p, pageIndex: p.pageIndex + 1 }))}
                   disabled={pagination.pageIndex >= totalPages - 1}
                   className="p-1.5 rounded hover:bg-gray-100 disabled:opacity-50 disabled:cursor-not-allowed"
                 >
                   <ChevronRight className="w-5 h-5" />
                 </button>
+                <button
+                  onClick={() => setPagination(p => ({ ...p, pageIndex: totalPages - 1 }))}
+                  disabled={pagination.pageIndex >= totalPages - 1}
+                  className="p-1.5 rounded hover:bg-gray-100 disabled:opacity-50 disabled:cursor-not-allowed"
+                  title="Last page"
+                >
+                  <ChevronLast className="w-5 h-5" />
+                </button>
+                <div className="flex items-center gap-1 ms-2 border-s border-gray-300 ps-2">
+                  <input
+                    type="number"
+                    value={gotoPage}
+                    onChange={(e) => setGotoPage(e.target.value)}
+                    onKeyDown={handleKeyDown}
+                    placeholder="#"
+                    min={1}
+                    max={totalPages}
+                    className="w-12 px-2 py-1 text-sm border border-gray-200 rounded text-center focus:ring-2 focus:ring-brand-500 focus:border-brand-500 outline-none"
+                  />
+                  <button
+                    onClick={handleGotoPage}
+                    disabled={!gotoPage || Number(gotoPage) < 1 || Number(gotoPage) > totalPages}
+                    className="px-2 py-1 text-sm bg-brand-500 text-white rounded hover:bg-brand-600 disabled:opacity-50 disabled:cursor-not-allowed"
+                  >
+                    {locale === "ar" ? "انتقال" : "Go"}
+                  </button>
+                </div>
               </div>
             </div>
           </div>

@@ -27,6 +27,10 @@ class SpecialtyController extends Controller
 
     public function index(Request $request): JsonResponse
     {
+        if (! auth()->user() || ! auth()->user()->hasPermissionTo('specialties.view', 'web')) {
+            return response()->json(['error' => 'Unauthorized'], 403);
+        }
+
         $filters = $request->only(['medical_field_id', 'is_active', 'search', 'per_page', 'page']);
         $cacheKey = $this->getIndexCacheKey(md5(json_encode($filters)));
 
@@ -69,6 +73,10 @@ class SpecialtyController extends Controller
 
     public function store(Request $request): JsonResponse
     {
+        if (! auth()->user() || ! auth()->user()->hasPermissionTo('specialties.create', 'web')) {
+            return response()->json(['error' => 'Unauthorized'], 403);
+        }
+
         $validated = $request->validate([
             'medical_field_id' => 'nullable|exists:medical_fields,id',
             'name' => 'required|string|max:255',
@@ -89,6 +97,10 @@ class SpecialtyController extends Controller
 
     public function show(Specialty $specialty): JsonResponse
     {
+        if (! auth()->user() || ! auth()->user()->hasPermissionTo('specialties.view', 'web')) {
+            return response()->json(['error' => 'Unauthorized'], 403);
+        }
+
         $cacheKey = static::$cachePrefix.'show:'.$specialty->id;
 
         $data = Cache::remember($cacheKey, now()->addMinutes(static::$cacheTtl), function () use ($specialty) {
@@ -102,6 +114,10 @@ class SpecialtyController extends Controller
 
     public function update(Request $request, Specialty $specialty): JsonResponse
     {
+        if (! auth()->user() || ! auth()->user()->hasPermissionTo('specialties.edit', 'web')) {
+            return response()->json(['error' => 'Unauthorized'], 403);
+        }
+
         $validated = $request->validate([
             'medical_field_id' => 'nullable|exists:medical_fields,id',
             'name' => 'sometimes|string|max:255',
@@ -123,6 +139,10 @@ class SpecialtyController extends Controller
 
     public function destroy(Specialty $specialty): JsonResponse
     {
+        if (! auth()->user() || ! auth()->user()->hasPermissionTo('specialties.delete', 'web')) {
+            return response()->json(['error' => 'Unauthorized'], 403);
+        }
+
         $specialty->delete();
 
         $this->clearIndexCache();
@@ -133,6 +153,10 @@ class SpecialtyController extends Controller
 
     public function toggleStatus(Specialty $specialty): JsonResponse
     {
+        if (! auth()->user() || ! auth()->user()->hasPermissionTo('specialties.edit', 'web')) {
+            return response()->json(['error' => 'Unauthorized'], 403);
+        }
+
         $specialty->update(['is_active' => ! $specialty->is_active]);
 
         $this->clearIndexCache();
@@ -146,6 +170,10 @@ class SpecialtyController extends Controller
 
     public function import(Request $request): JsonResponse
     {
+        if (! auth()->user() || ! auth()->user()->hasPermissionTo('specialties.create', 'web')) {
+            return response()->json(['error' => 'Unauthorized'], 403);
+        }
+
         $request->validate([
             'file' => 'required|file|mimes:csv,txt,xlsx,xls,application/vnd.ms-excel,application/vnd.openxmlformats-officedocument.spreadsheetml.sheet|max:10240',
         ]);
@@ -279,6 +307,10 @@ class SpecialtyController extends Controller
 
     public function export(Request $request): Response
     {
+        if (! auth()->user() || ! auth()->user()->hasPermissionTo('specialties.view', 'web')) {
+            return response()->json(['error' => 'Unauthorized'], 403);
+        }
+
         $format = $request->input('format', 'csv');
         $ids = $request->input('ids');
 

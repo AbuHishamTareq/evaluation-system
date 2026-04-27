@@ -29,6 +29,10 @@ class DepartmentController extends Controller
 
     public function index(Request $request): JsonResponse
     {
+        if (! auth()->user() || ! auth()->user()->hasPermissionTo('departments.view', 'web')) {
+            return response()->json(['error' => 'Unauthorized'], 403);
+        }
+
         $filters = $request->only(['phc_center_id', 'is_active', 'search', 'per_page', 'page']);
         $cacheKey = $this->getIndexCacheKey(md5(json_encode($filters)));
 
@@ -71,6 +75,10 @@ class DepartmentController extends Controller
 
     public function store(StoreDepartmentRequest $request): JsonResponse
     {
+        if (! auth()->user() || ! auth()->user()->hasPermissionTo('departments.create', 'web')) {
+            return response()->json(['error' => 'Unauthorized'], 403);
+        }
+
         $department = Department::create($request->validated());
 
         $this->clearIndexCache();
@@ -83,6 +91,10 @@ class DepartmentController extends Controller
 
     public function show(Department $department): JsonResponse
     {
+        if (! auth()->user() || ! auth()->user()->hasPermissionTo('departments.view', 'web')) {
+            return response()->json(['error' => 'Unauthorized'], 403);
+        }
+
         $cacheKey = static::$cachePrefix.'show:'.$department->id;
 
         $data = Cache::remember($cacheKey, now()->addMinutes(static::$cacheTtl), function () use ($department) {
@@ -96,6 +108,10 @@ class DepartmentController extends Controller
 
     public function update(UpdateDepartmentRequest $request, Department $department): JsonResponse
     {
+        if (! auth()->user() || ! auth()->user()->hasPermissionTo('departments.edit', 'web')) {
+            return response()->json(['error' => 'Unauthorized'], 403);
+        }
+
         $department->update($request->validated());
 
         $this->clearIndexCache();
@@ -109,6 +125,10 @@ class DepartmentController extends Controller
 
     public function destroy(Department $department): JsonResponse
     {
+        if (! auth()->user() || ! auth()->user()->hasPermissionTo('departments.delete', 'web')) {
+            return response()->json(['error' => 'Unauthorized'], 403);
+        }
+
         $department->delete();
 
         $this->clearIndexCache();
@@ -119,6 +139,10 @@ class DepartmentController extends Controller
 
     public function toggleStatus(Department $department): JsonResponse
     {
+        if (! auth()->user() || ! auth()->user()->hasPermissionTo('departments.edit', 'web')) {
+            return response()->json(['error' => 'Unauthorized'], 403);
+        }
+
         $department->update(['is_active' => ! $department->is_active]);
 
         $this->clearIndexCache();
@@ -132,6 +156,10 @@ class DepartmentController extends Controller
 
     public function import(Request $request): JsonResponse
     {
+        if (! auth()->user() || ! auth()->user()->hasPermissionTo('departments.create', 'web')) {
+            return response()->json(['error' => 'Unauthorized'], 403);
+        }
+
         $request->validate([
             'file' => 'required|file|mimes:csv,txt,xlsx,xls,application/vnd.ms-excel,application/vnd.openxmlformats-officedocument.spreadsheetml.sheet|max:10240',
         ]);
@@ -178,6 +206,10 @@ class DepartmentController extends Controller
 
     public function export(Request $request): Response
     {
+        if (! auth()->user() || ! auth()->user()->hasPermissionTo('departments.view', 'web')) {
+            return response()->json(['error' => 'Unauthorized'], 403);
+        }
+
         $format = $request->input('format', 'csv');
         $ids = $request->input('ids');
 

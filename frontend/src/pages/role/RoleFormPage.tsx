@@ -6,7 +6,7 @@ import { roleApi } from '@/lib/api'
 import { Layout } from '@/components/Layout'
 import { Button } from '@/components/ui/Button'
 import { Input } from '@/components/ui/Input'
-import { ArrowLeft, Save } from 'lucide-react'
+import { Save, Loader2 } from 'lucide-react'
 
 interface Permission {
   id: number
@@ -27,6 +27,7 @@ export function RoleFormPage() {
     permissions: [] as number[],
   })
   const [saving, setSaving] = useState(false)
+  const [loadingPermissions, setLoadingPermissions] = useState(true)
   const [allPermissions, setAllPermissions] = useState<Record<string, Permission[]>>({})
 
   useEffect(() => {
@@ -34,6 +35,7 @@ export function RoleFormPage() {
     if (isEdit && id) {
       fetchRole()
     }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [id])
 
   const fetchRole = async () => {
@@ -52,11 +54,19 @@ export function RoleFormPage() {
   }
 
   const fetchPermissions = async () => {
+    setLoadingPermissions(true)
     try {
       const res = await roleApi.getPermissions()
       setAllPermissions(res.data.data || {})
     } catch (err) {
       console.error('Failed to load permissions:', err)
+      Swal.fire({
+        icon: 'error',
+        title: locale === 'ar' ? 'خطأ' : 'Error',
+        text: locale === 'ar' ? 'فشل تحميل الصلاحيات' : 'Failed to load permissions',
+      })
+    } finally {
+      setLoadingPermissions(false)
     }
   }
 
@@ -133,7 +143,7 @@ export function RoleFormPage() {
           : locale === 'ar' ? 'تم الإنشاء بنجاح' : 'Created successfully',
       })
       navigate('/roles')
-    } catch (err) {
+    } catch {
       Swal.fire({
         icon: 'error',
         title: locale === 'ar' ? 'خطأ' : 'Error',
@@ -186,26 +196,19 @@ export function RoleFormPage() {
     reports: locale === 'ar' ? 'التقارير' : 'Reports',
     // Settings
     settings: locale === 'ar' ? 'الإعدادات' : 'Settings',
+    // Team Based Codes
+    team_based_codes: locale === 'ar' ? 'الرمز الجماعي' : 'Team Based Codes',
   }
 
   return (
     <Layout>
       <div className={`space-y-6 ${fontClass}`} dir={direction}>
         <div className="flex items-center justify-between">
-          <div className="flex items-center gap-4">
-            <button
-              onClick={() => navigate('/roles')}
-              className="flex items-center gap-2 text-gray-600 hover:text-gray-900"
-            >
-              <ArrowLeft className="w-4 h-4" />
-              {locale === 'ar' ? 'العودة للقائمة' : 'Back'}
-            </button>
-            <h1 className="text-2xl font-bold">
-              {isEdit
-                ? locale === 'ar' ? 'تعديل الدور' : 'Edit Role'
-                : locale === 'ar' ? 'إضافة دور' : 'Add Role'}
-            </h1>
-          </div>
+          <h1 className="text-2xl font-bold">
+            {isEdit
+              ? locale === 'ar' ? 'تعديل الدور' : 'Edit Role'
+              : locale === 'ar' ? 'إضافة دور' : 'Add Role'}
+          </h1>
           <Button onClick={handleSubmit} disabled={saving}>
             <Save className="w-4 h-4 me-2" />
             {saving
@@ -216,7 +219,7 @@ export function RoleFormPage() {
           </Button>
         </div>
 
-        <div className="bg-white rounded-lg shadow-sm border border-gray-200 p-6 space-y-6">
+<div className="bg-white rounded-lg shadow-sm border border-gray-200 p-6 space-y-6">
           <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
             <Input
               label={locale === 'ar' ? 'الاسم' : 'Name'}
@@ -252,8 +255,11 @@ export function RoleFormPage() {
             <div className="flex items-center justify-between mb-4">
               <h2 className="text-lg font-semibold text-gray-900">
                 {locale === 'ar' ? 'الصلاحيات' : 'Permissions'}
+                <span className="mr-2 text-sm font-normal text-gray-500">
+                  ({formData.permissions.length} {locale === 'ar' ? 'محدد' : 'selected'})
+                </span>
               </h2>
-              <label className="flex items-center gap-2 cursor-pointer">
+              <label className="flex items-center gap-2 cursor-pointer select-none">
                 <input
                   type="checkbox"
                   checked={isAllSelected}
@@ -265,44 +271,56 @@ export function RoleFormPage() {
                 </span>
               </label>
             </div>
-            <div className="space-y-4">
-              {Object.entries(allPermissions).map(([group, perms]) => (
-                <div key={group} className="border border-gray-200 rounded-lg p-4">
-                  <div className="flex items-center justify-between mb-3">
-                    <h3 className="font-medium text-gray-900">
-                      {permissionLabels[group] || group}
-                    </h3>
-                    <label className="flex items-center gap-2 cursor-pointer">
-                      <input
-                        type="checkbox"
-                        checked={isGroupAllSelected(group)}
-                        onChange={() => toggleGroupPermissions(group)}
-                        className="w-4 h-4 text-brand-600 rounded border-gray-300 focus:ring-brand-500"
-                      />
-                      <span className="text-sm text-gray-600">
-                        {locale === 'ar' ? 'تحديد الكل' : 'Select All'}
-                      </span>
-                    </label>
-                  </div>
-                  <div className="flex flex-wrap gap-2">
-                    {perms.map(perm => (
-                      <label
-                        key={perm.id}
-                        className="flex items-center gap-2 cursor-pointer"
-                      >
+
+            {loadingPermissions ? (
+              <div className="flex items-center justify-center py-12">
+                <Loader2 className="w-8 h-8 animate-spin text-brand-600" />
+                <span className="mr-2 text-gray-500">
+                  {locale === 'ar' ? 'جاري التحميل...' : 'Loading...'}
+                </span>
+              </div>
+            ) : (
+              <div className="grid grid-cols-1 lg:grid-cols-2 xl:grid-cols-3 gap-4">
+                {Object.entries(allPermissions).map(([group, perms]) => (
+                  <div key={group} className="border border-gray-200 rounded-lg overflow-hidden">
+                    <div className="flex items-center justify-between px-3 py-2 bg-gray-50 border-b border-gray-200">
+                      <h3 className="font-medium text-gray-900 text-sm">
+                        {permissionLabels[group] || group}
+                      </h3>
+                      <label className="flex items-center gap-1.5 cursor-pointer select-none">
                         <input
                           type="checkbox"
-                          checked={formData.permissions.includes(perm.id)}
-                          onChange={() => togglePermission(perm.id)}
-                          className="w-4 h-4 text-brand-600 rounded border-gray-300 focus:ring-brand-500"
+                          checked={isGroupAllSelected(group)}
+                          onChange={() => toggleGroupPermissions(group)}
+                          className="w-3.5 h-3.5 text-brand-600 rounded border-gray-300 focus:ring-brand-500"
                         />
-                        <span className="text-sm">{perm.name}</span>
+                        <span className="text-xs text-gray-500">
+                          {locale === 'ar' ? 'الكل' : 'All'}
+                        </span>
                       </label>
-                    ))}
+                    </div>
+                    <div className="p-3 space-y-1.5 max-h-48 overflow-y-auto">
+                      {perms.map(perm => (
+                        <label
+                          key={perm.id}
+                          className="flex items-center gap-2 cursor-pointer select-none group"
+                        >
+                          <input
+                            type="checkbox"
+                            checked={formData.permissions.includes(perm.id)}
+                            onChange={() => togglePermission(perm.id)}
+                            className="w-3.5 h-3.5 text-brand-600 rounded border-gray-300 focus:ring-brand-500"
+                          />
+                          <span className="text-xs text-gray-700 group-hover:text-brand-700 truncate">
+                            {perm.name}
+                          </span>
+                        </label>
+                      ))}
+                    </div>
                   </div>
-                </div>
-              ))}
-            </div>
+                ))}
+              </div>
+)}
           </div>
         </div>
       </div>
