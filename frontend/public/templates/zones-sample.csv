@@ -1,0 +1,10 @@
+Zone Name,Zone Code,Zone Level,Description,Parent Zone Name
+Northern Region,NR001,region,Northern part of the country,
+Ashanti Region,AR002,region,Central region of Ghana,
+Western Region,WR003,region,Western coastal region of Ghana,
+Tamale District,TD001,district,Major district in Northern Region,Northern Region
+Kumasi District,KD002,district,Capital district of Ashanti Region,Ashanti Region
+Sekondi-Takoradi District,STD003,district,Twin-city district,Western Region
+Tamale Central,TC001,sub_district,Central business district,Tamale District
+Kumasi Sub-Metro,KSM001,sub_district,Administrative sub-metro,Kumasi District
+Takoradi Port,TP001,sub_district,Port and harbor area,Sekondi-Takoradi District

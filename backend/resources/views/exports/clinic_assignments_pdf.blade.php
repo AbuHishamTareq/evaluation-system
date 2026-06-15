@@ -1,0 +1,63 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Clinic Assignments Export</title>
+    <style>
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+        body { font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Oxygen, Ubuntu, sans-serif; font-size: 12px; color: #333; line-height: 1.5; padding: 20px; }
+        .header { text-align: center; margin-bottom: 30px; padding-bottom: 20px; border-bottom: 2px solid #E11D48; }
+        .header h1 { font-size: 24px; color: #1F2937; margin-bottom: 5px; }
+        .header .subtitle { font-size: 14px; color: #6B7280; }
+        table { width: 100%; border-collapse: collapse; margin-top: 20px; }
+        thead { background-color: #E11D48; color: white; }
+        th, td { padding: 10px 8px; text-align: left; border: 1px solid #E5E7EB; font-size: 10px; }
+        th { font-weight: 600; text-transform: uppercase; font-size: 9px; letter-spacing: 0.5px; }
+        tbody tr:nth-child(even) { background-color: #F9FAFB; }
+        tbody tr:hover { background-color: #F3F4F6; }
+        .status-active { color: #059669; font-weight: 600; }
+        .status-inactive { color: #DC2626; font-weight: 600; }
+        .footer { margin-top: 30px; padding-top: 20px; border-top: 1px solid #E5E7EB; text-align: center; font-size: 10px; color: #9CA3AF; }
+        @media print { body { padding: 0; } .header { margin-bottom: 20px; } }
+    </style>
+</head>
+<body>
+    <div class="header">
+        <h1>Clinic Assignments Report</h1>
+        <p class="subtitle">Generated on {{ $generatedAt }}</p>
+    </div>
+
+    <table>
+        <thead>
+            <tr>
+                <th>No.</th>
+                <th>Clinic Assignment</th>
+                <th>Description</th>
+                <th>Is Active</th>
+                <th>Created At</th>
+            </tr>
+        </thead>
+        <tbody>
+            @php $rowNumber = 0; @endphp
+            @foreach($clinicAssignments as $clinicAssignment)
+            @php $rowNumber++; @endphp
+            <tr>
+                <td>{{ $rowNumber }}</td>
+                <td>{{ $clinicAssignment->name }}</td>
+                <td>{{ $clinicAssignment->description ?: '-' }}</td>
+                <td class="{{ $clinicAssignment->is_active ? 'status-active' : 'status-inactive' }}">
+                    {{ $clinicAssignment->is_active ? 'Active' : 'Inactive' }}
+                </td>
+                <td>{{ $clinicAssignment->created_at?->format('Y-m-d H:i:s') ?: '-' }}</td>
+            </tr>
+            @endforeach
+        </tbody>
+    </table>
+
+    <div class="footer">
+        <p>Total Records: {{ $clinicAssignments->count() }}</p>
+        <p>PHC Evaluation System - Clinic Assignments Export</p>
+    </div>
+</body>
+</html>
