@@ -19,6 +19,7 @@ export interface QuestionOption {
 export interface Question {
   id: number;
   category_id: number;
+  sub_category_id: number | null;
   question_text: string;
   description: string | null;
   question_type: QuestionType;
@@ -31,12 +32,14 @@ export interface Question {
   created_at: string;
   updated_at: string;
   category?: QuestionCategory;
+  sub_category?: QuestionSubCategory;
 }
 
 export interface QuestionCreateInput {
   question_text: string;
   question_type: QuestionType;
   category_id: number;
+  sub_category_id?: number | null;
   description?: string | null;
   options?: QuestionOption[] | null;
   weight?: number;

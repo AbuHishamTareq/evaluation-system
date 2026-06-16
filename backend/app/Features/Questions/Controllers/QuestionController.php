@@ -7,6 +7,7 @@ use App\Features\Questions\Exports\QuestionSampleExport;
 use App\Features\Questions\Imports\QuestionImport;
 use App\Features\Questions\Services\QuestionService;
 use App\Http\Controllers\Api\V1\BaseApiController;
+use App\Models\Question;
 use App\Models\QuestionCategory;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
@@ -31,7 +32,13 @@ class QuestionController extends BaseApiController
         $filters = $request->only(['search', 'category_id', 'sub_category_id', 'type', 'per_page']);
         $questions = $this->questionService->getAllQuestions($filters);
 
-        return $this->paginatedResponse($questions, 'Questions retrieved successfully');
+        $activeCount = Question::where('is_active', true)->count();
+        $inactiveCount = Question::where('is_active', false)->count();
+
+        return $this->paginatedResponse($questions, 'Questions retrieved successfully', [
+            'active_count' => $activeCount,
+            'inactive_count' => $inactiveCount,
+        ]);
     }
 
     public function store(Request $request): JsonResponse
@@ -40,6 +47,7 @@ class QuestionController extends BaseApiController
             'question_text' => 'required|string',
             'question_type' => 'required|string|in:text,textarea,select,radio,checkbox,rating',
             'category_id' => 'required|integer|exists:question_categories,id',
+            'sub_category_id' => 'nullable|integer|exists:question_sub_categories,id',
             'description' => 'nullable|string',
             'options' => 'nullable|json',
             'weight' => 'nullable|integer|min:0|max:100',
@@ -70,6 +78,7 @@ class QuestionController extends BaseApiController
             'question_text' => 'sometimes|string',
             'question_type' => 'sometimes|string|in:text,textarea,select,radio,checkbox,rating',
             'category_id' => 'sometimes|integer|exists:question_categories,id',
+            'sub_category_id' => 'nullable|integer|exists:question_sub_categories,id',
             'description' => 'nullable|string',
             'options' => 'nullable|json',
             'weight' => 'nullable|integer|min:0|max:100',

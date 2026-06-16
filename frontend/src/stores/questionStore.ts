@@ -15,9 +15,13 @@ interface QuestionState {
     total: number;
     perPage: number;
   };
+  stats: {
+    activeCount: number;
+    inactiveCount: number;
+  };
   categories: QuestionCategory[];
 
-  fetchQuestions: (params?: { page?: number; per_page?: number; category_id?: number; type?: string; search?: string }) => Promise<void>;
+  fetchQuestions: (params?: { page?: number; per_page?: number; category_id?: number; sub_category_id?: number; type?: string; search?: string }) => Promise<void>;
   fetchQuestionById: (id: number) => Promise<void>;
   createQuestion: (data: QuestionCreateInput) => Promise<void>;
   updateQuestion: (id: number, data: QuestionUpdateInput) => Promise<void>;
@@ -45,19 +49,27 @@ export const useQuestionStore = create<QuestionState>((set, get) => ({
     total: 0,
     perPage: 15,
   },
+  stats: {
+    activeCount: 0,
+    inactiveCount: 0,
+  },
   categories: [],
 
   fetchQuestions: async (params) => {
     set({ isLoading: true, error: null });
     try {
-      const response = await questionService.getAll(params);
+      const response = await questionService.getAll(params) as unknown as { data: Question[]; meta: { current_page: number; last_page: number; total: number; per_page: number; active_count?: number; inactive_count?: number } };
       set({
         questions: response.data,
         pagination: {
-          currentPage: response.current_page,
-          totalPages: response.last_page,
-          total: response.total,
-          perPage: response.per_page,
+          currentPage: response.meta.current_page,
+          totalPages: response.meta.last_page,
+          total: response.meta.total,
+          perPage: response.meta.per_page,
+        },
+        stats: {
+          activeCount: response.meta.active_count ?? 0,
+          inactiveCount: response.meta.inactive_count ?? 0,
         },
         isLoading: false,
       });

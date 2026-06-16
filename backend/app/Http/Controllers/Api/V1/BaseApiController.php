@@ -30,18 +30,18 @@ abstract class BaseApiController extends Controller
         return response()->json($response, $statusCode);
     }
 
-    protected function paginatedResponse($collection, string $message = 'Success'): JsonResponse
+    protected function paginatedResponse($collection, string $message = 'Success', array $extraMeta = []): JsonResponse
     {
         return response()->json([
             'success' => true,
             'message' => $message,
             'data' => $collection->items(),
-            'meta' => [
+            'meta' => array_merge([
                 'current_page' => $collection->currentPage(),
                 'last_page' => $collection->lastPage(),
                 'per_page' => $collection->perPage(),
                 'total' => $collection->total(),
-            ],
+            ], $extraMeta),
         ]);
     }
 }

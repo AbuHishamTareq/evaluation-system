@@ -1,4 +1,4 @@
-import React, { useEffect, useState, useRef, useCallback } from 'react';
+import React, { useEffect, useState, useRef } from 'react';
 import { Button } from '../../components/ui/buttons/Button';
 import { Card, CardContent } from '../../components/ui/cards/Card';
 import { Modal, ModalHeader, ModalContent, ModalFooter } from '../../components/ui/modals';
@@ -333,6 +333,88 @@ const CategoryFormModal: React.FC<CategoryFormModalProps> = ({
   );
 };
 
+// ─── Searchable Dropdown Item ───────────────────────────────────────────────
+interface DropdownItemProps {
+  question: Question;
+  isSelected: boolean;
+  isHighlighted: boolean;
+  onClick: (question: Question) => void;
+}
+
+const TYPE_LABELS_DROPDOWN: Record<string, string> = {
+  text: 'Text',
+  textarea: 'Textarea',
+  select: 'Select',
+  radio: 'Radio',
+  checkbox: 'Checkbox',
+  rating: 'Rating',
+};
+
+const DropdownItem: React.FC<DropdownItemProps> = ({
+  question,
+  isSelected,
+  isHighlighted,
+  onClick,
+}) => {
+  return (
+    <div
+      role="option"
+      aria-selected={isSelected}
+      className={`
+        group flex items-start gap-3 px-4 py-3 cursor-pointer transition-all duration-150
+        ${isSelected
+          ? 'bg-gradient-to-r from-blue-50 to-cyan-50 border-l-4 border-blue-500'
+          : isHighlighted
+            ? 'bg-slate-50'
+            : 'hover:bg-slate-50'
+        }
+      `}
+      onClick={() => onClick(question)}
+    >
+      <div className={`
+        shrink-0 w-10 h-10 rounded-xl flex items-center justify-center font-bold text-sm
+        transition-colors duration-200
+        ${isSelected
+          ? 'bg-gradient-to-br from-blue-500 to-cyan-500 text-white shadow-md shadow-blue-500/20'
+          : 'bg-gradient-to-br from-blue-100 to-cyan-100 text-blue-700'
+        }
+      `}>
+        {question.question_text.charAt(0).toUpperCase()}
+      </div>
+      <div className="flex-1 min-w-0">
+        <div className="flex items-center gap-2 flex-wrap">
+          <span className={`font-semibold text-sm ${isSelected ? 'text-blue-700' : 'text-gray-900'}`}>
+            {question.question_text}
+          </span>
+          <span className={`text-[10px] font-medium px-2 py-0.5 rounded-full ${
+            question.is_active
+              ? 'bg-emerald-100 text-emerald-700'
+              : 'bg-gray-100 text-gray-500'
+          }`}>
+            {question.is_active ? 'Active' : 'Inactive'}
+          </span>
+        </div>
+        {question.description && (
+          <p className="text-xs text-gray-500 mt-0.5 line-clamp-1">{question.description}</p>
+        )}
+        <div className="flex items-center gap-2 mt-1.5">
+          {question.category && (
+            <span className="text-[10px] font-medium px-1.5 py-0.5 bg-violet-100 text-violet-700 rounded">
+              {question.category.name}
+            </span>
+          )}
+          <span className="text-[10px] font-medium px-1.5 py-0.5 bg-blue-100 text-blue-700 rounded">
+            {TYPE_LABELS_DROPDOWN[question.question_type] || question.question_type}
+          </span>
+          <span className="text-[10px] text-gray-400">
+            W:{question.weight} Max:{question.max_score}
+          </span>
+        </div>
+      </div>
+    </div>
+  );
+};
+
 // ─── Main Page ───────────────────────────────────────────────────────────────
 export const QuestionsPage: React.FC = () => {
   const {
@@ -340,6 +422,7 @@ export const QuestionsPage: React.FC = () => {
     isLoading,
     error,
     pagination,
+    stats,
     categories,
     fetchQuestions,
     createQuestion,
@@ -348,7 +431,6 @@ export const QuestionsPage: React.FC = () => {
     fetchCategories,
     createCategory,
     updateCategory,
-    deleteCategory,
     exportQuestions,
     importQuestions,
     downloadSample,
@@ -372,21 +454,68 @@ export const QuestionsPage: React.FC = () => {
   const [showExportOptions, setShowExportOptions] = useState(false);
   const [showCategoryModal, setShowCategoryModal] = useState(false);
   const [editingCategory, setEditingCategory] = useState<QuestionCategory | null>(null);
+  const [dropdownOpen, setDropdownOpen] = useState(false);
+  const [highlightedIndex, setHighlightedIndex] = useState(-1);
+  const dropdownRef = useRef<HTMLDivElement>(null);
+  const inputRef = useRef<HTMLInputElement>(null);
 
   useEffect(() => {
-    fetchQuestions({ per_page: 100 });
+    fetchQuestions({ per_page: 10 });
     fetchCategories();
   }, [fetchQuestions, fetchCategories]);
 
+  // Close dropdown on outside click
+  useEffect(() => {
+    const handleClickOutside = (e: MouseEvent) => {
+      if (dropdownRef.current && !dropdownRef.current.contains(e.target as Node)) {
+        setDropdownOpen(false);
+      }
+    };
+    document.addEventListener('mousedown', handleClickOutside);
+    return () => document.removeEventListener('mousedown', handleClickOutside);
+  }, []);
+
   const handleSearch = (e: React.FormEvent) => {
     e.preventDefault();
+    setHighlightedIndex(-1);
     fetchQuestions({
       page: 1,
-      per_page: 100,
+      per_page: 10,
       search: searchQuery || undefined,
       category_id: categoryFilter ? parseInt(categoryFilter) : undefined,
       type: typeFilter || undefined,
     });
+    setDropdownOpen(true);
+  };
+
+  const handleSelect = (question: Question) => {
+    setSelectedQuestion(question);
+    setDropdownOpen(false);
+    setSearchQuery(question.question_text);
+  };
+
+  const handleDropdownKeyDown = (e: React.KeyboardEvent) => {
+    if (!dropdownOpen) return;
+
+    if (e.key === 'ArrowDown') {
+      e.preventDefault();
+      setHighlightedIndex((prev) => Math.min(prev + 1, questions.length - 1));
+    } else if (e.key === 'ArrowUp') {
+      e.preventDefault();
+      setHighlightedIndex((prev) => Math.max(prev - 1, 0));
+    } else if (e.key === 'Enter' && highlightedIndex >= 0) {
+      e.preventDefault();
+      handleSelect(questions[highlightedIndex]);
+    } else if (e.key === 'Escape') {
+      e.preventDefault();
+      setDropdownOpen(false);
+    }
+  };
+
+  const handleClearSelection = () => {
+    setSelectedQuestion(null);
+    setSearchQuery('');
+    inputRef.current?.focus();
   };
 
   const handleClearFilters = () => {
@@ -394,7 +523,9 @@ export const QuestionsPage: React.FC = () => {
     setCategoryFilter('');
     setTypeFilter('');
     setSelectedQuestion(null);
-    fetchQuestions({ page: 1, per_page: 100 });
+    setDropdownOpen(false);
+    setHighlightedIndex(-1);
+    fetchQuestions({ page: 1, per_page: 10 });
   };
 
   const handleOpenCreate = () => {
@@ -497,20 +628,10 @@ export const QuestionsPage: React.FC = () => {
     setEditingCategory(null);
   };
 
-  const handleOpenEditCategory = (category: QuestionCategory) => {
-    setEditingCategory(category);
-    setShowCategoryModal(true);
-  };
-
-  const handleDeleteCategory = async (id: number) => {
-    if (!confirm('Delete this category? Questions assigned to it will lose their category.')) return;
-    await deleteCategory(id);
-    addToast('Category deleted successfully', 'success');
-  };
-
   // Stats
   const totalCount = pagination.total;
-  const activeCount = questions.filter((q) => q.is_active).length;
+  const activeCount = stats.activeCount;
+  const inactiveCount = stats.inactiveCount;
   const categoryCount = categories.length;
 
   return (
@@ -577,61 +698,10 @@ export const QuestionsPage: React.FC = () => {
         <div className="group p-5 rounded-2xl bg-white border border-slate-100 shadow-soft hover:shadow-lg hover:-translate-y-1 transition-all duration-300">
           <p className="text-sm text-slate-500 font-medium">Inactive</p>
           <p className="text-3xl font-bold mt-2 bg-gradient-to-r from-orange-500 to-amber-500 bg-clip-text text-transparent">
-            {totalCount - activeCount}
+            {inactiveCount}
           </p>
         </div>
       </div>
-
-      {/* Categories Management */}
-      {hasPermission('questions.view') && categories.length > 0 && (
-        <details className="group">
-          <summary className="flex items-center gap-2 cursor-pointer text-sm font-medium text-slate-600 hover:text-slate-800 transition-colors">
-            <svg className="w-4 h-4 group-open:rotate-90 transition-transform" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5l7 7-7 7" />
-            </svg>
-            Categories ({categories.length})
-          </summary>
-          <div className="mt-3 flex flex-wrap gap-2">
-            {categories.map((cat) => (
-              <div key={cat.id} className="flex items-center gap-1 px-3 py-1.5 bg-slate-50 border border-slate-200 rounded-lg text-sm">
-                <span className="text-slate-700">{cat.name}</span>
-                <span className="text-xs text-slate-400 ml-1">({cat.code})</span>
-                {hasPermission('questions.edit') && (
-                  <button
-                    onClick={() => handleOpenEditCategory(cat)}
-                    className="ml-1 p-0.5 text-slate-400 hover:text-blue-600"
-                  >
-                    <svg className="w-3 h-3" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15.232 5.232l3.536 3.536m-2.036-5.036a2.5 2.5 0 113.536 3.536L6.5 21.036H3v-3.572L16.732 3.732z" />
-                    </svg>
-                  </button>
-                )}
-                {hasPermission('questions.delete') && (
-                  <button
-                    onClick={() => handleDeleteCategory(cat.id)}
-                    className="p-0.5 text-slate-400 hover:text-red-600"
-                  >
-                    <svg className="w-3 h-3" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
-                    </svg>
-                  </button>
-                )}
-              </div>
-            ))}
-            {hasPermission('questions.create') && (
-              <button
-                onClick={() => { setEditingCategory(null); setShowCategoryModal(true); }}
-                className="flex items-center gap-1 px-3 py-1.5 border border-dashed border-slate-300 rounded-lg text-sm text-slate-500 hover:text-blue-600 hover:border-blue-400 transition-colors"
-              >
-                <svg className="w-3.5 h-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 6v6m0 0v6m0-6h6m-6 0H6" />
-                </svg>
-                Add Category
-              </button>
-            )}
-          </div>
-        </details>
-      )}
 
       {/* Error Banner */}
       {error && (
@@ -648,19 +718,92 @@ export const QuestionsPage: React.FC = () => {
       {/* Search + Filter Bar */}
       <Card variant="outlined" padding="md">
         <form onSubmit={handleSearch} className="flex flex-wrap gap-3 items-end">
-          <div className="flex-1 min-w-[280px]">
-            <label className="block text-xs font-medium text-slate-500 mb-1.5 uppercase tracking-wide">Search</label>
-            <Input
-              placeholder="Search questions..."
-              value={searchQuery}
-              onChange={(e) => setSearchQuery(e.target.value)}
-              leftIcon={
-                <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z" />
-                </svg>
-              }
-            />
+          {/* Searchable Dropdown */}
+          <div ref={dropdownRef} className="flex-1 min-w-[280px] relative">
+            <label className="block text-xs font-medium text-slate-500 mb-1.5 uppercase tracking-wide">
+              Search Question
+            </label>
+            <div className="relative">
+              <Input
+                ref={inputRef}
+                placeholder="Type to search... (e.g., question text)"
+                value={searchQuery}
+                onChange={(e) => {
+                  setSearchQuery(e.target.value);
+                  setDropdownOpen(true);
+                }}
+                onFocus={() => { setHighlightedIndex(-1); setDropdownOpen(true); }}
+                onKeyDown={handleDropdownKeyDown}
+                leftIcon={
+                  <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z" />
+                  </svg>
+                }
+                rightIcon={
+                  searchQuery ? (
+                    <button
+                      type="button"
+                      onClick={handleClearSelection}
+                      className="text-slate-400 hover:text-slate-600 transition-colors"
+                    >
+                      <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
+                      </svg>
+                    </button>
+                  ) : null
+                }
+              />
+
+              {/* Dropdown List */}
+              {dropdownOpen && (
+                <div className="absolute z-50 w-full mt-2 bg-white border border-slate-200 rounded-xl shadow-xl shadow-slate-200/50 max-h-80 overflow-y-auto">
+                  {isLoading ? (
+                    <div className="flex items-center justify-center py-8">
+                      <div className="animate-spin rounded-full h-6 w-6 border-b-2 border-blue-600"></div>
+                    </div>
+                  ) : questions.length === 0 ? (
+                    <div className="text-center py-8 px-4">
+                      <svg className="w-10 h-10 mx-auto text-gray-300" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M8.228 9c.549-1.165 2.03-2 3.772-2 2.21 0 4 1.343 4 3 0 1.4-1.278 2.575-3.006 2.907-.542.104-.994.54-.994 1.093m0 3h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
+                      </svg>
+                      <p className="mt-2 text-sm text-gray-500">
+                        {searchQuery ? 'No questions match your search' : 'No questions found'}
+                      </p>
+                      <p className="mt-1 text-xs text-gray-400">
+                        {searchQuery ? 'Try a different search term' : 'Create a new question to get started'}
+                      </p>
+                    </div>
+                  ) : (
+                    <div role="listbox" className="py-1">
+                      {questions.map((q, index) => (
+                        <DropdownItem
+                          key={q.id}
+                          question={q}
+                          isSelected={selectedQuestion?.id === q.id}
+                          isHighlighted={index === highlightedIndex}
+                          onClick={handleSelect}
+                        />
+                      ))}
+                    </div>
+                  )}
+
+                  {/* Footer */}
+                  {!isLoading && questions.length > 0 && (
+                    <div className="px-4 py-2 bg-slate-50 border-t border-slate-100 text-xs text-slate-400 flex items-center justify-between">
+                      <span>{questions.length} result{questions.length !== 1 ? 's' : ''}</span>
+                      <span className="flex items-center gap-2">
+                        <kbd className="px-1.5 py-0.5 bg-white border border-slate-200 rounded text-[10px]">↑↓</kbd>
+                        navigate
+                        <kbd className="px-1.5 py-0.5 bg-white border border-slate-200 rounded text-[10px]">↵</kbd>
+                        select
+                      </span>
+                    </div>
+                  )}
+                </div>
+              )}
+            </div>
           </div>
+
           <SearchableCombobox
             label="Category"
             value={categoryFilter || null}
@@ -697,14 +840,14 @@ export const QuestionsPage: React.FC = () => {
         </div>
       )}
 
-      {/* Question Grid */}
-      {!isLoading && questions.length > 0 && (
+      {/* Question Grid — only when no question is selected */}
+      {!isLoading && !selectedQuestion && questions.length > 0 && (
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-2 gap-4">
           {questions.map((q) => (
             <QuestionCard
               key={q.id}
               question={q}
-              onClick={() => setSelectedQuestion(selectedQuestion?.id === q.id ? null : q)}
+              onClick={() => { setSelectedQuestion(q); setSearchQuery(q.question_text); }}
               onEdit={hasPermission('questions.edit') ? () => handleOpenEdit(q) : undefined}
               onDelete={hasPermission('questions.delete') ? () => handleOpenDelete(q.id) : undefined}
             />
@@ -712,8 +855,17 @@ export const QuestionsPage: React.FC = () => {
         </div>
       )}
 
-      {/* Selected Detail */}
+      {/* Selected card + Detail Panel */}
       {!isLoading && selectedQuestion && (
+        <div className="space-y-4">
+          <div className="max-w-full">
+            <QuestionCard
+              question={selectedQuestion}
+              onClick={() => { setSelectedQuestion(null); setSearchQuery(''); }}
+              onEdit={hasPermission('questions.edit') ? () => handleOpenEdit(selectedQuestion) : undefined}
+              onDelete={hasPermission('questions.delete') ? () => handleOpenDelete(selectedQuestion.id) : undefined}
+            />
+          </div>
         <Card variant="elevated" padding="lg" className="animate-in fade-in">
           <div className="flex items-start justify-between gap-4">
             <div className="flex-1">
@@ -770,7 +922,8 @@ export const QuestionsPage: React.FC = () => {
               </div>
             </div>
           )}
-        </Card>
+          </Card>
+        </div>
       )}
 
       {/* Empty State */}
@@ -807,21 +960,60 @@ export const QuestionsPage: React.FC = () => {
         <div className="flex flex-col sm:flex-row items-center justify-between gap-4">
           <p className="text-sm text-gray-500">
             Showing {((pagination.currentPage - 1) * pagination.perPage) + 1} to {Math.min(pagination.currentPage * pagination.perPage, pagination.total)} of {pagination.total} questions
+            <span className="ml-2 text-gray-400">(Page {pagination.currentPage} of {pagination.totalPages})</span>
           </p>
           <div className="flex items-center gap-2">
             <Button
               variant="outline"
               size="sm"
               disabled={pagination.currentPage === 1}
-              onClick={() => fetchQuestions({ page: pagination.currentPage - 1, per_page: 100, search: searchQuery || undefined })}
+              onClick={() => fetchQuestions({
+                page: pagination.currentPage - 1,
+                per_page: 10,
+                search: searchQuery || undefined,
+                category_id: categoryFilter ? parseInt(categoryFilter) : undefined,
+                type: typeFilter || undefined,
+              })}
+              leftIcon={
+                <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 19l-7-7 7-7" />
+                </svg>
+              }
             >
               Previous
             </Button>
+            {Array.from({ length: Math.min(pagination.totalPages, 7) }, (_, i) => i + 1).map((page) => (
+              <Button
+                key={page}
+                variant={page === pagination.currentPage ? 'primary' : 'outline'}
+                size="sm"
+                onClick={() => fetchQuestions({
+                  page,
+                  per_page: 10,
+                  search: searchQuery || undefined,
+                  category_id: categoryFilter ? parseInt(categoryFilter) : undefined,
+                  type: typeFilter || undefined,
+                })}
+              >
+                {page}
+              </Button>
+            ))}
             <Button
               variant="outline"
               size="sm"
               disabled={pagination.currentPage >= pagination.totalPages}
-              onClick={() => fetchQuestions({ page: pagination.currentPage + 1, per_page: 100, search: searchQuery || undefined })}
+              onClick={() => fetchQuestions({
+                page: pagination.currentPage + 1,
+                per_page: 10,
+                search: searchQuery || undefined,
+                category_id: categoryFilter ? parseInt(categoryFilter) : undefined,
+                type: typeFilter || undefined,
+              })}
+              rightIcon={
+                <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5l7 7-7 7" />
+                </svg>
+              }
             >
               Next
             </Button>

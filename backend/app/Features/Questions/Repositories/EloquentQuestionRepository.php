@@ -9,7 +9,7 @@ class EloquentQuestionRepository implements QuestionRepositoryInterface
 {
     public function getAll(array $filters = []): LengthAwarePaginator
     {
-        $query = Question::query()->with(['category']);
+        $query = Question::query()->with(['category', 'subCategory']);
 
         if (isset($filters['search'])) {
             $query->where(function ($q) use ($filters) {
@@ -41,7 +41,7 @@ class EloquentQuestionRepository implements QuestionRepositoryInterface
 
     public function findById(int $id): ?Question
     {
-        return Question::with(['category'])->find($id);
+        return Question::with(['category', 'subCategory'])->find($id);
     }
 
     public function create(array $data): Question
