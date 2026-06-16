@@ -106,6 +106,18 @@ class PermissionRegistryService
             'questions.edit' => 'Edit questions',
             'questions.delete' => 'Delete questions',
 
+            // Question Categories module
+            'question-categories.view' => 'View question categories',
+            'question-categories.create' => 'Create question categories',
+            'question-categories.edit' => 'Edit question categories',
+            'question-categories.delete' => 'Delete question categories',
+
+            // Question Sub-Categories module
+            'question-sub-categories.view' => 'View question sub-categories',
+            'question-sub-categories.create' => 'Create question sub-categories',
+            'question-sub-categories.edit' => 'Edit question sub-categories',
+            'question-sub-categories.delete' => 'Delete question sub-categories',
+
             // Templates module
             'templates.view' => 'View templates',
             'templates.create' => 'Create templates',

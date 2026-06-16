@@ -183,4 +183,68 @@ class QuestionControllerTest extends TestCase
             'Authorization' => 'Bearer '.$token,
         ])->assertStatus(403);
     }
+
+    public function test_can_export_questions_as_xlsx(): void
+    {
+        Question::create([
+            'category_id' => $this->category->id,
+            'question_text' => 'Export test question?',
+            'question_type' => 'text',
+            'is_active' => true,
+        ]);
+
+        $response = $this->json('GET', '/api/v1/questions/export', [], $this->headers);
+
+        $response->assertStatus(200);
+        $this->assertStringContainsString('application/vnd.openxmlformats-officedocument.spreadsheetml.sheet', $response->headers->get('Content-Type'));
+        $this->assertStringContainsString('questions.xlsx', $response->headers->get('Content-Disposition'));
+    }
+
+    public function test_can_export_questions_as_csv(): void
+    {
+        Question::create([
+            'category_id' => $this->category->id,
+            'question_text' => 'CSV export test?',
+            'question_type' => 'text',
+            'is_active' => true,
+        ]);
+
+        $response = $this->json('GET', '/api/v1/questions/export/csv', [], $this->headers);
+
+        $response->assertStatus(200);
+        $this->assertStringContainsString('text/csv', $response->headers->get('Content-Type'));
+        $this->assertStringContainsString('questions.csv', $response->headers->get('Content-Disposition'));
+    }
+
+    public function test_can_export_questions_as_pdf(): void
+    {
+        Question::create([
+            'category_id' => $this->category->id,
+            'question_text' => 'PDF export test?',
+            'question_type' => 'text',
+            'is_active' => true,
+        ]);
+
+        $response = $this->json('GET', '/api/v1/questions/export/pdf', [], $this->headers);
+
+        $response->assertStatus(200);
+        $this->assertStringContainsString('application/pdf', $response->headers->get('Content-Type'));
+        $this->assertStringContainsString('questions.pdf', $response->headers->get('Content-Disposition'));
+    }
+
+    public function test_can_export_questions_defaults_to_xlsx(): void
+    {
+        Question::create([
+            'category_id' => $this->category->id,
+            'question_text' => 'Default format test?',
+            'question_type' => 'text',
+            'is_active' => true,
+        ]);
+
+        $response = $this->json('GET', '/api/v1/questions/export/xlsx', [], $this->headers);
+
+        $response->assertStatus(200);
+        $this->assertStringContainsString('application/vnd.openxmlformats-officedocument.spreadsheetml.sheet', $response->headers->get('Content-Type'));
+        $this->assertStringContainsString('questions.xlsx', $response->headers->get('Content-Disposition'));
+    }
 }

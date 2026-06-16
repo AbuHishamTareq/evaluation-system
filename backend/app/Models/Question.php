@@ -12,6 +12,7 @@ class Question extends Model
 
     protected $fillable = [
         'category_id',
+        'sub_category_id',
         'question_text',
         'description',
         'question_type',
@@ -35,5 +36,10 @@ class Question extends Model
     public function category(): BelongsTo
     {
         return $this->belongsTo(QuestionCategory::class, 'category_id');
+    }
+
+    public function subCategory(): BelongsTo
+    {
+        return $this->belongsTo(QuestionSubCategory::class, 'sub_category_id');
     }
 }

@@ -27,4 +27,9 @@ class QuestionCategory extends Model
     {
         return $this->hasMany(Question::class, 'category_id');
     }
+
+    public function subCategories(): HasMany
+    {
+        return $this->hasMany(QuestionSubCategory::class)->orderBy('order');
+    }
 }

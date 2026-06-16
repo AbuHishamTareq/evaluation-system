@@ -1,53 +1,50 @@
-import React, { forwardRef } from 'react';
+import React from 'react';
+import { SearchableCombobox } from './SearchableCombobox';
 
 interface Option {
   label: string;
   value: string | number;
 }
 
-interface SelectProps extends React.SelectHTMLAttributes<HTMLSelectElement> {
+interface SelectProps {
   options: Option[];
   error?: string;
   placeholder?: string;
+  value?: string | number;
+  onChange?: (value: string | number | boolean | null) => void;
+  disabled?: boolean;
+  required?: boolean;
+  id?: string;
+  className?: string;
 }
 
-export const Select = forwardRef<HTMLSelectElement, SelectProps>(({
+export const Select: React.FC<SelectProps> = ({
   options,
   error,
   placeholder,
+  value,
+  onChange,
+  disabled,
+  required,
+  id,
   className = '',
-  ...props
-}, ref) => {
+}) => {
   return (
     <div>
-      <select
-        ref={ref}
-        className={`
-          w-full px-4 py-2 border rounded-lg transition-colors appearance-none
-          ${error ? 'border-red-500 focus:ring-red-500' : 'border-gray-300 focus:ring-blue-500'}
-          focus:outline-none focus:ring-2 focus:ring-offset-1
-          disabled:bg-gray-100 disabled:cursor-not-allowed
-          bg-white
-          ${className}
-        `}
-        {...props}
-      >
-        {placeholder && (
-          <option value="" disabled>
-            {placeholder}
-          </option>
-        )}
-        {options.map((option) => (
-          <option key={option.value} value={option.value}>
-            {option.label}
-          </option>
-        ))}
-      </select>
-      {error && (
-        <p className="mt-1 text-sm text-red-500">{error}</p>
-      )}
+      <SearchableCombobox
+        value={value ?? null}
+        onChange={(val) => onChange?.(val)}
+        options={options.map(opt => ({ value: opt.value, label: opt.label }))}
+        placeholder={placeholder}
+        error={error}
+        disabled={disabled}
+        required={required}
+        id={id}
+        className={className}
+        clearable={false}
+      />
     </div>
   );
-});
+};
 
-Select.displayName = 'Select';
+export default Select;

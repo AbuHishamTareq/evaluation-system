@@ -49,6 +49,8 @@
     "dashboard": "Dashboard",
     "staff": "Staff",
     "questions": "Questions",
+    "questionCategories": "Question Categories",
+    "questionSubCategories": "Question Sub-Categories",
     "evaluations": "Evaluations",
     "centers": "Centers",
     "reports": "Reports",

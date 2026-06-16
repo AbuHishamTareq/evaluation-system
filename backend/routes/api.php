@@ -15,7 +15,9 @@ use App\Features\EducationalDegrees\Controllers\EducationalDegreeController;
 use App\Features\Evaluations\Controllers\EvaluationController;
 use App\Features\Evaluations\Controllers\TemplateController;
 use App\Features\Professionals\Controllers\ProfessionalController;
+use App\Features\QuestionCategories\Controllers\QuestionCategoryController;
 use App\Features\Questions\Controllers\QuestionController;
+use App\Features\QuestionSubCategories\Controllers\QuestionSubCategoryController;
 use App\Features\RolesAndPermissions\Controllers\PermissionController;
 use App\Features\RolesAndPermissions\Controllers\RoleController;
 use App\Features\Staff\Controllers\StaffController;
@@ -80,13 +82,45 @@ Route::prefix('v1')->group(function () {
             Route::delete('/{id}/documents/{documentId}', [StaffController::class, 'deleteDocument'])->middleware('permission:staff.edit');
         });
 
+        // Question Categories
+        Route::prefix('question-categories')->group(function () {
+            Route::get('/', [QuestionCategoryController::class, 'index'])->middleware('permission:question-categories.view');
+            Route::post('/', [QuestionCategoryController::class, 'store'])->middleware('permission:question-categories.create');
+            Route::get('/active', [QuestionCategoryController::class, 'active'])->middleware('permission:question-categories.view');
+            Route::get('/sample', [QuestionCategoryController::class, 'downloadSample']);
+            Route::get('/export/{format?}', [QuestionCategoryController::class, 'export'])->middleware('permission:question-categories.view');
+            Route::post('/import', [QuestionCategoryController::class, 'import'])->middleware('permission:question-categories.create');
+            Route::get('/{id}', [QuestionCategoryController::class, 'show'])->middleware('permission:question-categories.view');
+            Route::put('/{id}', [QuestionCategoryController::class, 'update'])->middleware('permission:question-categories.edit');
+            Route::patch('/{id}/toggle-status', [QuestionCategoryController::class, 'toggleStatus'])->middleware('permission:question-categories.edit');
+            Route::delete('/{id}', [QuestionCategoryController::class, 'destroy'])->middleware('permission:question-categories.delete');
+        });
+
+        // Question Sub-Categories
+        Route::prefix('question-sub-categories')->group(function () {
+            Route::get('/', [QuestionSubCategoryController::class, 'index'])->middleware('permission:question-sub-categories.view');
+            Route::post('/', [QuestionSubCategoryController::class, 'store'])->middleware('permission:question-sub-categories.create');
+            Route::get('/active', [QuestionSubCategoryController::class, 'active'])->middleware('permission:question-sub-categories.view');
+            Route::get('/sample', [QuestionSubCategoryController::class, 'downloadSample'])->middleware('permission:question-sub-categories.view');
+            Route::get('/export/{format?}', [QuestionSubCategoryController::class, 'export'])->middleware('permission:question-sub-categories.view');
+            Route::post('/import', [QuestionSubCategoryController::class, 'import'])->middleware('permission:question-sub-categories.create');
+            Route::get('/{id}', [QuestionSubCategoryController::class, 'show'])->middleware('permission:question-sub-categories.view');
+            Route::put('/{id}', [QuestionSubCategoryController::class, 'update'])->middleware('permission:question-sub-categories.edit');
+            Route::patch('/{id}/toggle-status', [QuestionSubCategoryController::class, 'toggleStatus'])->middleware('permission:question-sub-categories.edit');
+            Route::delete('/{id}', [QuestionSubCategoryController::class, 'destroy'])->middleware('permission:question-sub-categories.delete');
+        });
+
         // Questions
         Route::prefix('questions')->group(function () {
             Route::get('/', [QuestionController::class, 'index'])->middleware('permission:questions.view');
             Route::post('/', [QuestionController::class, 'store'])->middleware('permission:questions.create');
-            Route::post('/import', [QuestionController::class, 'import']);
-            Route::get('/export', [QuestionController::class, 'export']);
+            Route::get('/sample', [QuestionController::class, 'sample'])->middleware('permission:questions.create');
+            Route::post('/import', [QuestionController::class, 'import'])->middleware('permission:questions.create');
+            Route::get('/export/{format?}', [QuestionController::class, 'export'])->middleware('permission:questions.view');
             Route::get('/categories', [QuestionController::class, 'categories'])->middleware('permission:questions.view');
+            Route::post('/categories', [QuestionController::class, 'storeCategory'])->middleware('permission:questions.create');
+            Route::put('/categories/{id}', [QuestionController::class, 'updateCategory'])->middleware('permission:questions.edit');
+            Route::delete('/categories/{id}', [QuestionController::class, 'destroyCategory'])->middleware('permission:questions.delete');
             Route::get('/category/{categoryId}', [QuestionController::class, 'byCategory'])->middleware('permission:questions.view');
             Route::get('/type', [QuestionController::class, 'byType'])->middleware('permission:questions.view');
             Route::get('/{id}', [QuestionController::class, 'show'])->middleware('permission:questions.view');

@@ -1,5 +1,5 @@
 import { create } from 'zustand';
-import type { Question } from '../types';
+import type { Question, QuestionCreateInput, QuestionUpdateInput, QuestionCategory } from '../types';
 import { questionService } from '../api/services';
 
 interface QuestionState {
@@ -15,16 +15,20 @@ interface QuestionState {
     total: number;
     perPage: number;
   };
-  categories: string[];
+  categories: QuestionCategory[];
 
-  fetchQuestions: (params?: { page?: number; per_page?: number; category?: string }) => Promise<void>;
-  fetchQuestionById: (id: string | number) => Promise<void>;
-  createQuestion: (data: Partial<Question>) => Promise<void>;
-  updateQuestion: (id: string | number, data: Partial<Question>) => Promise<void>;
-  deleteQuestion: (id: string | number) => Promise<void>;
+  fetchQuestions: (params?: { page?: number; per_page?: number; category_id?: number; type?: string; search?: string }) => Promise<void>;
+  fetchQuestionById: (id: number) => Promise<void>;
+  createQuestion: (data: QuestionCreateInput) => Promise<void>;
+  updateQuestion: (id: number, data: QuestionUpdateInput) => Promise<void>;
+  deleteQuestion: (id: number) => Promise<void>;
   fetchCategories: () => Promise<void>;
-  exportQuestions: () => Promise<void>;
+  createCategory: (data: { name: string; code: string; description?: string; order?: number }) => Promise<void>;
+  updateCategory: (id: number, data: Partial<{ name: string; code: string; description: string; order: number; is_active: boolean }>) => Promise<void>;
+  deleteCategory: (id: number) => Promise<void>;
+  exportQuestions: (format?: string) => Promise<void>;
   importQuestions: (file: File) => Promise<void>;
+  downloadSample: () => Promise<Blob | null>;
   clearError: () => void;
 }
 
@@ -126,15 +130,50 @@ export const useQuestionStore = create<QuestionState>((set, get) => ({
     }
   },
 
-  exportQuestions: async () => {
+  createCategory: async (data) => {
+    set({ error: null });
+    try {
+      await questionService.createCategory(data);
+      await get().fetchCategories();
+    } catch (error) {
+      set({
+        error: error instanceof Error ? error.message : 'Failed to create category',
+      });
+    }
+  },
+
+  updateCategory: async (id, data) => {
+    set({ error: null });
+    try {
+      await questionService.updateCategory(id, data);
+      await get().fetchCategories();
+    } catch (error) {
+      set({
+        error: error instanceof Error ? error.message : 'Failed to update category',
+      });
+    }
+  },
+
+  deleteCategory: async (id) => {
+    set({ error: null });
+    try {
+      await questionService.deleteCategory(id);
+      await get().fetchCategories();
+    } catch (error) {
+      set({
+        error: error instanceof Error ? error.message : 'Failed to delete category',
+      });
+    }
+  },
+
+  exportQuestions: async (format: string = 'xlsx') => {
     set({ isExporting: true, error: null });
     try {
-      const response = await questionService.exportQuestions() as unknown as { data: Blob };
-      // Create a download link for the blob
+      const response = await questionService.exportQuestions(format) as unknown as { data: Blob };
       const url = window.URL.createObjectURL(new Blob([response.data]));
       const link = document.createElement('a');
       link.href = url;
-      link.setAttribute('download', `questions_${new Date().toISOString().split('T')[0]}.xlsx`);
+      link.setAttribute('download', `questions_${new Date().toISOString().split('T')[0]}.${format}`);
       document.body.appendChild(link);
       link.click();
       link.remove();
@@ -159,6 +198,19 @@ export const useQuestionStore = create<QuestionState>((set, get) => ({
         error: error instanceof Error ? error.message : 'Failed to import questions',
         isImporting: false,
       });
+    }
+  },
+
+  downloadSample: async () => {
+    set({ error: null });
+    try {
+      const blob = await questionService.downloadSample();
+      return blob as Blob;
+    } catch (error) {
+      set({
+        error: error instanceof Error ? error.message : 'Failed to download sample',
+      });
+      return null;
     }
   },
 

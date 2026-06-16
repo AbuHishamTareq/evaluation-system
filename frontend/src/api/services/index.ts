@@ -20,6 +20,12 @@ import type {
   ClassificationResolveInput,
   ClassificationResolveResult,
   EducationalDegree,
+  QuestionCreateInput,
+  QuestionUpdateInput,
+  QuestionCategory,
+  QuestionCategoryCreateInput,
+  QuestionSubCategory,
+  QuestionSubCategoryCreateInput,
 } from '../../types';
 
 // Auth Service
@@ -150,32 +156,46 @@ export const staffService = {
 
 // Question Service
 export const questionService = {
-  getAll: async (params?: { page?: number; per_page?: number; category?: string }) => {
+  getAll: async (params?: { page?: number; per_page?: number; category_id?: number; sub_category_id?: number; type?: string; search?: string }) => {
     return apiClient.get<PaginatedResponse<Question>>(API_ENDPOINTS.questions.list, { params });
   },
 
-  getById: async (id: string | number) => {
+  getById: async (id: number) => {
     return apiClient.get<Question>(API_ENDPOINTS.questions.show(id));
   },
 
-  create: async (data: Partial<Question>) => {
+  create: async (data: QuestionCreateInput) => {
     return apiClient.post<Question>(API_ENDPOINTS.questions.store, data);
   },
 
-  update: async (id: string | number, data: Partial<Question>) => {
+  update: async (id: number, data: QuestionUpdateInput) => {
     return apiClient.put<Question>(API_ENDPOINTS.questions.update(id), data);
   },
 
-  delete: async (id: string | number) => {
+  delete: async (id: number) => {
     return apiClient.delete(API_ENDPOINTS.questions.destroy(id));
   },
 
   getCategories: async () => {
-    return apiClient.get<string[]>(API_ENDPOINTS.questions.categories);
+    const response = await apiClient.get<{ data: QuestionCategory[] }>(API_ENDPOINTS.questions.categories);
+    return response.data;
   },
 
-  exportQuestions: async () => {
+  createCategory: async (data: { name: string; code: string; description?: string; order?: number }) => {
+    return apiClient.post<QuestionCategory>(API_ENDPOINTS.questions.storeCategory, data);
+  },
+
+  updateCategory: async (id: number, data: Partial<{ name: string; code: string; description: string; order: number; is_active: boolean }>) => {
+    return apiClient.put<QuestionCategory>(API_ENDPOINTS.questions.updateCategory(id), data);
+  },
+
+  deleteCategory: async (id: number) => {
+    return apiClient.delete(API_ENDPOINTS.questions.destroyCategory(id));
+  },
+
+  exportQuestions: async (format: string = 'xlsx') => {
     const response = await apiClient.get(API_ENDPOINTS.questions.export, {
+      params: { format },
       responseType: 'blob',
     });
     return response;
@@ -188,6 +208,13 @@ export const questionService = {
       headers: {
         'Content-Type': 'multipart/form-data',
       },
+    });
+    return response;
+  },
+
+  downloadSample: async () => {
+    const response = await apiClient.get(API_ENDPOINTS.questions.sample, {
+      responseType: 'blob',
     });
     return response;
   },
@@ -713,6 +740,136 @@ export const educationalDegreeService = {
   },
 };
 
+// Question Category Service
+export const questionCategoryService = {
+  getAll: async (params?: { page?: number; per_page?: number; search?: string; is_active?: boolean }) => {
+    const response = await apiClient.get<{
+      data: QuestionCategory[];
+      meta: { current_page: number; last_page: number; total: number; per_page: number };
+    }>(API_ENDPOINTS.questionCategories.list, { params });
+    return response;
+  },
+
+  getById: async (id: string | number) => {
+    const response = await apiClient.get<{ data: QuestionCategory }>(API_ENDPOINTS.questionCategories.show(id));
+    return response.data;
+  },
+
+  create: async (data: QuestionCategoryCreateInput) => {
+    const response = await apiClient.post<{ data: QuestionCategory }>(API_ENDPOINTS.questionCategories.store, data);
+    return response.data;
+  },
+
+  update: async (id: string | number, data: Partial<QuestionCategoryCreateInput>) => {
+    const response = await apiClient.put<{ data: QuestionCategory }>(API_ENDPOINTS.questionCategories.update(id), data);
+    return response.data;
+  },
+
+  delete: async (id: string | number) => {
+    return apiClient.delete(API_ENDPOINTS.questionCategories.destroy(id));
+  },
+
+  toggleStatus: async (id: string | number) => {
+    const response = await apiClient.patch<{ data: QuestionCategory }>(API_ENDPOINTS.questionCategories.toggleStatus(id));
+    return response.data;
+  },
+
+  getActive: async () => {
+    const response = await apiClient.get<{ data: QuestionCategory[] }>(API_ENDPOINTS.questionCategories.active);
+    return response.data;
+  },
+
+  exportQuestionCategories: async (format: string = 'xlsx') => {
+    const response = await apiClient.get(API_ENDPOINTS.questionCategories.export, {
+      params: { format },
+      responseType: 'blob',
+    });
+    return response;
+  },
+
+  importQuestionCategories: async (file: File) => {
+    const formData = new FormData();
+    formData.append('file', file);
+    const response = await apiClient.post<{ success: boolean; message: string }>(API_ENDPOINTS.questionCategories.import, formData, {
+      headers: {
+        'Content-Type': 'multipart/form-data',
+      },
+    });
+    return response;
+  },
+
+  downloadSample: async () => {
+    const response = await apiClient.get(API_ENDPOINTS.questionCategories.sample, {
+      responseType: 'blob',
+    });
+    return response;
+  },
+};
+
+// Question Sub Category Service
+export const questionSubCategoryService = {
+  getAll: async (params?: Record<string, string | number | boolean>) => {
+    const response = await apiClient.get<{
+      data: QuestionSubCategory[];
+      meta: { current_page: number; last_page: number; total: number; per_page: number };
+    }>(API_ENDPOINTS.questionSubCategories.list, { params });
+    return response;
+  },
+
+  getById: async (id: string | number) => {
+    const response = await apiClient.get<{ data: QuestionSubCategory }>(API_ENDPOINTS.questionSubCategories.show(id));
+    return response.data;
+  },
+
+  create: async (data: QuestionSubCategoryCreateInput) => {
+    const response = await apiClient.post<{ data: QuestionSubCategory }>(API_ENDPOINTS.questionSubCategories.store, data);
+    return response.data;
+  },
+
+  update: async (id: string | number, data: Partial<QuestionSubCategoryCreateInput>) => {
+    const response = await apiClient.put<{ data: QuestionSubCategory }>(API_ENDPOINTS.questionSubCategories.update(id), data);
+    return response.data;
+  },
+
+  delete: async (id: string | number) => {
+    return apiClient.delete(API_ENDPOINTS.questionSubCategories.destroy(id));
+  },
+
+  toggleStatus: async (id: string | number) => {
+    const response = await apiClient.patch<{ data: QuestionSubCategory }>(API_ENDPOINTS.questionSubCategories.toggleStatus(id));
+    return response.data;
+  },
+
+  getActive: async () => {
+    const response = await apiClient.get<{ data: QuestionSubCategory[] }>(API_ENDPOINTS.questionSubCategories.active);
+    return response.data;
+  },
+
+  exportQuestionSubCategories: async (format: string = 'xlsx') => {
+    const response = await apiClient.get(API_ENDPOINTS.questionSubCategories.export, {
+      params: { format },
+      responseType: 'blob',
+    });
+    return response;
+  },
+
+  importQuestionSubCategories: async (file: File) => {
+    const formData = new FormData();
+    formData.append('file', file);
+    const response = await apiClient.post<{ success: boolean; message: string }>(API_ENDPOINTS.questionSubCategories.import, formData, {
+      headers: { 'Content-Type': 'multipart/form-data' },
+    });
+    return response;
+  },
+
+  downloadSample: async () => {
+    const response = await apiClient.get(API_ENDPOINTS.questionSubCategories.sample, {
+      responseType: 'blob',
+    });
+    return response;
+  },
+};
+
 // Analytics Service
 export const analyticsService = {
   getDashboard: async () => {
@@ -774,6 +931,8 @@ export default {
   auth: authService,
   staff: staffService,
   questions: questionService,
+  questionCategories: questionCategoryService,
+  questionSubCategories: questionSubCategoryService,
   evaluations: evaluationService,
   templates: templateService,
   centers: centerService,

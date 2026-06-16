@@ -1,47 +1,29 @@
 import React from 'react';
 import { Card } from '../../ui/cards/Card';
+import type { Question } from '../../../types';
 
 interface QuestionCardProps {
-  id: string | number;
-  question: string;
-  category?: string;
-  type?: 'multiple-choice' | 'true-false' | 'short-answer' | 'rating';
-  difficulty?: 'easy' | 'medium' | 'hard';
-  status?: 'active' | 'draft' | 'archived';
+  question: Question;
   onClick?: () => void;
   onEdit?: () => void;
   onDelete?: () => void;
 }
 
+const TYPE_LABELS: Record<string, string> = {
+  text: 'Text',
+  textarea: 'Textarea',
+  select: 'Select',
+  radio: 'Radio',
+  checkbox: 'Checkbox',
+  rating: 'Rating',
+};
+
 export const QuestionCard: React.FC<QuestionCardProps> = ({
   question,
-  category,
-  type = 'multiple-choice',
-  difficulty = 'medium',
-  status = 'active',
   onClick,
   onEdit,
   onDelete,
 }) => {
-  const difficultyColors = {
-    easy: 'bg-green-100 text-green-800',
-    medium: 'bg-yellow-100 text-yellow-800',
-    hard: 'bg-red-100 text-red-800',
-  };
-
-  const statusColors = {
-    active: 'bg-blue-100 text-blue-800',
-    draft: 'bg-gray-100 text-gray-800',
-    archived: 'bg-purple-100 text-purple-800',
-  };
-
-  const typeLabels = {
-    'multiple-choice': 'Multiple Choice',
-    'true-false': 'True/False',
-    'short-answer': 'Short Answer',
-    rating: 'Rating',
-  };
-
   return (
     <Card
       variant="outlined"
@@ -50,27 +32,42 @@ export const QuestionCard: React.FC<QuestionCardProps> = ({
       onClick={onClick}
     >
       <div className="flex items-start justify-between">
-        <div className="flex-1">
-          <p className="text-gray-900 font-medium line-clamp-2">{question}</p>
+        <div className="flex-1 min-w-0">
+          <p className="text-gray-900 font-medium line-clamp-2">{question.question_text}</p>
+          {question.description && (
+            <p className="text-sm text-gray-500 mt-1 line-clamp-1">{question.description}</p>
+          )}
           <div className="flex flex-wrap gap-2 mt-2">
-            {category && (
-              <span className="px-2 py-0.5 bg-gray-100 text-gray-600 rounded text-xs">
-                {category}
+            {question.category && (
+              <span className="px-2 py-0.5 bg-violet-100 text-violet-700 rounded text-xs font-medium">
+                {question.category.name}
               </span>
             )}
-            <span className="px-2 py-0.5 bg-gray-100 text-gray-600 rounded text-xs">
-              {typeLabels[type]}
+            <span className="px-2 py-0.5 bg-blue-100 text-blue-700 rounded text-xs font-medium">
+              {TYPE_LABELS[question.question_type] || question.question_type}
             </span>
-            <span className={`px-2 py-0.5 rounded text-xs ${difficultyColors[difficulty]}`}>
-              {difficulty}
+            <span className="px-2 py-0.5 bg-slate-100 text-slate-600 rounded text-xs">
+              W: {question.weight}
             </span>
-            <span className={`px-2 py-0.5 rounded text-xs ${statusColors[status]}`}>
-              {status}
+            <span className="px-2 py-0.5 bg-slate-100 text-slate-600 rounded text-xs">
+              Max: {question.max_score}
+            </span>
+            {question.is_required && (
+              <span className="px-2 py-0.5 bg-red-100 text-red-600 rounded text-xs font-medium">
+                Required
+              </span>
+            )}
+            <span className={`px-2 py-0.5 rounded text-xs font-medium ${
+              question.is_active
+                ? 'bg-emerald-100 text-emerald-700'
+                : 'bg-gray-100 text-gray-500'
+            }`}>
+              {question.is_active ? 'Active' : 'Inactive'}
             </span>
           </div>
         </div>
         {(onEdit || onDelete) && (
-          <div className="flex gap-1 ml-2">
+          <div className="flex gap-1 ml-2 shrink-0">
             {onEdit && (
               <button
                 onClick={(e) => { e.stopPropagation(); onEdit(); }}

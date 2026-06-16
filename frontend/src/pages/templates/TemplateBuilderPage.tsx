@@ -3,6 +3,7 @@ import { Input } from '../../components/ui/forms/Input';
 import { Button } from '../../components/ui/buttons/Button';
 import { Card, CardContent } from '../../components/ui/cards/Card';
 import { Modal, ModalHeader, ModalContent, ModalFooter } from '../../components/ui/modals';
+import { SearchableCombobox } from '../../components/ui/forms/SearchableCombobox';
 import { useTemplateStore } from '../../stores/templateStore';
 import { useQuestionStore } from '../../stores/questionStore';
 import { useToast } from '../../components/ui/toast';
@@ -275,16 +276,14 @@ const TemplateFormModal: React.FC<TemplateFormModalProps> = ({
             </div>
 
             <div>
-              <label className="block text-sm font-medium text-gray-700 mb-1">Schedule Type</label>
-              <select
+              <SearchableCombobox
+                label="Schedule Type"
                 value={scheduleType}
-                onChange={(e) => setScheduleType(e.target.value as typeof scheduleType)}
-                className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-teal-500 focus:border-teal-500"
-              >
-                {SCHEDULE_OPTIONS.map((opt) => (
-                  <option key={opt.value} value={opt.value}>{opt.label}</option>
-                ))}
-              </select>
+                onChange={(val) => setScheduleType(val as typeof scheduleType)}
+                options={SCHEDULE_OPTIONS.map(opt => ({ value: opt.value, label: opt.label }))}
+                clearable={false}
+                className="w-full"
+              />
             </div>
           </div>
 
@@ -303,16 +302,15 @@ const TemplateFormModal: React.FC<TemplateFormModalProps> = ({
           <div>
             <label className="block text-sm font-medium text-gray-700 mb-2">Questions</label>
             <div className="flex gap-2 mb-3">
-              <select
-                value={availableQuestionId}
-                onChange={(e) => setAvailableQuestionId(e.target.value)}
-                className="flex-1 px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-teal-500 focus:border-teal-500"
-              >
-                <option value="">Select a question to add...</option>
-                {availableQuestions.map((q) => (
-                  <option key={q.id} value={q.id}>{q.question}</option>
-                ))}
-              </select>
+              <SearchableCombobox
+                value={availableQuestionId || null}
+                onChange={(val) => setAvailableQuestionId(val ? String(val) : '')}
+                options={availableQuestions.map(q => ({ value: String(q.id), label: q.question_text }))}
+                placeholder="Select a question to add..."
+                noSelectionLabel="Select a question to add..."
+                clearable
+                className="flex-1"
+              />
               <Button
                 type="button"
                 variant="outline"
@@ -334,7 +332,7 @@ const TemplateFormModal: React.FC<TemplateFormModalProps> = ({
                       </span>
                       <div className="flex-1 min-w-0">
                         <p className="text-sm font-medium text-gray-900 truncate">
-                          {question?.question || `Question #${sq.question_id}`}
+                          {question?.question_text || `Question #${sq.question_id}`}
                         </p>
                       </div>
                       <div className="flex items-center gap-2">
@@ -564,23 +562,20 @@ export const TemplateBuilderPage: React.FC = () => {
             />
           </div>
 
-          <div className="w-44">
-            <label className="block text-xs font-medium text-slate-500 mb-1.5 uppercase tracking-wide">
-              Status
-            </label>
-            <select
-              value={statusFilter === '' ? 'all' : statusFilter ? 'active' : 'inactive'}
-              onChange={(e) => {
-                const val = e.target.value;
-                setStatusFilter(val === 'all' ? '' : val === 'active');
-              }}
-              className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-teal-500 focus:border-teal-500 text-sm"
-            >
-              <option value="all">All</option>
-              <option value="active">Active</option>
-              <option value="inactive">Inactive</option>
-            </select>
-          </div>
+          <SearchableCombobox
+            label="Status"
+            value={statusFilter === '' ? 'all' : statusFilter ? 'active' : 'inactive'}
+            onChange={(val) => {
+              setStatusFilter(val === 'all' ? '' : val === 'active');
+            }}
+            options={[
+              { value: 'all', label: 'All' },
+              { value: 'active', label: 'Active' },
+              { value: 'inactive', label: 'Inactive' },
+            ]}
+            clearable={false}
+            className="w-44"
+          />
 
           <div className="flex gap-2">
             <Button type="submit" variant="outline">

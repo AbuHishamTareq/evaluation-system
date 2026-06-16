@@ -1,0 +1,1 @@
+export { QuestionCategoryCard } from './QuestionCategoryCard';

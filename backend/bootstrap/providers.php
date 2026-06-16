@@ -7,7 +7,9 @@ use App\Providers\ClinicAssignmentServiceProvider;
 use App\Providers\DepartmentServiceProvider;
 use App\Providers\EducationalDegreeServiceProvider;
 use App\Providers\ProfessionalServiceProvider;
+use App\Providers\QuestionCategoryServiceProvider;
 use App\Providers\QuestionServiceProvider;
+use App\Providers\QuestionSubCategoryServiceProvider;
 use App\Providers\RolesAndPermissionsServiceProvider;
 use App\Providers\StaffServiceProvider;
 use App\Providers\TeamCodeServiceProvider;
@@ -18,6 +20,8 @@ return [
     AppServiceProvider::class,
     RolesAndPermissionsServiceProvider::class,
     ZoneServiceProvider::class,
+    QuestionCategoryServiceProvider::class,
+    QuestionSubCategoryServiceProvider::class,
     QuestionServiceProvider::class,
     CenterServiceProvider::class,
     ClinicAssignmentServiceProvider::class,

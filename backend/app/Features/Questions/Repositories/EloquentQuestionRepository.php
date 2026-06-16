@@ -22,6 +22,10 @@ class EloquentQuestionRepository implements QuestionRepositoryInterface
             $query->where('category_id', $filters['category_id']);
         }
 
+        if (isset($filters['sub_category_id'])) {
+            $query->where('sub_category_id', $filters['sub_category_id']);
+        }
+
         if (isset($filters['type'])) {
             $query->where('question_type', $filters['type']);
         }

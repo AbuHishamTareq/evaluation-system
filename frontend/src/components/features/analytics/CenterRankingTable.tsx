@@ -1,4 +1,5 @@
 import React, { useState, useMemo } from 'react';
+import { SearchableCombobox } from '../../ui/forms/SearchableCombobox';
 
 interface CenterPerformance {
   id: number;
@@ -88,20 +89,18 @@ export const CenterRankingTable: React.FC<CenterRankingTableProps> = ({ data }) 
             <h3 className="text-lg font-bold text-slate-800">Center Rankings</h3>
             <p className="text-sm text-slate-500">Performance ranking by average score</p>
           </div>
-          <div className="flex items-center gap-3">
-            <select
-              value={filterClassification}
-              onChange={(e) => setFilterClassification(e.target.value)}
-              className="px-3 py-2 text-sm border border-slate-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-cyan-500 focus:border-transparent"
-            >
-              <option value="all">All Classifications</option>
-              {classifications.map((c) => (
-                <option key={c} value={c}>
-                  {c.charAt(0).toUpperCase() + c.slice(1)}
-                </option>
-              ))}
-            </select>
-          </div>
+          <SearchableCombobox
+            value={filterClassification === 'all' ? null : filterClassification}
+            onChange={(val) => setFilterClassification(val ? String(val) : 'all')}
+            options={classifications.map(c => ({
+              value: c,
+              label: c.charAt(0).toUpperCase() + c.slice(1)
+            }))}
+            placeholder="All Classifications"
+            noSelectionLabel="All Classifications"
+            clearable
+            className="min-w-[180px]"
+          />
         </div>
       </div>
 

@@ -1,11 +1,15 @@
 import React, { useEffect, useState, useCallback } from 'react';
+import { useNavigate } from 'react-router-dom';
 import { Input } from '../../components/ui/forms/Input';
+import { SearchableCombobox } from '../../components/ui/forms/SearchableCombobox';
 import { Button } from '../../components/ui/buttons/Button';
 import { Card, CardContent } from '../../components/ui/cards/Card';
 import { Modal, ModalHeader, ModalContent, ModalFooter } from '../../components/ui/modals';
+import { useAuthStore } from '../../stores/authStore';
 import { useEvaluationStore } from '../../stores/evaluationStore';
 import { useTemplateStore } from '../../stores/templateStore';
 import { useCenterStore } from '../../stores/centerStore';
+import { useStaffStore } from '../../stores/staffStore';
 import { useToast } from '../../components/ui/toast';
 import type { Evaluation, EvaluationFilters, EvaluationCreateInput } from '../../types/evaluation';
 import type { CenterFilters } from '../../types/center';
@@ -46,6 +50,7 @@ interface EvaluationRowProps {
 }
 
 const EvaluationRow: React.FC<EvaluationRowProps> = ({ evaluation, onSelect, onSubmit, onDelete }) => {
+  const hasPermission = useAuthStore((state) => state.hasPermission);
   const percentage = evaluation.percentage ?? 0;
   const scoreColor = percentage >= 80 ? 'text-emerald-600' : percentage >= 60 ? 'text-amber-600' : 'text-red-600';
 
@@ -82,7 +87,7 @@ const EvaluationRow: React.FC<EvaluationRowProps> = ({ evaluation, onSelect, onS
           {getStatusLabel(evaluation.status)}
         </span>
         <div className="flex items-center gap-1 opacity-0 group-hover:opacity-100 transition-opacity">
-          {evaluation.status === 'draft' && (
+          {evaluation.status === 'draft' && hasPermission('evaluations.submit') && (
             <button
               type="button"
               onClick={(e) => { e.stopPropagation(); onSubmit(evaluation.id); }}
@@ -94,16 +99,18 @@ const EvaluationRow: React.FC<EvaluationRowProps> = ({ evaluation, onSelect, onS
               </svg>
             </button>
           )}
-          <button
-            type="button"
-            onClick={(e) => { e.stopPropagation(); onDelete(evaluation.id); }}
-            className="p-1.5 text-red-400 hover:text-red-600 hover:bg-red-50 rounded-lg transition-colors"
-            title="Delete"
-          >
-            <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" />
-            </svg>
-          </button>
+          {hasPermission('evaluations.delete') && (
+            <button
+              type="button"
+              onClick={(e) => { e.stopPropagation(); onDelete(evaluation.id); }}
+              className="p-1.5 text-red-400 hover:text-red-600 hover:bg-red-50 rounded-lg transition-colors"
+              title="Delete"
+            >
+              <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" />
+              </svg>
+            </button>
+          )}
         </div>
       </div>
     </div>
@@ -118,6 +125,8 @@ interface DetailPanelProps {
 }
 
 const DetailPanel: React.FC<DetailPanelProps> = ({ evaluation, onSubmit, onDelete }) => {
+  const navigate = useNavigate();
+  const hasPermission = useAuthStore((state) => state.hasPermission);
   const percentage = evaluation.percentage ?? 0;
   const scoreColor = percentage >= 80 ? 'text-emerald-600' : percentage >= 60 ? 'text-amber-600' : 'text-red-600';
 
@@ -144,7 +153,21 @@ const DetailPanel: React.FC<DetailPanelProps> = ({ evaluation, onSubmit, onDelet
         </div>
 
         <div className="flex items-center gap-2">
-          {evaluation.status === 'draft' && (
+          {(evaluation.status === 'draft' || evaluation.status === 'in_progress') && (
+            <Button
+              variant="outline"
+              size="sm"
+              onClick={() => navigate(`/evaluations/${evaluation.id}/take`)}
+              leftIcon={
+                <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2" />
+                </svg>
+              }
+            >
+              {evaluation.status === 'draft' ? 'Start' : 'Continue'}
+            </Button>
+          )}
+          {evaluation.status === 'draft' && hasPermission('evaluations.submit') && (
             <Button
               variant="gradient"
               gradient="from-emerald-500 to-teal-500"
@@ -159,18 +182,20 @@ const DetailPanel: React.FC<DetailPanelProps> = ({ evaluation, onSubmit, onDelet
               Submit
             </Button>
           )}
-          <Button
-            variant="danger"
-            size="sm"
-            onClick={() => onDelete(evaluation.id)}
-            leftIcon={
-              <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" />
-              </svg>
-            }
-          >
-            Delete
-          </Button>
+          {hasPermission('evaluations.delete') && (
+            <Button
+              variant="danger"
+              size="sm"
+              onClick={() => onDelete(evaluation.id)}
+              leftIcon={
+                <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" />
+                </svg>
+              }
+            >
+              Delete
+            </Button>
+          )}
         </div>
       </div>
 
@@ -290,7 +315,7 @@ const CreateEvaluationModal: React.FC<CreateEvaluationModalProps> = ({
       template_id: parseInt(templateId),
       phc_center_id: parseInt(centerId),
       staff_id: staffId ? parseInt(staffId) : null,
-      evaluator_id: 1,
+      evaluator_id: useAuthStore.getState().user?.id ?? 0,
       notes: notes || undefined,
     });
   };
@@ -308,47 +333,42 @@ const CreateEvaluationModal: React.FC<CreateEvaluationModalProps> = ({
       <ModalContent>
         <form onSubmit={handleSubmit} className="space-y-4">
           <div>
-            <label className="block text-sm font-medium text-gray-700 mb-1">Template *</label>
-            <select
+            <SearchableCombobox
+              id="template-select"
               value={templateId}
-              onChange={(e) => setTemplateId(e.target.value)}
-              className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-emerald-500 focus:border-emerald-500"
+              onChange={(val) => setTemplateId(val as string)}
+              options={templates.map((t) => ({ value: String(t.id), label: t.name }))}
+              label="Template *"
+              placeholder="Select a template"
               required
-            >
-              <option value="">Select a template</option>
-              {templates.map((t) => (
-                <option key={t.id} value={t.id}>{t.name}</option>
-              ))}
-            </select>
+              clearable={false}
+            />
           </div>
 
           <div>
-            <label className="block text-sm font-medium text-gray-700 mb-1">Center *</label>
-            <select
+            <SearchableCombobox
+              id="center-select"
               value={centerId}
-              onChange={(e) => setCenterId(e.target.value)}
-              className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-emerald-500 focus:border-emerald-500"
+              onChange={(val) => setCenterId(val as string)}
+              options={centers.map((c) => ({ value: String(c.id), label: c.name }))}
+              label="Center *"
+              placeholder="Select a center"
               required
-            >
-              <option value="">Select a center</option>
-              {centers.map((c) => (
-                <option key={c.id} value={c.id}>{c.name}</option>
-              ))}
-            </select>
+              clearable={false}
+            />
           </div>
 
           <div>
-            <label className="block text-sm font-medium text-gray-700 mb-1">Staff (Optional)</label>
-            <select
-              value={staffId}
-              onChange={(e) => setStaffId(e.target.value)}
-              className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-emerald-500 focus:border-emerald-500"
-            >
-              <option value="">No staff assigned</option>
-              {staff.map((s) => (
-                <option key={s.id} value={s.id}>{s.first_name} {s.last_name}</option>
-              ))}
-            </select>
+            <SearchableCombobox
+              id="staff-select"
+              value={staffId || null}
+              onChange={(val) => setStaffId(val === null ? '' : String(val))}
+              options={staff.map((s) => ({ value: String(s.id), label: `${s.first_name} ${s.last_name}` }))}
+              label="Staff (Optional)"
+              placeholder="No staff assigned"
+              noSelectionLabel="No staff assigned"
+              clearable
+            />
           </div>
 
           <div>
@@ -384,6 +404,9 @@ const CreateEvaluationModal: React.FC<CreateEvaluationModalProps> = ({
 
 // ─── Main Page ──────────────────────────────────────────────────────────────
 export const EvaluationsPage: React.FC = () => {
+  const navigate = useNavigate();
+  const hasPermission = useAuthStore((state) => state.hasPermission);
+
   const {
     evaluations,
     isLoading,
@@ -397,6 +420,7 @@ export const EvaluationsPage: React.FC = () => {
 
   const { templates, fetchTemplates, fetchActiveTemplates } = useTemplateStore();
   const { centers, fetchCenters } = useCenterStore();
+  const { staff: staffList, fetchStaff } = useStaffStore();
   const { addToast } = useToast();
 
   const [searchQuery, setSearchQuery] = useState('');
@@ -436,6 +460,10 @@ export const EvaluationsPage: React.FC = () => {
   useEffect(() => {
     fetchTemplates({ per_page: 100 });
   }, [fetchTemplates]);
+
+  useEffect(() => {
+    fetchStaff({ per_page: 100 });
+  }, [fetchStaff]);
 
   const handleSearch = (e: React.FormEvent) => {
     e.preventDefault();
@@ -494,18 +522,20 @@ export const EvaluationsPage: React.FC = () => {
           </h1>
           <p className="text-slate-500 mt-1">Create and manage evaluation cycles</p>
         </div>
-        <Button
-          variant="gradient"
-          gradient="from-emerald-500 to-teal-500"
-          leftIcon={
-            <svg className="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 6v6m0 0v6m0-6h6m-6 0H6" />
-            </svg>
-          }
-          onClick={() => setShowCreateModal(true)}
-        >
-          Create Evaluation
-        </Button>
+        {hasPermission('evaluations.create') && (
+          <Button
+            variant="gradient"
+            gradient="from-emerald-500 to-teal-500"
+            leftIcon={
+              <svg className="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 6v6m0 0v6m0-6h6m-6 0H6" />
+              </svg>
+            }
+            onClick={() => setShowCreateModal(true)}
+          >
+            Create Evaluation
+          </Button>
+        )}
       </div>
 
       {/* Stats */}
@@ -586,15 +616,17 @@ export const EvaluationsPage: React.FC = () => {
             <label className="block text-xs font-medium text-slate-500 mb-1.5 uppercase tracking-wide">
               Status
             </label>
-            <select
-              value={statusFilter}
-              onChange={(e) => setStatusFilter(e.target.value)}
-              className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-emerald-500 focus:border-emerald-500 text-sm"
-            >
-              {STATUS_OPTIONS.map((opt) => (
-                <option key={opt.value} value={opt.value}>{opt.label}</option>
-              ))}
-            </select>
+            <SearchableCombobox
+              value={statusFilter || null}
+              onChange={(val) => setStatusFilter(val === null ? '' : String(val))}
+              options={STATUS_OPTIONS.filter((o) => o.value !== '').map((opt) => ({
+                value: opt.value,
+                label: opt.label,
+              }))}
+              placeholder="Filter by status..."
+              noSelectionLabel="All Statuses"
+              clearable={false}
+            />
           </div>
 
           <div className="flex gap-2">
@@ -726,7 +758,7 @@ export const EvaluationsPage: React.FC = () => {
         isLoading={isLoading}
         templates={templates}
         centers={centers}
-        staff={[]}
+        staff={staffList}
       />
 
       {/* Delete Confirmation Modal */}

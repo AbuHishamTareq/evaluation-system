@@ -16,3 +16,5 @@ export { useEducationalDegreeStore } from './educationalDegreeStore';
 export { useDepartmentStore } from './departmentStore';
 export { useClinicAssignmentStore } from './clinicAssignmentStore';
 export { useProfessionalStore } from './professionalStore';
+export { useQuestionCategoryStore } from './questionCategoryStore';
+export { useQuestionSubCategoryStore } from './questionSubCategoryStore';

@@ -50,10 +50,10 @@ class ScoringService
         $maxScore = $question->max_score ?? 1;
 
         $score = match ($question->question_type) {
-            'yes_no' => $this->calculateYesNoScore($answer),
+            'radio' => $this->calculateYesNoScore($answer),
             'rating' => $this->calculateRatingScore($answer, $maxScore),
-            'multiple_choice' => $this->calculateMultipleChoiceScore($answer, $question),
-            'text' => $this->calculateTextScore($answer),
+            'select' => $this->calculateMultipleChoiceScore($answer, $question),
+            'textarea', 'text' => $this->calculateTextScore($answer),
             default => 0,
         };
 

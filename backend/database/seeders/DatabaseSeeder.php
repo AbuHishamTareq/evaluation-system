@@ -13,6 +13,8 @@ class DatabaseSeeder extends Seeder
         $this->call([
             RolesAndPermissionsSeeder::class,
             ZoneSeeder::class,
+            QuestionCategorySeeder::class,
+            QuestionSubCategorySeeder::class,
         ]);
 
         $admin = User::firstOrCreate(

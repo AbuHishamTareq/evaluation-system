@@ -49,6 +49,8 @@
     "dashboard": "لوحة التحكم",
     "staff": "الموظفين",
     "questions": "الأسئلة",
+    "questionCategories": "فئات الأسئلة",
+    "questionSubCategories": "الفئات الفرعية للأسئلة",
     "evaluations": "التقييمات",
     "centers": "المراكز",
     "reports": "التقارير",

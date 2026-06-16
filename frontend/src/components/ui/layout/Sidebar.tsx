@@ -108,6 +108,8 @@ const navItems: NavItem[] = [
       </svg>
     ),
     children: [
+      { path: '/question-categories', labelKey: 'nav.questionCategories' },
+      { path: '/question-sub-categories', labelKey: 'nav.questionSubCategories' },
       { path: '/questions', labelKey: 'nav.questions' },
       { path: '/evaluations', labelKey: 'nav.evaluations' },
       { path: '/action-plans', labelKey: 'nav.actionPlans' },
@@ -405,6 +407,8 @@ export const Sidebar: React.FC<SidebarProps> = ({ isOpen, isRtl }) => {
     'classificationTabs.ranks': 'ranks.view',
     'classificationTabs.categories': 'categories.view',
     'classificationTabs.mappings': 'classifications.view',
+    'nav.questionCategories': 'question-categories.view',
+    'nav.questionSubCategories': 'question-sub-categories.view',
   };
 
   // Track which group menus are expanded

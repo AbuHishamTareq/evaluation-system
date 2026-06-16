@@ -3,6 +3,7 @@
 namespace App\Features\Questions\Controllers;
 
 use App\Features\Questions\Exports\QuestionExport;
+use App\Features\Questions\Exports\QuestionSampleExport;
 use App\Features\Questions\Imports\QuestionImport;
 use App\Features\Questions\Services\QuestionService;
 use App\Http\Controllers\Api\V1\BaseApiController;
@@ -12,6 +13,7 @@ use Illuminate\Http\Request;
 use Maatwebsite\Excel\Facades\Excel;
 use Maatwebsite\Excel\Validators\ValidationException;
 use Symfony\Component\HttpFoundation\BinaryFileResponse;
+use Symfony\Component\HttpFoundation\StreamedResponse;
 
 /**
  * @group Questions
@@ -26,7 +28,7 @@ class QuestionController extends BaseApiController
 
     public function index(Request $request): JsonResponse
     {
-        $filters = $request->only(['search', 'category_id', 'type', 'per_page']);
+        $filters = $request->only(['search', 'category_id', 'sub_category_id', 'type', 'per_page']);
         $questions = $this->questionService->getAllQuestions($filters);
 
         return $this->paginatedResponse($questions, 'Questions retrieved successfully');
@@ -112,9 +114,30 @@ class QuestionController extends BaseApiController
         return $this->paginatedResponse($questions, 'Questions retrieved successfully');
     }
 
-    public function export(Request $request): BinaryFileResponse
+    public function export(?string $format = null): BinaryFileResponse|StreamedResponse
     {
-        return Excel::download(new QuestionExport, 'questions.xlsx');
+        $format = $format ?? 'xlsx';
+
+        $fileName = match ($format) {
+            'csv' => 'questions.csv',
+            'pdf' => 'questions.pdf',
+            default => 'questions.xlsx',
+        };
+
+        $writerType = match ($format) {
+            'csv' => \Maatwebsite\Excel\Excel::CSV,
+            'pdf' => \Maatwebsite\Excel\Excel::DOMPDF,
+            default => \Maatwebsite\Excel\Excel::XLSX,
+        };
+
+        return Excel::download(new QuestionExport, $fileName, $writerType);
+    }
+
+    public function sample(): BinaryFileResponse
+    {
+        $filename = 'questions-sample-'.now()->format('Y-m-d-His').'.xlsx';
+
+        return Excel::download(new QuestionSampleExport, $filename);
     }
 
     public function import(Request $request): JsonResponse
@@ -144,11 +167,58 @@ class QuestionController extends BaseApiController
 
     public function categories(): JsonResponse
     {
-        $categories = QuestionCategory::where('is_active', true)
-            ->orderBy('order')
+        $categories = QuestionCategory::orderBy('order')
             ->orderBy('name')
-            ->get(['id', 'name', 'code', 'description']);
+            ->get();
 
         return $this->successResponse($categories, 'Categories retrieved successfully');
+    }
+
+    public function storeCategory(Request $request): JsonResponse
+    {
+        $validated = $request->validate([
+            'name' => 'required|string|max:255',
+            'code' => 'required|string|max:100|unique:question_categories,code',
+            'description' => 'nullable|string',
+            'order' => 'nullable|integer|min:0',
+        ]);
+
+        $category = QuestionCategory::create($validated);
+
+        return $this->successResponse($category, 'Category created successfully', 201);
+    }
+
+    public function updateCategory(Request $request, int $id): JsonResponse
+    {
+        $category = QuestionCategory::find($id);
+
+        if (! $category) {
+            return $this->errorResponse('Category not found', 404);
+        }
+
+        $validated = $request->validate([
+            'name' => 'sometimes|string|max:255',
+            'code' => 'sometimes|string|max:100|unique:question_categories,code,'.$id,
+            'description' => 'nullable|string',
+            'order' => 'nullable|integer|min:0',
+            'is_active' => 'nullable|boolean',
+        ]);
+
+        $category->update($validated);
+
+        return $this->successResponse($category, 'Category updated successfully');
+    }
+
+    public function destroyCategory(int $id): JsonResponse
+    {
+        $category = QuestionCategory::find($id);
+
+        if (! $category) {
+            return $this->errorResponse('Category not found', 404);
+        }
+
+        $category->delete();
+
+        return $this->successResponse(null, 'Category deleted successfully');
     }
 }

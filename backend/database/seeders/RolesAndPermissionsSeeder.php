@@ -56,6 +56,9 @@ class RolesAndPermissionsSeeder extends Seeder
             'departments.view',
             'roles.view',
             'permissions.view',
+            'questions.view', 'questions.create', 'questions.edit', 'questions.delete',
+            'question-categories.view', 'question-categories.create', 'question-categories.edit', 'question-categories.delete',
+            'question-sub-categories.view', 'question-sub-categories.create', 'question-sub-categories.edit', 'question-sub-categories.delete',
         ])->pluck('id');
         $managerRole->permissions()->sync($managerPermissions);
 
@@ -65,6 +68,9 @@ class RolesAndPermissionsSeeder extends Seeder
             'evaluations.view', 'evaluations.create', 'evaluations.edit', 'evaluations.submit',
             'centers.view',
             'reports.view',
+            'questions.view',
+            'question-categories.view',
+            'question-sub-categories.view',
         ])->pluck('id');
         $evaluatorRole->permissions()->sync($evaluatorPermissions);
 
@@ -72,6 +78,9 @@ class RolesAndPermissionsSeeder extends Seeder
         $staffPermissions = Permission::whereIn('name', [
             'staff.view',
             'evaluations.view',
+            'questions.view',
+            'question-categories.view',
+            'question-sub-categories.view',
         ])->pluck('id');
         $staffRole->permissions()->sync($staffPermissions);
 

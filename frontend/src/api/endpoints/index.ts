@@ -42,7 +42,11 @@ export const API_ENDPOINTS = {
     destroy: (id: string | number) => `/api/v1/questions/${id}`,
     import: '/api/v1/questions/import',
     export: '/api/v1/questions/export',
+    sample: '/api/v1/questions/sample',
     categories: '/api/v1/questions/categories',
+    storeCategory: '/api/v1/questions/categories',
+    updateCategory: (id: string | number) => `/api/v1/questions/categories/${id}`,
+    destroyCategory: (id: string | number) => `/api/v1/questions/categories/${id}`,
   },
 
   // Evaluations
@@ -277,6 +281,35 @@ export const API_ENDPOINTS = {
     store: '/api/v1/permissions',
     update: (id: string | number) => `/api/v1/permissions/${id}`,
     destroy: (id: string | number) => `/api/v1/permissions/${id}`,
+  },
+
+  // Question Categories (standalone)
+  questionCategories: {
+    list: '/api/v1/question-categories',
+    store: '/api/v1/question-categories',
+    show: (id: string | number) => `/api/v1/question-categories/${id}`,
+    update: (id: string | number) => `/api/v1/question-categories/${id}`,
+    destroy: (id: string | number) => `/api/v1/question-categories/${id}`,
+    toggleStatus: (id: string | number) => `/api/v1/question-categories/${id}/toggle-status`,
+    export: '/api/v1/question-categories/export',
+    import: '/api/v1/question-categories/import',
+    sample: '/api/v1/question-categories/sample',
+    active: '/api/v1/question-categories/active',
+  },
+
+  // Question Sub-Categories
+  questionSubCategories: {
+    list: '/api/v1/question-sub-categories',
+    store: '/api/v1/question-sub-categories',
+    show: (id: string | number) => `/api/v1/question-sub-categories/${id}`,
+    update: (id: string | number) => `/api/v1/question-sub-categories/${id}`,
+    destroy: (id: string | number) => `/api/v1/question-sub-categories/${id}`,
+    toggleStatus: (id: string | number) => `/api/v1/question-sub-categories/${id}/toggle-status`,
+    export: '/api/v1/question-sub-categories/export',
+    import: '/api/v1/question-sub-categories/import',
+    sample: '/api/v1/question-sub-categories/sample',
+    active: '/api/v1/question-sub-categories/active',
+    byCategory: (categoryId: string | number) => `/api/v1/question-sub-categories?question_category_id=${categoryId}`,
   },
 
   // Analytics
