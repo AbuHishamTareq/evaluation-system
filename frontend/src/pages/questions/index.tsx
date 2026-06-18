@@ -1,8 +1,10 @@
 import React, { useEffect, useState, useRef } from 'react';
 import { Button } from '../../components/ui/buttons/Button';
-import { Card, CardContent } from '../../components/ui/cards/Card';
+import { Card, CardContent, CardHeader } from '../../components/ui/cards/Card';
 import { Modal, ModalHeader, ModalContent, ModalFooter } from '../../components/ui/modals';
 import { Input } from '../../components/ui/forms/Input';
+import { Textarea } from '../../components/ui/forms/Textarea';
+import { Checkbox } from '../../components/ui/forms/Checkbox';
 import { SearchableCombobox } from '../../components/ui/forms/SearchableCombobox';
 import { useQuestionStore, useQuestionSubCategoryStore } from '../../stores';
 import { useAuthStore } from '../../stores/authStore';
@@ -101,171 +103,217 @@ const QuestionFormModal: React.FC<QuestionFormModalProps> = ({
   return (
     <Modal isOpen={isOpen} onClose={onClose} size="xl">
       <ModalHeader title={editingQuestion ? 'Edit Question' : 'Create Question'} onClose={onClose} />
-      <ModalContent>
-        <form onSubmit={handleSubmit} className="space-y-4">
-          <div>
-            <Label className="block text-sm font-medium text-gray-700 mb-1" required>
-              Question Text
-            </Label>
-            <textarea
-              value={questionText}
-              onChange={(e) => setQuestionText(e.target.value)}
-              className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
-              rows={2}
-              required
-              placeholder="Enter the question text..."
+      <form onSubmit={handleSubmit}>
+        <ModalContent className="space-y-6">
+          {/* ─── Question Details Card ─────────────────────────────────── */}
+          <Card variant="outlined" padding="none">
+            <CardHeader
+              title="Question Details"
+              subtitle="Enter the main question content and optional description"
             />
-          </div>
-
-          <div>
-            <label className="block text-sm font-medium text-gray-700 mb-1">Description</label>
-            <textarea
-              value={description}
-              onChange={(e) => setDescription(e.target.value)}
-              className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
-              rows={2}
-              placeholder="Optional description..."
-            />
-          </div>
-
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-            <div>
-              <SearchableCombobox
-                label="Type"
-                value={questionType}
-                onChange={(val) => setQuestionType(val as QuestionType)}
-                options={TYPE_OPTIONS.map(opt => ({ value: opt.value, label: opt.label }))}
-                required
-                clearable={false}
-                className="w-full"
-              />
-            </div>
-
-            <div>
-              <SearchableCombobox
-                label="Category"
-                value={categoryId || null}
-                onChange={(val) => {
-                  setCategoryId(val ? String(val) : '');
-                  setSubCategoryId('');
-                }}
-                options={categories.map(cat => ({ value: String(cat.id), label: cat.name }))}
-                placeholder="Select a category"
-                noSelectionLabel="Select a category"
-                required
-                clearable
-                className="w-full"
-              />
-            </div>
-            {categoryId && (!editingQuestion || subCategoryId) && (
+            <CardContent className="space-y-4">
               <div>
-                <SearchableCombobox
-                  label="Sub Category"
-                  value={subCategoryId || null}
-                  onChange={(val) => setSubCategoryId(typeof val === 'string' ? val : '')}
-                  options={subCategories
-                    .filter(sc => sc.question_category_id === parseInt(categoryId))
-                    .map(sc => ({ value: String(sc.id), label: sc.name }))}
-                  placeholder="Select a sub category"
-                  noSelectionLabel="Select a sub category"
-                  clearable
-                  className="w-full"
+                <Label required>Question Text</Label>
+                <Textarea
+                  value={questionText}
+                  onChange={(e) => setQuestionText(e.target.value)}
+                  rows={2}
+                  required
+                  placeholder="Enter the question text..."
+                />
+                <p className="mt-1.5 text-xs text-gray-400 text-right">
+                  {questionText.length} character{questionText.length !== 1 ? 's' : ''}
+                </p>
+              </div>
+              <div>
+                <Label>Description</Label>
+                <Textarea
+                  value={description}
+                  onChange={(e) => setDescription(e.target.value)}
+                  rows={2}
+                  placeholder="Optional description or context for this question..."
                 />
               </div>
-            )}
-          </div>
+            </CardContent>
+          </Card>
 
-          <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-            <div>
-              <label className="block text-sm font-medium text-gray-700 mb-1">Weight</label>
-              <input
-                type="number"
-                min={0}
-                max={100}
-                value={weight}
-                onChange={(e) => setWeight(parseInt(e.target.value) || 0)}
-                className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
-              />
-            </div>
-            <div>
-              <label className="block text-sm font-medium text-gray-700 mb-1">Max Score</label>
-              <input
-                type="number"
-                min={0}
-                max={1000}
-                value={maxScore}
-                onChange={(e) => setMaxScore(parseInt(e.target.value) || 0)}
-                className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
-              />
-            </div>
-            <div className="flex items-end gap-4">
-              <label className="flex items-center gap-2 cursor-pointer">
-                <input
-                  type="checkbox"
-                  checked={isRequired}
-                  onChange={(e) => setIsRequired(e.target.checked)}
-                  className="rounded border-gray-300 text-blue-600 focus:ring-blue-500"
-                />
-                <span className="text-sm font-medium text-gray-700">Required</span>
-              </label>
-            </div>
-          </div>
+          {/* ─── Configuration Card ────────────────────────────────────── */}
+          <Card variant="outlined" padding="none">
+            <CardHeader
+              title="Configuration"
+              subtitle="Set the question type, category, scoring and requirements"
+            />
+            <CardContent className="space-y-4">
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                <div>
+                  <SearchableCombobox
+                    label="Type"
+                    value={questionType}
+                    onChange={(val) => setQuestionType(val as QuestionType)}
+                    options={TYPE_OPTIONS.map(opt => ({ value: opt.value, label: opt.label }))}
+                    required
+                    clearable={false}
+                    className="w-full"
+                  />
+                </div>
+                <div>
+                  <SearchableCombobox
+                    label="Category"
+                    value={categoryId || null}
+                    onChange={(val) => {
+                      setCategoryId(val ? String(val) : '');
+                      setSubCategoryId('');
+                    }}
+                    options={categories.map(cat => ({ value: String(cat.id), label: cat.name }))}
+                    placeholder="Select a category"
+                    noSelectionLabel="Select a category"
+                    required
+                    clearable
+                    className="w-full"
+                  />
+                </div>
+              </div>
 
+              {categoryId && (!editingQuestion || subCategoryId) && (
+                <div>
+                  <SearchableCombobox
+                    label="Sub Category"
+                    value={subCategoryId || null}
+                    onChange={(val) => setSubCategoryId(typeof val === 'string' ? val : '')}
+                    options={subCategories
+                      .filter(sc => sc.question_category_id === parseInt(categoryId))
+                      .map(sc => ({ value: String(sc.id), label: sc.name }))}
+                    placeholder="Select a sub category"
+                    noSelectionLabel="Select a sub category"
+                    clearable
+                    className="w-full"
+                  />
+                </div>
+              )}
+
+              <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+                <div>
+                  <Label>Weight</Label>
+                  <Input
+                    type="number"
+                    min={0}
+                    max={100}
+                    value={weight}
+                    onChange={(e) => setWeight(parseInt(e.target.value) || 0)}
+                    placeholder="1"
+                  />
+                </div>
+                <div>
+                  <Label>Max Score</Label>
+                  <Input
+                    type="number"
+                    min={0}
+                    max={1000}
+                    value={maxScore}
+                    onChange={(e) => setMaxScore(parseInt(e.target.value) || 0)}
+                    placeholder="10"
+                  />
+                </div>
+                <div className="flex items-end h-full">
+                  <Checkbox label="Required" checked={isRequired} onChange={(e) => setIsRequired(e.target.checked)} />
+                </div>
+              </div>
+            </CardContent>
+          </Card>
+
+          {/* ─── Options Card (conditional) ────────────────────────────── */}
           {showOptionsEditor && (
-            <div>
-              <label className="block text-sm font-medium text-gray-700 mb-2">Options</label>
-              <div className="space-y-2">
-                {options.map((opt, idx) => (
-                  <div key={idx} className="flex items-center gap-2">
-                    <input
-                      type="text"
-                      value={opt.label}
-                      onChange={(e) => {
-                        const newOptions = [...options];
-                        newOptions[idx] = { ...newOptions[idx], label: e.target.value, value: e.target.value.toLowerCase().replace(/\s+/g, '_') };
-                        setOptions(newOptions);
-                      }}
-                      className="flex-1 px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 text-sm"
-                      placeholder="Option label"
-                    />
-                    <button
-                      type="button"
-                      onClick={() => setOptions(options.filter((_, i) => i !== idx))}
-                      className="p-2 text-red-500 hover:text-red-700 hover:bg-red-50 rounded-lg transition-colors"
-                    >
-                      <svg className="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" />
+            <Card variant="outlined" padding="none">
+              <CardHeader
+                title="Options"
+                subtitle="Define the answer choices available for this question"
+                action={
+                  <div className="w-8 h-8 rounded-lg bg-gradient-to-br from-blue-100 to-cyan-100 flex items-center justify-center">
+                    {questionType === 'select' && (
+                      <svg className="w-4 h-4 text-blue-600" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 6h16M4 10h16M4 14h16M4 18h16" />
                       </svg>
-                    </button>
+                    )}
+                    {questionType === 'radio' && (
+                      <svg className="w-4 h-4 text-blue-600" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M8.111 16.404a5.5 5.5 0 017.778 0M12 20h.01m-7.08-7.071c3.904-3.905 10.236-3.905 14.141 0M1.394 9.393c5.857-5.858 15.355-5.858 21.213 0" />
+                      </svg>
+                    )}
+                    {questionType === 'checkbox' && (
+                      <svg className="w-4 h-4 text-blue-600" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z" />
+                      </svg>
+                    )}
                   </div>
-                ))}
+                }
+              />
+              <CardContent className="space-y-3">
+                {options.length === 0 ? (
+                  <div className="text-center py-6">
+                    <svg className="w-10 h-10 mx-auto text-gray-300 mb-2" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2" />
+                    </svg>
+                    <p className="text-sm text-gray-500">No options defined yet</p>
+                    <p className="text-xs text-gray-400 mt-1">Click the button below to add your first option</p>
+                  </div>
+                ) : (
+                  options.map((opt, idx) => (
+                    <div key={idx} className="flex items-center gap-2 group">
+                      <div className="shrink-0 w-8 h-8 rounded-lg bg-slate-100 flex items-center justify-center text-xs font-bold text-slate-500 group-hover:bg-blue-100 group-hover:text-blue-600 transition-colors">
+                        {idx + 1}
+                      </div>
+                      <Input
+                        type="text"
+                        value={opt.label}
+                        onChange={(e) => {
+                          const newOptions = [...options];
+                          newOptions[idx] = { ...newOptions[idx], label: e.target.value, value: e.target.value.toLowerCase().replace(/\s+/g, '_') };
+                          setOptions(newOptions);
+                        }}
+                        placeholder={`Option ${idx + 1} label`}
+                        className="flex-1"
+                      />
+                      <button
+                        type="button"
+                        onClick={() => setOptions(options.filter((_, i) => i !== idx))}
+                        className="p-2 text-red-400 hover:text-red-600 hover:bg-red-50 rounded-lg transition-colors opacity-0 group-hover:opacity-100 focus:opacity-100"
+                        title="Remove option"
+                      >
+                        <svg className="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" />
+                        </svg>
+                      </button>
+                    </div>
+                  ))
+                )}
                 <button
                   type="button"
                   onClick={() => setOptions([...options, { label: '', value: '' }])}
-                  className="flex items-center gap-1 text-sm text-blue-600 hover:text-blue-700 font-medium"
+                  className="inline-flex items-center justify-center gap-2 px-4 py-2.5 rounded-xl border-2 border-dashed border-slate-300 hover:border-blue-400 hover:bg-blue-50/50 text-sm font-medium text-slate-500 hover:text-blue-600 transition-all duration-200 w-full mt-2"
                 >
                   <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                     <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 6v6m0 0v6m0-6h6m-6 0H6" />
                   </svg>
                   Add Option
                 </button>
-              </div>
-            </div>
+              </CardContent>
+            </Card>
           )}
+        </ModalContent>
 
-          <div className="flex justify-end gap-3 pt-4 border-t border-slate-100">
-            <Button type="button" variant="outline" onClick={onClose}>Cancel</Button>
-            <Button
-              type="submit"
-              variant="gradient"
-              gradient="from-blue-500 to-cyan-500"
-              isLoading={isLoading}
-            >
-              {editingQuestion ? 'Update' : 'Create'}
-            </Button>
-          </div>
-        </form>
-      </ModalContent>
+        {/* ─── Footer ────────────────────────────────────────────────── */}
+        <ModalFooter>
+          <Button type="button" variant="outline" onClick={onClose}>Cancel</Button>
+          <Button
+            type="submit"
+            variant="gradient"
+            gradient="from-blue-500 to-cyan-500"
+            isLoading={isLoading}
+          >
+            {editingQuestion ? 'Update' : 'Create'}
+          </Button>
+        </ModalFooter>
+      </form>
     </Modal>
   );
 };
