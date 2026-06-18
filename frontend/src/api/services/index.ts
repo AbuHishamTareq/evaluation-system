@@ -194,8 +194,7 @@ export const questionService = {
   },
 
   exportQuestions: async (format: string = 'xlsx') => {
-    const response = await apiClient.get(API_ENDPOINTS.questions.export, {
-      params: { format },
+    const response = await apiClient.get(`${API_ENDPOINTS.questions.export}/${format}`, {
       responseType: 'blob',
     });
     return response;
@@ -780,8 +779,7 @@ export const questionCategoryService = {
   },
 
   exportQuestionCategories: async (format: string = 'xlsx') => {
-    const response = await apiClient.get(API_ENDPOINTS.questionCategories.export, {
-      params: { format },
+    const response = await apiClient.get(`${API_ENDPOINTS.questionCategories.export}/${format}`, {
       responseType: 'blob',
     });
     return response;
@@ -846,8 +844,7 @@ export const questionSubCategoryService = {
   },
 
   exportQuestionSubCategories: async (format: string = 'xlsx') => {
-    const response = await apiClient.get(API_ENDPOINTS.questionSubCategories.export, {
-      params: { format },
+    const response = await apiClient.get(`${API_ENDPOINTS.questionSubCategories.export}/${format}`, {
       responseType: 'blob',
     });
     return response;

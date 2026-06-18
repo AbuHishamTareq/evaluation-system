@@ -181,16 +181,28 @@ class ZoneController extends BaseApiController
             'generatedAt' => now()->toIso8601String(),
         ])->render();
 
-        $options = new Options;
-        $options->set('isRemoteEnabled', false);
-        $options->set('isPhpEnabled', false);
+        // Prevent accidental output from corrupting the PDF binary
+        ob_start();
 
-        $dompdf = new Dompdf($options);
-        $dompdf->loadHtml($html);
-        $dompdf->setPaper('A4', 'landscape');
-        $dompdf->render();
+        // Suppress deprecation warnings for the entire Dompdf lifecycle
+        $previousLevel = error_reporting(E_ALL & ~E_DEPRECATED & ~E_USER_DEPRECATED);
 
-        return response($dompdf->output(), 200, [
+        try {
+            $options = new Options;
+            $options->set('isRemoteEnabled', false);
+            $options->set('isPhpEnabled', false);
+
+            $dompdf = new Dompdf($options);
+            $dompdf->loadHtml($html);
+            $dompdf->setPaper('A4', 'landscape');
+            $dompdf->render();
+            $output = $dompdf->output();
+        } finally {
+            error_reporting($previousLevel);
+            ob_end_clean();
+        }
+
+        return response($output, 200, [
             'Content-Type' => 'application/pdf',
             'Content-Disposition' => "attachment; filename=\"{$filename}.pdf\"",
         ]);

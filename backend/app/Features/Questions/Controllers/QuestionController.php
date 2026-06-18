@@ -9,11 +9,14 @@ use App\Features\Questions\Services\QuestionService;
 use App\Http\Controllers\Api\V1\BaseApiController;
 use App\Models\Question;
 use App\Models\QuestionCategory;
+use Dompdf\Dompdf;
+use Dompdf\Options;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
 use Maatwebsite\Excel\Facades\Excel;
 use Maatwebsite\Excel\Validators\ValidationException;
 use Symfony\Component\HttpFoundation\BinaryFileResponse;
+use Symfony\Component\HttpFoundation\Response;
 use Symfony\Component\HttpFoundation\StreamedResponse;
 
 /**
@@ -123,23 +126,67 @@ class QuestionController extends BaseApiController
         return $this->paginatedResponse($questions, 'Questions retrieved successfully');
     }
 
-    public function export(?string $format = null): BinaryFileResponse|StreamedResponse
+    public function export(?string $format = null): BinaryFileResponse|StreamedResponse|Response
     {
-        $format = $format ?? 'xlsx';
+        $format = strtolower($format ?? 'xlsx');
 
-        $fileName = match ($format) {
-            'csv' => 'questions.csv',
-            'pdf' => 'questions.pdf',
-            default => 'questions.xlsx',
-        };
+        $validFormats = ['csv', 'xlsx', 'pdf'];
+        if (! in_array($format, $validFormats)) {
+            abort(400, 'Invalid format. Valid formats: '.implode(', ', $validFormats));
+        }
 
-        $writerType = match ($format) {
-            'csv' => \Maatwebsite\Excel\Excel::CSV,
-            'pdf' => \Maatwebsite\Excel\Excel::DOMPDF,
-            default => \Maatwebsite\Excel\Excel::XLSX,
-        };
+        if ($format === 'pdf') {
+            return $this->exportPdf();
+        }
 
-        return Excel::download(new QuestionExport, $fileName, $writerType);
+        $extension = $format === 'xlsx' ? 'xlsx' : 'csv';
+        $filename = 'questions_'.now()->format('Y-m-d_His').".{$extension}";
+
+        ob_start();
+        $previousLevel = error_reporting(E_ALL & ~E_DEPRECATED & ~E_USER_DEPRECATED);
+        try {
+            return Excel::download(new QuestionExport, $filename);
+        } finally {
+            error_reporting($previousLevel);
+            ob_end_clean();
+        }
+    }
+
+    protected function exportPdf(): Response
+    {
+        $questions = Question::with(['category', 'subCategory'])
+            ->select(['id', 'category_id', 'sub_category_id', 'question_text', 'question_type', 'options'])
+            ->orderBy('id')
+            ->get();
+
+        $html = view('exports.questions-pdf', [
+            'questions' => $questions,
+            'generatedAt' => now()->toIso8601String(),
+        ])->render();
+
+        ob_start();
+        $previousLevel = error_reporting(E_ALL & ~E_DEPRECATED & ~E_USER_DEPRECATED);
+        try {
+            $options = new Options;
+            $options->set('isRemoteEnabled', false);
+            $options->set('isPhpEnabled', false);
+
+            $dompdf = new Dompdf($options);
+            $dompdf->loadHtml($html);
+            $dompdf->setPaper('A4', 'landscape');
+            $dompdf->render();
+            $output = $dompdf->output();
+        } finally {
+            error_reporting($previousLevel);
+            ob_end_clean();
+        }
+
+        $filename = 'questions_'.now()->format('Y-m-d_His').'.pdf';
+
+        return response($output, 200, [
+            'Content-Type' => 'application/pdf',
+            'Content-Disposition' => "attachment; filename=\"{$filename}\"",
+        ]);
     }
 
     public function sample(): BinaryFileResponse

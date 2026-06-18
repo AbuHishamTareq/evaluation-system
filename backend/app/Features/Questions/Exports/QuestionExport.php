@@ -9,6 +9,8 @@ use Maatwebsite\Excel\Concerns\WithMapping;
 
 class QuestionExport implements FromCollection, WithHeadings, WithMapping
 {
+    private int $rowNumber = 0;
+
     public function collection()
     {
         return Question::with(['category', 'subCategory'])
@@ -17,15 +19,8 @@ class QuestionExport implements FromCollection, WithHeadings, WithMapping
                 'category_id',
                 'sub_category_id',
                 'question_text',
-                'description',
                 'question_type',
                 'options',
-                'weight',
-                'max_score',
-                'is_required',
-                'is_active',
-                'version',
-                'created_at',
             ])
             ->orderBy('id')
             ->get();
@@ -34,38 +29,39 @@ class QuestionExport implements FromCollection, WithHeadings, WithMapping
     public function headings(): array
     {
         return [
-            'ID',
-            'Question Text',
+            'No.',
+            'Question',
+            'Category / Sub Category',
             'Question Type',
-            'Category Code',
-            'Sub-Category Code',
-            'Description',
             'Options',
-            'Weight',
-            'Max Score',
-            'Required',
-            'Active',
-            'Version',
-            'Created At',
         ];
     }
 
     public function map($question): array
     {
+        $this->rowNumber++;
+
+        $category = $question->category?->name ?? $question->subCategory?->name ?? '';
+
+        $options = '';
+        if ($question->options && is_array($question->options)) {
+            $labels = [];
+            foreach ($question->options as $option) {
+                if (is_string($option)) {
+                    $labels[] = $option;
+                } elseif (is_array($option) && isset($option['label'])) {
+                    $labels[] = $option['label'];
+                }
+            }
+            $options = implode(', ', $labels);
+        }
+
         return [
-            $question->id,
+            $this->rowNumber,
             $question->question_text,
+            $category,
             $question->question_type,
-            $question->category?->code,
-            $question->subCategory?->code,
-            $question->description,
-            $question->options ? json_encode($question->options) : null,
-            $question->weight,
-            $question->max_score,
-            $question->is_required ? 1 : 0,
-            $question->is_active ? 1 : 0,
-            $question->version,
-            $question->created_at?->toIso8601String(),
+            $options,
         ];
     }
 }

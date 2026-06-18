@@ -144,18 +144,30 @@ class UserController extends BaseApiController
             'generatedAt' => now()->format('d F Y, h:i A'),
         ])->render();
 
-        $options = new Options;
-        $options->set('isRemoteEnabled', false);
-        $options->set('isPhpEnabled', false);
+        // Prevent accidental output from corrupting the PDF binary
+        ob_start();
 
-        $dompdf = new Dompdf($options);
-        $dompdf->loadHtml($html);
-        $dompdf->setPaper('A4', 'landscape');
-        $dompdf->render();
+        // Suppress deprecation warnings for the entire Dompdf lifecycle
+        $previousLevel = error_reporting(E_ALL & ~E_DEPRECATED & ~E_USER_DEPRECATED);
+
+        try {
+            $options = new Options;
+            $options->set('isRemoteEnabled', false);
+            $options->set('isPhpEnabled', false);
+
+            $dompdf = new Dompdf($options);
+            $dompdf->loadHtml($html);
+            $dompdf->setPaper('A4', 'landscape');
+            $dompdf->render();
+            $output = $dompdf->output();
+        } finally {
+            error_reporting($previousLevel);
+            ob_end_clean();
+        }
 
         $filename = 'users_export_'.now()->format('Y-m-d_His');
 
-        return response($dompdf->output(), 200, [
+        return response($output, 200, [
             'Content-Type' => 'application/pdf',
             'Content-Disposition' => "attachment; filename=\"{$filename}.pdf\"",
         ]);

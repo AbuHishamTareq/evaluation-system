@@ -33,15 +33,26 @@ class DashboardPdfExport
             'generatedAt' => now()->format('F j, Y g:i A'),
         ])->render();
 
-        $pdf = Pdf::loadHTML($html)
-            ->setPaper('a4', 'portrait')
-            ->setOptions([
-                'isHtml5ParserEnabled' => true,
-                'isRemoteEnabled' => true,
-            ]);
+        // Prevent accidental output from corrupting the PDF binary
+        ob_start();
 
-        return response($pdf->output())
-            ->header('Content-Type', 'application/pdf')
-            ->header('Content-Disposition', 'attachment; filename="dashboard-report-'.now()->format('Y-m-d').'.pdf"');
+        // Suppress deprecation warnings for the entire Dompdf lifecycle
+        $previousLevel = error_reporting(E_ALL & ~E_DEPRECATED & ~E_USER_DEPRECATED);
+
+        try {
+            $pdf = Pdf::loadHTML($html)
+                ->setPaper('a4', 'portrait')
+                ->setOptions([
+                    'isHtml5ParserEnabled' => true,
+                    'isRemoteEnabled' => true,
+                ]);
+
+            return response($pdf->output())
+                ->header('Content-Type', 'application/pdf')
+                ->header('Content-Disposition', 'attachment; filename="dashboard-report-'.now()->format('Y-m-d').'.pdf"');
+        } finally {
+            error_reporting($previousLevel);
+            ob_end_clean();
+        }
     }
 }

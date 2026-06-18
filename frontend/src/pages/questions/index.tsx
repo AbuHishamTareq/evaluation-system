@@ -579,10 +579,20 @@ export const QuestionsPage: React.FC = () => {
 
   const handleExportFormatSelect = async (format: ExportFormat) => {
     try {
-      await exportQuestions(format);
-      addToast('Questions exported successfully', 'success');
-      setShowExportOptions(false);
-      setShowDataModal(false);
+      const blob = await exportQuestions(format);
+      if (blob) {
+        const url = window.URL.createObjectURL(blob);
+        const link = document.createElement('a');
+        link.href = url;
+        link.download = `questions-export-${new Date().toISOString().split('T')[0]}.${format}`;
+        document.body.appendChild(link);
+        link.click();
+        document.body.removeChild(link);
+        window.URL.revokeObjectURL(url);
+        addToast('Questions exported successfully', 'success');
+        setShowExportOptions(false);
+        setShowDataModal(false);
+      }
     } catch {
       addToast('Failed to export questions', 'error');
     }

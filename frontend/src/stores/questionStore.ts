@@ -30,7 +30,7 @@ interface QuestionState {
   createCategory: (data: { name: string; code: string; description?: string; order?: number }) => Promise<void>;
   updateCategory: (id: number, data: Partial<{ name: string; code: string; description: string; order: number; is_active: boolean }>) => Promise<void>;
   deleteCategory: (id: number) => Promise<void>;
-  exportQuestions: (format?: string) => Promise<void>;
+  exportQuestions: (format?: string) => Promise<Blob | null>;
   importQuestions: (file: File) => Promise<void>;
   downloadSample: () => Promise<Blob | null>;
   clearError: () => void;
@@ -181,21 +181,13 @@ export const useQuestionStore = create<QuestionState>((set, get) => ({
   exportQuestions: async (format: string = 'xlsx') => {
     set({ isExporting: true, error: null });
     try {
-      const response = await questionService.exportQuestions(format) as unknown as { data: Blob };
-      const url = window.URL.createObjectURL(new Blob([response.data]));
-      const link = document.createElement('a');
-      link.href = url;
-      link.setAttribute('download', `questions_${new Date().toISOString().split('T')[0]}.${format}`);
-      document.body.appendChild(link);
-      link.click();
-      link.remove();
-      window.URL.revokeObjectURL(url);
+      const blob = await questionService.exportQuestions(format);
       set({ isExporting: false });
+      return blob as Blob;
     } catch (error) {
-      set({
-        error: error instanceof Error ? error.message : 'Failed to export questions',
-        isExporting: false,
-      });
+      const message = error instanceof Error ? error.message : 'Failed to export questions';
+      set({ error: message, isExporting: false });
+      return null;
     }
   },
 

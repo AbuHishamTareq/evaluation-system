@@ -115,14 +115,20 @@ class StaffController extends BaseApiController
     {
         $staff->load(['center', 'teamCode', 'educationalDegrees']);
 
-        $options = new Options;
-        $options->set('isHtml5ParserEnabled', config('dompdf.is_html5_parser_enabled', true));
-        $options->set('isRemoteEnabled', config('dompdf.is_remote_enabled', false));
-        $options->set('defaultFont', config('dompdf.default_font', 'sans-serif'));
-        $options->set('isFontSubsettingEnabled', config('dompdf.is_font_subsetting_enabled', false));
-        $options->set('fontHeightRatio', config('dompdf.font_height_ratio', 1.1));
+        // Prevent accidental output from corrupting the PDF binary
+        ob_start();
+
+        // Suppress deprecation warnings for the entire Dompdf lifecycle
+        $previousLevel = error_reporting(E_ALL & ~E_DEPRECATED & ~E_USER_DEPRECATED);
 
         try {
+            $options = new Options;
+            $options->set('isHtml5ParserEnabled', config('dompdf.is_html5_parser_enabled', true));
+            $options->set('isRemoteEnabled', config('dompdf.is_remote_enabled', false));
+            $options->set('defaultFont', config('dompdf.default_font', 'sans-serif'));
+            $options->set('isFontSubsettingEnabled', config('dompdf.is_font_subsetting_enabled', false));
+            $options->set('fontHeightRatio', config('dompdf.font_height_ratio', 1.1));
+
             $dompdf = new Dompdf($options);
             $dompdf->loadHtml(view('staff.cv', compact('staff'))->render());
             $dompdf->setPaper('A4', 'portrait');
@@ -130,10 +136,12 @@ class StaffController extends BaseApiController
 
             $filename = 'CV_'.str_replace([' ', '/', '\\'], '_', $staff->full_name).'_'.$staff->employee_id.'.pdf';
 
-            return new Response($dompdf->output(), 200, [
+            $output = $dompdf->output();
+
+            return new Response($output, 200, [
                 'Content-Type' => 'application/pdf',
                 'Content-Disposition' => 'inline; filename="'.$filename.'"',
-                'Content-Length' => strlen($dompdf->output()),
+                'Content-Length' => strlen($output),
             ]);
         } catch (\Throwable $e) {
             Log::error('CV PDF generation failed for staff #'.$staff->id.': '.$e->getMessage(), [
@@ -145,6 +153,9 @@ class StaffController extends BaseApiController
                 'message' => 'Failed to generate CV PDF. Please try again later.',
                 'error' => $e->getMessage(),
             ], 500);
+        } finally {
+            error_reporting($previousLevel);
+            ob_end_clean();
         }
     }
 
@@ -376,18 +387,30 @@ class StaffController extends BaseApiController
             'generatedAt' => now()->format('d F Y, h:i A'),
         ])->render();
 
-        $options = new Options;
-        $options->set('isRemoteEnabled', false);
-        $options->set('isPhpEnabled', false);
+        // Prevent accidental output from corrupting the PDF binary
+        ob_start();
 
-        $dompdf = new Dompdf($options);
-        $dompdf->loadHtml($html);
-        $dompdf->setPaper('A4', 'landscape');
-        $dompdf->render();
+        // Suppress deprecation warnings for the entire Dompdf lifecycle
+        $previousLevel = error_reporting(E_ALL & ~E_DEPRECATED & ~E_USER_DEPRECATED);
+
+        try {
+            $options = new Options;
+            $options->set('isRemoteEnabled', false);
+            $options->set('isPhpEnabled', false);
+
+            $dompdf = new Dompdf($options);
+            $dompdf->loadHtml($html);
+            $dompdf->setPaper('A4', 'landscape');
+            $dompdf->render();
+            $output = $dompdf->output();
+        } finally {
+            error_reporting($previousLevel);
+            ob_end_clean();
+        }
 
         $filename = 'staff_export_'.now()->format('Y-m-d_His');
 
-        return response($dompdf->output(), 200, [
+        return response($output, 200, [
             'Content-Type' => 'application/pdf',
             'Content-Disposition' => "attachment; filename=\"{$filename}.pdf\"",
         ]);
