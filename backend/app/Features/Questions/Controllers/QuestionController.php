@@ -59,6 +59,11 @@ class QuestionController extends BaseApiController
             'is_active' => 'nullable|boolean',
         ]);
 
+        // Default is_active to true if not provided
+        if (! isset($validated['is_active']) || $validated['is_active'] === null) {
+            $validated['is_active'] = true;
+        }
+
         $question = $this->questionService->createQuestion($validated);
 
         return $this->successResponse($question, 'Question created successfully', 201);

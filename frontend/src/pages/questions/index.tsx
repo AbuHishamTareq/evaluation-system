@@ -4,11 +4,12 @@ import { Card, CardContent } from '../../components/ui/cards/Card';
 import { Modal, ModalHeader, ModalContent, ModalFooter } from '../../components/ui/modals';
 import { Input } from '../../components/ui/forms/Input';
 import { SearchableCombobox } from '../../components/ui/forms/SearchableCombobox';
-import { useQuestionStore } from '../../stores';
+import { useQuestionStore, useQuestionSubCategoryStore } from '../../stores';
 import { useAuthStore } from '../../stores/authStore';
 import { useToast } from '../../components/ui/toast';
 import { QuestionCard } from '../../components/features/questions';
-import type { Question, QuestionCreateInput, QuestionUpdateInput, QuestionType, QuestionCategory } from '../../types';
+import type { Question, QuestionCreateInput, QuestionUpdateInput, QuestionType, QuestionCategory, QuestionOption } from '../../types';
+import { Label } from '../../components/ui/forms/Label';
 
 type ExportFormat = 'csv' | 'xlsx' | 'pdf';
 
@@ -46,8 +47,10 @@ const QuestionFormModal: React.FC<QuestionFormModalProps> = ({
   const [weight, setWeight] = useState(1);
   const [maxScore, setMaxScore] = useState(10);
   const [isRequired, setIsRequired] = useState(false);
-  const [isActive, setIsActive] = useState(true);
-  const [optionsText, setOptionsText] = useState('');
+  const [subCategoryId, setSubCategoryId] = useState('');
+  const [options, setOptions] = useState<QuestionOption[]>([]);
+
+  const { subCategories, fetchSubCategories } = useQuestionSubCategoryStore();
 
   useEffect(() => {
     if (editingQuestion) {
@@ -58,8 +61,9 @@ const QuestionFormModal: React.FC<QuestionFormModalProps> = ({
       setWeight(editingQuestion.weight);
       setMaxScore(editingQuestion.max_score);
       setIsRequired(editingQuestion.is_required);
-      setIsActive(editingQuestion.is_active);
-      setOptionsText(editingQuestion.options ? JSON.stringify(editingQuestion.options, null, 2) : '');
+      setSubCategoryId(editingQuestion.sub_category_id ? String(editingQuestion.sub_category_id) : '');
+      setOptions(editingQuestion.options ?? []);
+      fetchSubCategories({ filters: { question_category_id: editingQuestion.category_id } });
     } else {
       setQuestionText('');
       setDescription('');
@@ -68,34 +72,25 @@ const QuestionFormModal: React.FC<QuestionFormModalProps> = ({
       setWeight(1);
       setMaxScore(10);
       setIsRequired(false);
-      setIsActive(true);
-      setOptionsText('');
+      setOptions([]);
+      setSubCategoryId('');
     }
-  }, [editingQuestion, isOpen]);
+  }, [editingQuestion, isOpen, fetchSubCategories]);
 
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
     if (!questionText || !categoryId) return;
-
-    let options = null;
-    if (optionsText.trim()) {
-      try {
-        options = JSON.parse(optionsText);
-      } catch {
-        return;
-      }
-    }
 
     const data = {
       question_text: questionText,
       description: description || null,
       question_type: questionType,
       category_id: parseInt(categoryId),
+      sub_category_id: subCategoryId ? parseInt(subCategoryId) : null,
       weight,
       max_score: maxScore,
       is_required: isRequired,
-      is_active: isActive,
-      options,
+      options: options.length > 0 ? options : null,
     };
 
     onSubmit(data);
@@ -109,7 +104,9 @@ const QuestionFormModal: React.FC<QuestionFormModalProps> = ({
       <ModalContent>
         <form onSubmit={handleSubmit} className="space-y-4">
           <div>
-            <label className="block text-sm font-medium text-gray-700 mb-1">Question Text *</label>
+            <Label className="block text-sm font-medium text-gray-700 mb-1" required>
+              Question Text
+            </Label>
             <textarea
               value={questionText}
               onChange={(e) => setQuestionText(e.target.value)}
@@ -134,7 +131,7 @@ const QuestionFormModal: React.FC<QuestionFormModalProps> = ({
           <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
             <div>
               <SearchableCombobox
-                label="Type *"
+                label="Type"
                 value={questionType}
                 onChange={(val) => setQuestionType(val as QuestionType)}
                 options={TYPE_OPTIONS.map(opt => ({ value: opt.value, label: opt.label }))}
@@ -146,9 +143,12 @@ const QuestionFormModal: React.FC<QuestionFormModalProps> = ({
 
             <div>
               <SearchableCombobox
-                label="Category *"
+                label="Category"
                 value={categoryId || null}
-                onChange={(val) => setCategoryId(val ? String(val) : '')}
+                onChange={(val) => {
+                  setCategoryId(val ? String(val) : '');
+                  setSubCategoryId('');
+                }}
                 options={categories.map(cat => ({ value: String(cat.id), label: cat.name }))}
                 placeholder="Select a category"
                 noSelectionLabel="Select a category"
@@ -157,6 +157,22 @@ const QuestionFormModal: React.FC<QuestionFormModalProps> = ({
                 className="w-full"
               />
             </div>
+            {categoryId && (!editingQuestion || subCategoryId) && (
+              <div>
+                <SearchableCombobox
+                  label="Sub Category"
+                  value={subCategoryId || null}
+                  onChange={(val) => setSubCategoryId(typeof val === 'string' ? val : '')}
+                  options={subCategories
+                    .filter(sc => sc.question_category_id === parseInt(categoryId))
+                    .map(sc => ({ value: String(sc.id), label: sc.name }))}
+                  placeholder="Select a sub category"
+                  noSelectionLabel="Select a sub category"
+                  clearable
+                  className="w-full"
+                />
+              </div>
+            )}
           </div>
 
           <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
@@ -192,30 +208,48 @@ const QuestionFormModal: React.FC<QuestionFormModalProps> = ({
                 />
                 <span className="text-sm font-medium text-gray-700">Required</span>
               </label>
-              <label className="flex items-center gap-2 cursor-pointer">
-                <input
-                  type="checkbox"
-                  checked={isActive}
-                  onChange={(e) => setIsActive(e.target.checked)}
-                  className="rounded border-gray-300 text-blue-600 focus:ring-blue-500"
-                />
-                <span className="text-sm font-medium text-gray-700">Active</span>
-              </label>
             </div>
           </div>
 
           {showOptionsEditor && (
             <div>
-              <label className="block text-sm font-medium text-gray-700 mb-1">
-                Options (JSON array of `{`"label", "value"`}`)
-              </label>
-              <textarea
-                value={optionsText}
-                onChange={(e) => setOptionsText(e.target.value)}
-                className="w-full px-3 py-2 border border-gray-300 rounded-lg font-mono text-sm focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
-                rows={4}
-                placeholder={JSON.stringify([{ label: 'Option 1', value: 'option_1' }, { label: 'Option 2', value: 'option_2' }], null, 2)}
-              />
+              <label className="block text-sm font-medium text-gray-700 mb-2">Options</label>
+              <div className="space-y-2">
+                {options.map((opt, idx) => (
+                  <div key={idx} className="flex items-center gap-2">
+                    <input
+                      type="text"
+                      value={opt.label}
+                      onChange={(e) => {
+                        const newOptions = [...options];
+                        newOptions[idx] = { ...newOptions[idx], label: e.target.value, value: e.target.value.toLowerCase().replace(/\s+/g, '_') };
+                        setOptions(newOptions);
+                      }}
+                      className="flex-1 px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 text-sm"
+                      placeholder="Option label"
+                    />
+                    <button
+                      type="button"
+                      onClick={() => setOptions(options.filter((_, i) => i !== idx))}
+                      className="p-2 text-red-500 hover:text-red-700 hover:bg-red-50 rounded-lg transition-colors"
+                    >
+                      <svg className="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" />
+                      </svg>
+                    </button>
+                  </div>
+                ))}
+                <button
+                  type="button"
+                  onClick={() => setOptions([...options, { label: '', value: '' }])}
+                  className="flex items-center gap-1 text-sm text-blue-600 hover:text-blue-700 font-medium"
+                >
+                  <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 6v6m0 0v6m0-6h6m-6 0H6" />
+                  </svg>
+                  Add Option
+                </button>
+              </div>
             </div>
           )}
 
