@@ -226,15 +226,18 @@ export const evaluationService = {
   },
 
   getById: async (id: string | number) => {
-    return apiClient.get<Evaluation>(API_ENDPOINTS.evaluations.show(id));
+    const response = await apiClient.get<{ success: boolean; data: Evaluation }>(API_ENDPOINTS.evaluations.show(id));
+    return response.data;
   },
 
   create: async (data: Partial<Evaluation>) => {
-    return apiClient.post<Evaluation>(API_ENDPOINTS.evaluations.store, data);
+    const response = await apiClient.post<{ success: boolean; data: Evaluation }>(API_ENDPOINTS.evaluations.store, data);
+    return response.data;
   },
 
   update: async (id: string | number, data: Partial<Evaluation>) => {
-    return apiClient.put<Evaluation>(API_ENDPOINTS.evaluations.update(id), data);
+    const response = await apiClient.put<{ success: boolean; data: Evaluation }>(API_ENDPOINTS.evaluations.update(id), data);
+    return response.data;
   },
 
   delete: async (id: string | number) => {
@@ -257,15 +260,18 @@ export const templateService = {
   },
 
   getById: async (id: string | number) => {
-    return apiClient.get<EvaluationTemplate>(API_ENDPOINTS.templates.show(id));
+    const response = await apiClient.get<{ success: boolean; data: EvaluationTemplate }>(API_ENDPOINTS.templates.show(id));
+    return response.data;
   },
 
   create: async (data: Partial<EvaluationTemplate>) => {
-    return apiClient.post<EvaluationTemplate>(API_ENDPOINTS.templates.store, data);
+    const response = await apiClient.post<{ success: boolean; data: EvaluationTemplate }>(API_ENDPOINTS.templates.store, data);
+    return response.data;
   },
 
   update: async (id: string | number, data: Partial<EvaluationTemplate>) => {
-    return apiClient.put<EvaluationTemplate>(API_ENDPOINTS.templates.update(id), data);
+    const response = await apiClient.put<{ success: boolean; data: EvaluationTemplate }>(API_ENDPOINTS.templates.update(id), data);
+    return response.data;
   },
 
   delete: async (id: string | number) => {
@@ -277,7 +283,8 @@ export const templateService = {
   },
 
   getActive: async () => {
-    return apiClient.get<EvaluationTemplate[]>(API_ENDPOINTS.templates.active);
+    const response = await apiClient.get<{ success: boolean; data: EvaluationTemplate[] }>(API_ENDPOINTS.templates.active);
+    return response.data;
   },
 };
 

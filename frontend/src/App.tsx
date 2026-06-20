@@ -10,12 +10,15 @@ import { ErrorBoundary } from './components/ui/ErrorBoundary';
 import { DashboardPage } from './pages/dashboard/DashboardPage';
 import { StaffPage } from './pages/staff';
 import { QuestionsPage } from './pages/questions';
+import { TemplateBuilderPage } from './pages/templates';
 import { EvaluationsPage, EvaluationTakingPage } from './pages/evaluations';
 import { CentersPage } from './pages/centers';
 import { ReportsPage } from './pages/reports';
 import ZonesPage from './pages/zones';
 import ActionPlansPage from './pages/action-plans';
 import { TeamCodesPage } from './pages/team-codes';
+import { MedicationsPage } from './pages/medications/MedicationsPage';
+import { PhcMedicationsPage } from './pages/medications/PhcMedicationsPage';
 import { ClassificationPage } from './pages/classification/ClassificationPage';
 import { QuestionCategoriesPage } from './pages/question-categories';
 import { QuestionSubCategoriesPage } from './pages/question-sub-categories';
@@ -102,12 +105,15 @@ function App() {
             <Route path="/dashboard" element={<DashboardPage />} />
             <Route path="/staff" element={<StaffPage />} />
             <Route path="/questions" element={<QuestionsPage />} />
+            <Route path="/templates" element={<TemplateBuilderPage />} />
             <Route path="/evaluations" element={<EvaluationsPage />} />
             <Route path="/evaluations/:id/take" element={<EvaluationTakingPage />} />
             <Route path="/centers" element={<CentersPage />} />
             <Route path="/reports" element={<ReportsPage />} />
             <Route path="/zones" element={<ZonesPage />} />
             <Route path="/action-plans" element={<ActionPlansPage />} />
+            <Route path="/medications" element={<MedicationsPage />} />
+            <Route path="/phc-medications" element={<PhcMedicationsPage />} />
             <Route path="/team-codes" element={<TeamCodesPage />} />
             <Route path="/classification" element={<ClassificationPage />} />
             <Route path="/question-categories" element={<QuestionCategoriesPage />} />

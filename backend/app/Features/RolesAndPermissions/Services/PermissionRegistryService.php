@@ -164,6 +164,14 @@ class PermissionRegistryService
             'classifications.delete' => 'Delete classification mappings',
             'classifications.export' => 'Export classification mappings',
             'classifications.import' => 'Import classification mappings',
+
+            // Medications module
+            'medications.view' => 'View medications',
+            'medications.create' => 'Create medications',
+            'medications.edit' => 'Edit medications',
+            'medications.delete' => 'Delete medications',
+            'medications.export' => 'Export medication data',
+            'medications.import' => 'Import medication data',
         ];
     }
 

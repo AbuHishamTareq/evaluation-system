@@ -54,10 +54,10 @@ export const useTemplateStore = create<TemplateState>((set, get) => ({
       set({
         templates: response.data,
         pagination: {
-          currentPage: response.current_page,
-          totalPages: response.last_page,
-          total: response.total,
-          perPage: response.per_page,
+          currentPage: response.meta?.current_page ?? 1,
+          totalPages: response.meta?.last_page ?? 1,
+          total: response.meta?.total ?? 0,
+          perPage: response.meta?.per_page ?? 15,
         },
         isLoading: false,
       });

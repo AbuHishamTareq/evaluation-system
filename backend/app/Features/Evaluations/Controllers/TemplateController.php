@@ -31,14 +31,26 @@ class TemplateController extends BaseApiController
         $validated = $request->validate([
             'name' => 'required|string|max:255',
             'description' => 'nullable|string',
+            'type' => 'nullable|string|in:standard,checklist,audit',
             'schedule_type' => 'nullable|string|in:one_time,monthly,quarterly,custom',
             'start_date' => 'nullable|date',
             'end_date' => 'nullable|date|after:start_date',
             'total_score' => 'nullable|integer|min:1',
             'is_active' => 'nullable|boolean',
+            'category_id' => 'nullable|integer|exists:question_categories,id',
+            'sub_category_id' => 'nullable|integer|exists:question_sub_categories,id',
             'questions' => 'nullable|array',
             'questions.*.question_id' => 'required_with:questions|integer|exists:questions,id',
             'questions.*.weight' => 'nullable|integer|min:1',
+            'questions.*.order' => 'nullable|integer|min:0',
+            'new_questions' => 'nullable|array',
+            'new_questions.*.question_text' => 'required|string',
+            'new_questions.*.question_type' => 'required|string|in:text,textarea,select,radio,checkbox,rating',
+            'new_questions.*.description' => 'nullable|string',
+            'new_questions.*.options' => 'nullable|json',
+            'new_questions.*.weight' => 'nullable|integer|min:1|max:100',
+            'new_questions.*.max_score' => 'nullable|integer|min:0|max:1000',
+            'new_questions.*.is_required' => 'nullable|boolean',
         ]);
 
         $template = $this->templateService->createTemplate($validated);
@@ -62,14 +74,26 @@ class TemplateController extends BaseApiController
         $validated = $request->validate([
             'name' => 'sometimes|string|max:255',
             'description' => 'nullable|string',
+            'type' => 'nullable|string|in:standard,checklist,audit',
             'schedule_type' => 'sometimes|string|in:one_time,monthly,quarterly,custom',
             'start_date' => 'nullable|date',
             'end_date' => 'nullable|date|after:start_date',
             'total_score' => 'nullable|integer|min:1',
             'is_active' => 'sometimes|boolean',
+            'category_id' => 'nullable|integer|exists:question_categories,id',
+            'sub_category_id' => 'nullable|integer|exists:question_sub_categories,id',
             'questions' => 'nullable|array',
             'questions.*.question_id' => 'required_with:questions|integer|exists:questions,id',
             'questions.*.weight' => 'nullable|integer|min:1',
+            'questions.*.order' => 'nullable|integer|min:0',
+            'new_questions' => 'nullable|array',
+            'new_questions.*.question_text' => 'required|string',
+            'new_questions.*.question_type' => 'required|string|in:text,textarea,select,radio,checkbox,rating',
+            'new_questions.*.description' => 'nullable|string',
+            'new_questions.*.options' => 'nullable|json',
+            'new_questions.*.weight' => 'nullable|integer|min:1|max:100',
+            'new_questions.*.max_score' => 'nullable|integer|min:0|max:1000',
+            'new_questions.*.is_required' => 'nullable|boolean',
         ]);
 
         $template = $this->templateService->updateTemplate($id, $validated);

@@ -52,6 +52,7 @@
     "questionCategories": "فئات الأسئلة",
     "questionSubCategories": "الفئات الفرعية للأسئلة",
     "evaluations": "التقييمات",
+    "templates": "القوالب",
     "centers": "المراكز",
     "reports": "التقارير",
     "zones": "المناطق",
@@ -70,7 +71,9 @@
     "administration": "الإدارة",
     "users": "المستخدمين",
     "roles": "الأدوار",
-    "permissions": "الصلاحيات"
+    "permissions": "الصلاحيات",
+    "medications": "الأدوية",
+    "phcMedications": "أدوية المراكز"
   },
   "classificationTabs": {
     "fields": "المجالات",

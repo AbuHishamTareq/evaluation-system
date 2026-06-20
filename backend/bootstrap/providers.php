@@ -6,6 +6,8 @@ use App\Providers\ClassificationServiceProvider;
 use App\Providers\ClinicAssignmentServiceProvider;
 use App\Providers\DepartmentServiceProvider;
 use App\Providers\EducationalDegreeServiceProvider;
+use App\Providers\EvaluationServiceProvider;
+use App\Providers\MedicationServiceProvider;
 use App\Providers\ProfessionalServiceProvider;
 use App\Providers\QuestionCategoryServiceProvider;
 use App\Providers\QuestionServiceProvider;
@@ -28,6 +30,8 @@ return [
     TeamCodeServiceProvider::class,
     ClassificationServiceProvider::class,
     EducationalDegreeServiceProvider::class,
+    EvaluationServiceProvider::class,
+    MedicationServiceProvider::class,
     DepartmentServiceProvider::class,
     ProfessionalServiceProvider::class,
     StaffServiceProvider::class,

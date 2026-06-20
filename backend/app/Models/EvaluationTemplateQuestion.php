@@ -12,11 +12,13 @@ class EvaluationTemplateQuestion extends Model
         'question_id',
         'order',
         'weight',
+        'is_medication_check',
     ];
 
     protected $casts = [
         'order' => 'integer',
         'weight' => 'integer',
+        'is_medication_check' => 'boolean',
     ];
 
     public function template(): BelongsTo

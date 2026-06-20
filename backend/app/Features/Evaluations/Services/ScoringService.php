@@ -50,7 +50,7 @@ class ScoringService
         $maxScore = $question->max_score ?? 1;
 
         $score = match ($question->question_type) {
-            'radio' => $this->calculateYesNoScore($answer),
+            'radio' => $this->calculateYesNoScore($answer, $question),
             'rating' => $this->calculateRatingScore($answer, $maxScore),
             'select' => $this->calculateMultipleChoiceScore($answer, $question),
             'textarea', 'text' => $this->calculateTextScore($answer),
@@ -63,9 +63,33 @@ class ScoringService
         ];
     }
 
-    protected function calculateYesNoScore(array $answer): float
+    protected function calculateYesNoScore(array $answer, ?Question $question = null): float
     {
+        if ($question && ! empty($question->options)) {
+            return $this->calculateRadioWithOptions($answer, $question);
+        }
+
         return ($answer['answer_yes_no'] ?? '') === 'yes' ? 1 : 0;
+    }
+
+    protected function calculateRadioWithOptions(array $answer, Question $question): float
+    {
+        $selected = $answer['answer_multiple_choice'] ?? '';
+        $options = $question->options ?? [];
+        $count = count($options);
+
+        if ($count === 0 || $selected === '') {
+            return 0;
+        }
+
+        $index = array_search($selected, array_column($options, 'value'), true);
+        if ($index === false) {
+            return 0;
+        }
+
+        $maxScore = $question->max_score ?? 1;
+
+        return (($count - 1 - $index) / ($count - 1)) * $maxScore;
     }
 
     protected function calculateRatingScore(array $answer, float $maxScore): float

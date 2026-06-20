@@ -43,17 +43,29 @@ class TemplateService
     public function createTemplate(array $data): EvaluationTemplate
     {
         return DB::transaction(function () use ($data) {
+            $this->resolveQuestionSources($data);
+
+            $hasQuestions = ! empty($data['questions']);
+
+            $totalScore = $data['total_score'] ?? null;
+            if ($totalScore === null && $hasQuestions) {
+                $totalScore = array_sum(array_map(function ($q) {
+                    return $q['weight'] ?? 1;
+                }, $data['questions']));
+            }
+
             $template = EvaluationTemplate::create([
                 'name' => $data['name'],
                 'description' => $data['description'] ?? null,
+                'type' => $data['type'] ?? 'standard',
                 'schedule_type' => $data['schedule_type'] ?? 'one_time',
                 'start_date' => $data['start_date'] ?? null,
                 'end_date' => $data['end_date'] ?? null,
-                'total_score' => $data['total_score'] ?? 100,
+                'total_score' => $totalScore ?? 100,
                 'is_active' => $data['is_active'] ?? true,
             ]);
 
-            if (! empty($data['questions'])) {
+            if ($hasQuestions) {
                 $this->addQuestionsToTemplate($template, $data['questions']);
             }
 
@@ -69,19 +81,36 @@ class TemplateService
                 throw new \InvalidArgumentException("Template not found: {$id}");
             }
 
-            $template->update([
+            $hadQuestionSources = $this->resolveQuestionSources($data);
+
+            $updateData = [
                 'name' => $data['name'] ?? $template->name,
                 'description' => $data['description'] ?? $template->description,
+                'type' => $data['type'] ?? $template->type,
                 'schedule_type' => $data['schedule_type'] ?? $template->schedule_type,
                 'start_date' => $data['start_date'] ?? $template->start_date,
                 'end_date' => $data['end_date'] ?? $template->end_date,
-                'total_score' => $data['total_score'] ?? $template->total_score,
                 'is_active' => $data['is_active'] ?? $template->is_active,
-            ]);
+            ];
 
-            if (isset($data['questions'])) {
+            if ($hadQuestionSources || isset($data['questions'])) {
+                $newQuestions = $data['questions'] ?? [];
+                $totalScore = $data['total_score'] ?? null;
+                if ($totalScore === null) {
+                    $totalScore = array_sum(array_map(function ($q) {
+                        return $q['weight'] ?? 1;
+                    }, $newQuestions));
+                }
+                $updateData['total_score'] = $totalScore;
+
+                $template->update($updateData);
                 $template->questions()->delete();
-                $this->addQuestionsToTemplate($template, $data['questions']);
+                $this->addQuestionsToTemplate($template, $newQuestions);
+            } else {
+                if (isset($data['total_score'])) {
+                    $updateData['total_score'] = $data['total_score'];
+                }
+                $template->update($updateData);
             }
 
             return $template->fresh(['questions.question.category']);
@@ -110,6 +139,78 @@ class TemplateService
         return $template->fresh();
     }
 
+    /**
+     * Resolve category_id, sub_category_id, and new_questions sources
+     * into the questions array. Removes the temporary fields from $data.
+     *
+     * @return bool Whether any question source was present.
+     */
+    private function resolveQuestionSources(array &$data): bool
+    {
+        $hasSources = false;
+
+        // Create new questions inline and add them to the questions array
+        if (! empty($data['new_questions'])) {
+            $hasSources = true;
+            $createdQuestions = [];
+
+            foreach ($data['new_questions'] as $newQ) {
+                $question = Question::create([
+                    'category_id' => $data['category_id'] ?? null,
+                    'sub_category_id' => $data['sub_category_id'] ?? null,
+                    'question_text' => $newQ['question_text'],
+                    'description' => $newQ['description'] ?? null,
+                    'question_type' => $newQ['question_type'],
+                    'options' => isset($newQ['options']) ? json_decode($newQ['options'], true) : null,
+                    'weight' => (int) ($newQ['weight'] ?? 1),
+                    'max_score' => $newQ['max_score'] ?? null,
+                    'is_required' => (bool) ($newQ['is_required'] ?? false),
+                    'is_active' => true,
+                ]);
+
+                $createdQuestions[] = [
+                    'question_id' => $question->id,
+                    'weight' => (int) ($newQ['weight'] ?? 1),
+                ];
+            }
+
+            $data['questions'] = array_merge($data['questions'] ?? [], $createdQuestions);
+        }
+
+        // Auto-populate from category questions
+        if (! empty($data['category_id'])) {
+            $hasSources = true;
+            $categoryQuestions = Question::where('category_id', $data['category_id'])
+                ->where('is_active', true)
+                ->get()
+                ->map(fn (Question $q) => ['question_id' => $q->id, 'weight' => 1])
+                ->toArray();
+
+            if (! empty($categoryQuestions)) {
+                $data['questions'] = array_merge($data['questions'] ?? [], $categoryQuestions);
+            }
+        }
+
+        // Auto-populate from sub-category questions
+        if (! empty($data['sub_category_id'])) {
+            $hasSources = true;
+            $subCategoryQuestions = Question::where('sub_category_id', $data['sub_category_id'])
+                ->where('is_active', true)
+                ->get()
+                ->map(fn (Question $q) => ['question_id' => $q->id, 'weight' => 1])
+                ->toArray();
+
+            if (! empty($subCategoryQuestions)) {
+                $data['questions'] = array_merge($data['questions'] ?? [], $subCategoryQuestions);
+            }
+        }
+
+        // Remove temporary fields so they are not passed to model creation
+        unset($data['category_id'], $data['sub_category_id'], $data['new_questions']);
+
+        return $hasSources;
+    }
+
     public function addQuestionsToTemplate(EvaluationTemplate $template, array $questions): Collection
     {
         $added = collect();
@@ -117,6 +218,9 @@ class TemplateService
         foreach ($questions as $index => $questionData) {
             $questionId = is_array($questionData) ? $questionData['question_id'] : $questionData;
             $weight = is_array($questionData) ? ($questionData['weight'] ?? 1) : 1;
+            $order = is_array($questionData) && isset($questionData['order'])
+                ? (int) $questionData['order']
+                : $index + 1;
 
             $question = Question::find($questionId);
             if (! $question) {
@@ -126,8 +230,11 @@ class TemplateService
             $templateQuestion = EvaluationTemplateQuestion::create([
                 'template_id' => $template->id,
                 'question_id' => $questionId,
-                'order' => $index + 1,
+                'order' => $order,
                 'weight' => $weight,
+                'is_medication_check' => is_array($questionData)
+                    ? ($questionData['is_medication_check'] ?? false)
+                    : false,
             ]);
 
             $added->push($templateQuestion);

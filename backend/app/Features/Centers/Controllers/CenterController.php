@@ -12,9 +12,13 @@ use Dompdf\Options;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
 use Maatwebsite\Excel\Concerns\FromArray;
+use Maatwebsite\Excel\Concerns\ShouldAutoSize;
 use Maatwebsite\Excel\Concerns\WithHeadings;
+use Maatwebsite\Excel\Concerns\WithStyles;
 use Maatwebsite\Excel\Facades\Excel;
 use Maatwebsite\Excel\Validators\ValidationException;
+use PhpOffice\PhpSpreadsheet\Style\Fill;
+use PhpOffice\PhpSpreadsheet\Worksheet\Worksheet;
 use Symfony\Component\HttpFoundation\Response;
 
 /**
@@ -329,11 +333,15 @@ class CenterController extends BaseApiController
 
         $filename = 'center_import_template';
 
-        return Excel::download(new class($headers, $sampleData) implements FromArray, WithHeadings
+        return Excel::download(new class($headers, $sampleData) implements FromArray, ShouldAutoSize, WithHeadings, WithStyles
         {
             private array $headers;
 
             private array $sampleData;
+
+            private const HEADER_BG = '4f81bd';
+
+            private const HEADER_FONT_COLOR = 'FFFFFF';
 
             public function __construct(array $headers, array $sampleData)
             {
@@ -348,7 +356,37 @@ class CenterController extends BaseApiController
 
             public function headings(): array
             {
-                return [$this->headers];
+                return $this->headers;
+            }
+
+            public function styles(Worksheet $sheet): void
+            {
+                $headerRange = 'A1:'.$sheet->getHighestDataColumn().'1';
+                $sheet->getStyle($headerRange)->applyFromArray([
+                    'font' => [
+                        'bold' => true,
+                        'color' => ['rgb' => self::HEADER_FONT_COLOR],
+                        'size' => 11,
+                    ],
+                    'fill' => [
+                        'fillType' => Fill::FILL_SOLID,
+                        'startColor' => ['rgb' => self::HEADER_BG],
+                    ],
+                    'alignment' => [
+                        'horizontal' => 'center',
+                        'vertical' => 'center',
+                    ],
+                ]);
+
+                $lastRow = $sheet->getHighestDataRow();
+                if ($lastRow > 1) {
+                    $dataRange = 'A2:'.$sheet->getHighestDataColumn().$lastRow;
+                    $sheet->getStyle($dataRange)->applyFromArray([
+                        'alignment' => [
+                            'vertical' => 'center',
+                        ],
+                    ]);
+                }
             }
         }, "{$filename}.xlsx");
     }

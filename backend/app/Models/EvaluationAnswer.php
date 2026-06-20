@@ -10,6 +10,7 @@ class EvaluationAnswer extends Model
     protected $fillable = [
         'evaluation_id',
         'question_id',
+        'medication_id',
         'answer_text',
         'answer_yes_no',
         'answer_rating',
@@ -34,5 +35,10 @@ class EvaluationAnswer extends Model
     public function question(): BelongsTo
     {
         return $this->belongsTo(Question::class, 'question_id');
+    }
+
+    public function medication(): BelongsTo
+    {
+        return $this->belongsTo(Medication::class, 'medication_id');
     }
 }

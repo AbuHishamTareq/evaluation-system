@@ -64,6 +64,7 @@ class EvaluationController extends BaseApiController
             'notes' => 'nullable|string',
             'answers' => 'nullable|array',
             'answers.*.question_id' => 'required_with:answers|integer|exists:questions,id',
+            'answers.*.medication_id' => 'nullable|integer|exists:medications,id',
             'answers.*.answer_text' => 'nullable|string',
             'answers.*.answer_yes_no' => 'nullable|string|in:yes,no',
             'answers.*.answer_rating' => 'nullable|integer|min:1|max:5',

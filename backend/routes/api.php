@@ -14,6 +14,8 @@ use App\Features\Departments\Controllers\DepartmentController;
 use App\Features\EducationalDegrees\Controllers\EducationalDegreeController;
 use App\Features\Evaluations\Controllers\EvaluationController;
 use App\Features\Evaluations\Controllers\TemplateController;
+use App\Features\Medications\Controllers\MedicationController;
+use App\Features\Medications\Controllers\PhcMedicationController;
 use App\Features\Professionals\Controllers\ProfessionalController;
 use App\Features\QuestionCategories\Controllers\QuestionCategoryController;
 use App\Features\Questions\Controllers\QuestionController;
@@ -344,6 +346,29 @@ Route::prefix('v1')->group(function () {
             Route::put('/{id}', [ClinicAssignmentController::class, 'update'])->middleware('permission:clinic-assignments.edit');
             Route::patch('/{id}/toggle-status', [ClinicAssignmentController::class, 'toggleStatus'])->middleware('permission:clinic-assignments.edit');
             Route::delete('/{id}', [ClinicAssignmentController::class, 'destroy'])->middleware('permission:clinic-assignments.delete');
+        });
+
+        // Medications
+        Route::prefix('medications')->group(function () {
+            Route::get('/', [MedicationController::class, 'index'])->middleware('permission:medications.view');
+            Route::post('/', [MedicationController::class, 'store'])->middleware('permission:medications.create');
+            Route::get('/export', [MedicationController::class, 'export'])->middleware('permission:medications.export');
+            Route::post('/import', [MedicationController::class, 'import'])->middleware('permission:medications.import');
+            Route::get('/template', [MedicationController::class, 'template']);
+            Route::get('/active', [MedicationController::class, 'active'])->middleware('permission:medications.view');
+            Route::get('/{id}', [MedicationController::class, 'show'])->middleware('permission:medications.view');
+            Route::put('/{id}', [MedicationController::class, 'update'])->middleware('permission:medications.edit');
+            Route::delete('/{id}', [MedicationController::class, 'destroy'])->middleware('permission:medications.delete');
+        });
+
+        // PHC Medications (links)
+        Route::prefix('phc-medications')->group(function () {
+            Route::get('/', [PhcMedicationController::class, 'index'])->middleware('permission:medications.view');
+            Route::post('/', [PhcMedicationController::class, 'store'])->middleware('permission:medications.create');
+            Route::get('/by-center/{phcCenterId}', [PhcMedicationController::class, 'byCenter'])->middleware('permission:medications.view');
+            Route::get('/{id}', [PhcMedicationController::class, 'show'])->middleware('permission:medications.view');
+            Route::put('/{id}', [PhcMedicationController::class, 'update'])->middleware('permission:medications.edit');
+            Route::delete('/{id}', [PhcMedicationController::class, 'destroy'])->middleware('permission:medications.delete');
         });
 
         // Professionals

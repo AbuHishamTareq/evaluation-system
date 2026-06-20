@@ -52,6 +52,7 @@
     "questionCategories": "Question Categories",
     "questionSubCategories": "Question Sub-Categories",
     "evaluations": "Evaluations",
+    "templates": "Templates",
     "centers": "Centers",
     "reports": "Reports",
     "zones": "Zones",
@@ -70,7 +71,9 @@
     "administration": "Administration",
     "users": "Users",
     "roles": "Roles",
-    "permissions": "Permissions"
+    "permissions": "Permissions",
+    "medications": "Medications",
+    "phcMedications": "PHC Medications"
   },
   "classificationTabs": {
     "fields": "Fields",

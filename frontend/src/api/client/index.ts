@@ -53,6 +53,15 @@ class ApiClient {
     return response.data;
   }
 
+  /**
+   * Performs a GET request and returns the full response object (including headers).
+   * Useful for blob downloads where Content-Disposition headers need to be read.
+   */
+  async getFullResponse<T>(url: string, config?: AxiosRequestConfig): Promise<{ data: T; headers: Record<string, string> }> {
+    const response = await this.client.get<T>(url, config);
+    return { data: response.data, headers: response.headers as Record<string, string> };
+  }
+
   async post<T>(url: string, data?: unknown, config?: AxiosRequestConfig): Promise<T> {
     const response = await this.client.post<T>(url, data, config);
     return response.data;

@@ -869,7 +869,16 @@ export const ProfessionalsPage: React.FC = () => {
 
       {/* Import/Export Data Modal */}
       <Modal isOpen={showDataModal} onClose={handleCloseDataModal} size="lg">
-        <div className="p-6">
+        <div className="p-6 relative">
+            <button
+                onClick={handleCloseDataModal}
+                className="absolute top-4 right-4 p-1 text-gray-400 hover:text-gray-600 transition-colors"
+                aria-label="Close modal"
+            >
+                <svg className="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
+                </svg>
+            </button>
           {showImportOptions ? (
             <>
               <div className="flex items-center mb-6">

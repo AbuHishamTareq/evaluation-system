@@ -13,6 +13,7 @@ class EvaluationTemplate extends Model
     protected $fillable = [
         'name',
         'description',
+        'type',
         'schedule_type',
         'start_date',
         'end_date',
@@ -22,6 +23,7 @@ class EvaluationTemplate extends Model
     ];
 
     protected $casts = [
+        'type' => 'string',
         'schedule_type' => 'string',
         'start_date' => 'date',
         'end_date' => 'date',

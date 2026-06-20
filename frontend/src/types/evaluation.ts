@@ -4,6 +4,7 @@ export interface EvaluationAnswer {
   id: number;
   evaluation_id: number;
   question_id: number;
+  medication_id: number | null;
   answer_text: string | null;
   answer_yes_no: string | null;
   answer_rating: number | null;
@@ -39,6 +40,7 @@ export interface EvaluationTemplate {
     question_id: number;
     order: number;
     weight: number;
+    is_medication_check?: boolean;
     question: {
       id: number;
       question_text: string;
@@ -100,6 +102,7 @@ export interface EvaluationCreateInput {
 export interface EvaluationUpdateInput {
   answers?: Array<{
     question_id: number;
+    medication_id?: number;
     answer_text?: string;
     answer_yes_no?: string;
     answer_rating?: number;
@@ -130,6 +133,16 @@ export interface TemplateCreateInput {
   questions?: Array<{
     question_id: number;
     weight?: number;
+    order?: number;
+    is_medication_check?: boolean;
+  }>;
+  new_questions?: Array<{
+    question_text: string;
+    question_type: string;
+    options?: Array<{ label: string; value: string }> | null;
+    description?: string | null;
+    weight?: number;
+    is_medication_check?: boolean;
   }>;
 }
 

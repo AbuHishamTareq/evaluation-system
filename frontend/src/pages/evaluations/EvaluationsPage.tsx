@@ -258,23 +258,46 @@ const DetailPanel: React.FC<DetailPanelProps> = ({ evaluation, onSubmit, onDelet
         <div className="mt-6 pt-6 border-t border-slate-100">
           <h3 className="text-sm font-medium text-slate-500 mb-3">Answers ({evaluation.answers.length})</h3>
           <div className="space-y-2">
-            {evaluation.answers.map((answer) => (
-              <div key={answer.id} className="flex items-center justify-between p-3 bg-slate-50 rounded-lg">
-                <div className="flex-1">
-                  <p className="text-sm font-medium text-gray-900">
-                    {answer.question?.question_text || `Question #${answer.question_id}`}
-                  </p>
-                  {answer.comment && (
-                    <p className="text-xs text-gray-500 mt-1">{answer.comment}</p>
-                  )}
+            {evaluation.answers.map((answer) => {
+              const qType = answer.question?.question_type;
+              const storedValue = qType === 'radio'
+                ? (answer.answer_yes_no ?? answer.answer_multiple_choice ?? '')
+                : qType === 'select'
+                  ? (answer.answer_multiple_choice ?? '')
+                  : qType === 'rating'
+                    ? (answer.answer_rating != null ? `${answer.answer_rating} / 5` : '')
+                    : (answer.answer_text ?? '');
+              const options = (answer.question?.options ?? []) as Array<{ label?: string; value?: string }>;
+              const opt = options.find((o) => o.value === storedValue);
+              const answerText = opt?.label ?? storedValue;
+
+              return (
+                <div key={answer.id} className="p-3 bg-slate-50 rounded-lg">
+                  <div className="flex items-start justify-between gap-4">
+                    <div className="flex-1 min-w-0">
+                      <p className="text-sm font-medium text-gray-900">
+                        {answer.question?.question_text || `Question #${answer.question_id}`}
+                      </p>
+                      {answerText && (
+                        <p className="text-sm text-gray-600 mt-1">
+                          <span className="font-medium">Answer:</span> {answerText}
+                        </p>
+                      )}
+                      {answer.comment && (
+                        <p className="text-xs text-gray-500 mt-1">
+                          <span className="font-medium">Note:</span> {answer.comment}
+                        </p>
+                      )}
+                    </div>
+                    <div className="text-right ml-4 shrink-0">
+                      <p className="text-sm font-semibold text-gray-900">
+                        {answer.score ?? '—'} / {answer.max_score ?? '—'}
+                      </p>
+                    </div>
+                  </div>
                 </div>
-                <div className="text-right ml-4">
-                  <p className="text-sm font-semibold text-gray-900">
-                    {answer.score ?? '—'} / {answer.max_score ?? '—'}
-                  </p>
-                </div>
-              </div>
-            ))}
+              );
+            })}
           </div>
         </div>
       )}
@@ -404,7 +427,6 @@ const CreateEvaluationModal: React.FC<CreateEvaluationModalProps> = ({
 
 // ─── Main Page ──────────────────────────────────────────────────────────────
 export const EvaluationsPage: React.FC = () => {
-  const navigate = useNavigate();
   const hasPermission = useAuthStore((state) => state.hasPermission);
 
   const {

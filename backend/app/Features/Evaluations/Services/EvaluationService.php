@@ -61,6 +61,7 @@ class EvaluationService
 
                     $evaluation->answers()->create([
                         'question_id' => $answer['question_id'],
+                        'medication_id' => $answer['medication_id'] ?? null,
                         'answer_text' => $answer['answer_text'] ?? null,
                         'answer_yes_no' => $answer['answer_yes_no'] ?? null,
                         'answer_rating' => $answer['answer_rating'] ?? null,
