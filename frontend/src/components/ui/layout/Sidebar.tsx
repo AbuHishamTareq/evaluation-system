@@ -112,10 +112,10 @@ const navItems: NavItem[] = [
       { path: '/question-sub-categories', labelKey: 'nav.questionSubCategories' },
       { path: '/questions', labelKey: 'nav.questions' },
       { path: '/templates', labelKey: 'nav.templates' },
+      { path: '/medication-evaluation-templates', labelKey: 'nav.medicationEvaluationTemplates' },
       { path: '/evaluations', labelKey: 'nav.evaluations' },
+      { path: '/medication-evaluations', labelKey: 'nav.medicationEvaluations' },
       { path: '/action-plans', labelKey: 'nav.actionPlans' },
-      { path: '/medications', labelKey: 'nav.medications' },
-      { path: '/phc-medications', labelKey: 'nav.phcMedications' },
     ],
   },
 
@@ -134,6 +134,8 @@ const navItems: NavItem[] = [
       { path: '/centers', labelKey: 'nav.centers' },
       { path: '/departments', labelKey: 'nav.departments' },
       { path: '/clinic-assignments', labelKey: 'nav.clinicAssignments' },
+      { path: '/medications', labelKey: 'nav.medications' },
+      { path: '/phc-medications', labelKey: 'nav.phcMedications' },
     ],
   },
 
@@ -415,6 +417,8 @@ export const Sidebar: React.FC<SidebarProps> = ({ isOpen, isRtl }) => {
     'nav.templates': 'templates.view',
     'nav.medications': 'medications.view',
     'nav.phcMedications': 'medications.view',
+    'nav.medicationEvaluationTemplates': 'medication-eval-templates.view',
+    'nav.medicationEvaluations': 'medication-evaluations.view',
   };
 
   // Track which group menus are expanded

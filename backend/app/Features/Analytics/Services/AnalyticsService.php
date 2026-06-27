@@ -4,6 +4,7 @@ namespace App\Features\Analytics\Services;
 
 use App\Models\ActionPlan;
 use App\Models\Evaluation;
+use App\Models\MedicationEvaluation;
 use App\Models\PhcCenter;
 use App\Models\Question;
 use App\Models\Staff;
@@ -11,6 +12,42 @@ use App\Models\Zone;
 
 class AnalyticsService
 {
+    protected int $regularWeight;
+
+    protected int $medicationWeight;
+
+    public function __construct()
+    {
+        $weights = config('evaluation.composite_weights', ['regular' => 70, 'medication' => 30]);
+        $this->regularWeight = $weights['regular'];
+        $this->medicationWeight = $weights['medication'];
+    }
+
+    protected function getRegularAvg(int $phcCenterId): float
+    {
+        return round((float) (Evaluation::where('phc_center_id', $phcCenterId)
+            ->where('status', 'completed')
+            ->whereNotNull('percentage')
+            ->avg('percentage') ?? 0), 2);
+    }
+
+    protected function getMedicationAvg(int $phcCenterId): float
+    {
+        return round((float) (MedicationEvaluation::where('phc_center_id', $phcCenterId)
+            ->where('status', 'completed')
+            ->whereNotNull('percentage')
+            ->avg('percentage') ?? 0), 2);
+    }
+
+    protected function computeCompositeScore(float $regularAvg, float $medicationAvg): float
+    {
+        $totalWeight = $this->regularWeight + $this->medicationWeight;
+
+        return $totalWeight > 0
+            ? round(($this->regularWeight * $regularAvg + $this->medicationWeight * $medicationAvg) / $totalWeight, 2)
+            : 0;
+    }
+
     public function getDashboardSummary(): array
     {
         $totalStaff = Staff::count();
@@ -18,8 +55,18 @@ class AnalyticsService
         $totalEvaluations = Evaluation::count();
         $completedEvaluations = Evaluation::where('status', 'completed')->count();
         $inProgressEvaluations = Evaluation::where('status', 'in_progress')->count();
+        $totalMedicationEvaluations = MedicationEvaluation::count();
+        $completedMedicationEvaluations = MedicationEvaluation::where('status', 'completed')->count();
+        $inProgressMedicationEvaluations = MedicationEvaluation::where('status', 'in_progress')->count();
 
-        $averagePercentage = Evaluation::where('status', 'completed')
+        $combinedTotal = $totalEvaluations + $totalMedicationEvaluations;
+        $combinedCompleted = $completedEvaluations + $completedMedicationEvaluations;
+
+        $regularPercentage = Evaluation::where('status', 'completed')
+            ->whereNotNull('percentage')
+            ->avg('percentage') ?? 0;
+
+        $medicationPercentage = MedicationEvaluation::where('status', 'completed')
             ->whereNotNull('percentage')
             ->avg('percentage') ?? 0;
 
@@ -31,19 +78,61 @@ class AnalyticsService
             'active_staff' => $activeStaff,
             'total_centers' => $totalCenters,
             'active_centers' => $activeCenters,
-            'total_evaluations' => $totalEvaluations,
-            'completed_evaluations' => $completedEvaluations,
+            'total_evaluations' => $combinedTotal,
+            'completed_evaluations' => $combinedCompleted,
             'in_progress_evaluations' => $inProgressEvaluations,
-            'average_percentage' => round((float) $averagePercentage, 2),
-            'completion_rate' => $totalEvaluations > 0
-                ? round(($completedEvaluations / $totalEvaluations) * 100, 2)
+            'average_percentage' => round((float) $regularPercentage, 2),
+            'completion_rate' => $combinedTotal > 0
+                ? round(($combinedCompleted / $combinedTotal) * 100, 2)
                 : 0,
+            // Medication evaluation stats
+            'total_medication_evaluations' => $totalMedicationEvaluations,
+            'completed_medication_evaluations' => $completedMedicationEvaluations,
+            'in_progress_medication_evaluations' => $inProgressMedicationEvaluations,
+            'medication_average_percentage' => round((float) $medicationPercentage, 2),
+            // Composite score
+            'composite_average_percentage' => $this->computeCompositeScore(
+                round((float) $regularPercentage, 2),
+                round((float) $medicationPercentage, 2)
+            ),
+            'composite_weights' => [
+                'regular' => $this->regularWeight,
+                'medication' => $this->medicationWeight,
+            ],
         ];
     }
 
     public function getEvaluationTrends(string $period = 'month'): array
     {
-        $query = Evaluation::where('status', 'completed')
+        $regularData = $this->trendQuery(new Evaluation, $period);
+        $medicationData = $this->trendQuery(new MedicationEvaluation, $period);
+
+        $periods = collect($regularData)->pluck('period')
+            ->merge(collect($medicationData)->pluck('period'))
+            ->unique()
+            ->sort()
+            ->values();
+
+        return $periods->map(function ($periodLabel) use ($regularData, $medicationData) {
+            $regular = collect($regularData)->firstWhere('period', $periodLabel);
+            $medication = collect($medicationData)->firstWhere('period', $periodLabel);
+
+            $regularAvg = $regular ? (float) $regular['avg_percentage'] : null;
+            $medicationAvg = $medication ? (float) $medication['avg_percentage'] : null;
+            $count = ($regular ? $regular['count'] : 0) + ($medication ? $medication['count'] : 0);
+
+            return [
+                'period' => $periodLabel,
+                'count' => $count,
+                'regular_avg_percentage' => $regularAvg,
+                'medication_avg_percentage' => $medicationAvg,
+            ];
+        })->values()->toArray();
+    }
+
+    protected function trendQuery($model, string $period): array
+    {
+        $query = $model->where('status', 'completed')
             ->whereNotNull('completed_at');
 
         switch ($period) {
@@ -78,35 +167,30 @@ class AnalyticsService
         return $data->map(fn ($row) => [
             'period' => $row->period,
             'count' => (int) $row->count,
-            'avg_percentage' => round((float) $row->avg_percentage, 2),
+            'avg_percentage' => round((float) ($row->avg_percentage ?? 0), 2),
         ])->values()->toArray();
     }
 
     public function getTopPerformers(int $limit = 10): array
     {
         return PhcCenter::where('is_active', true)
-            ->whereHas('evaluations', function ($query) {
-                $query->where('status', 'completed')
-                    ->whereNotNull('percentage');
-            })
-            ->withCount(['evaluations' => function ($query) {
-                $query->where('status', 'completed');
-            }])
-            ->withAvg(['evaluations' => function ($query) {
-                $query->where('status', 'completed');
-            }], 'percentage')
-            ->orderByDesc('evaluations_avg_percentage')
-            ->limit($limit)
             ->get()
             ->map(fn ($center) => [
                 'id' => $center->id,
                 'name' => $center->name,
                 'code' => $center->code,
                 'classification' => $center->classification,
-                'evaluations_count' => $center->evaluations_count,
-                'avg_percentage' => round((float) ($center->evaluations_avg_percentage ?? 0), 2),
+                'regular_avg_percentage' => $this->getRegularAvg($center->id),
+                'medication_avg_percentage' => $this->getMedicationAvg($center->id),
+                'composite_avg_percentage' => $this->computeCompositeScore(
+                    $this->getRegularAvg($center->id),
+                    $this->getMedicationAvg($center->id)
+                ),
             ])
+            ->filter(fn ($center) => $center['regular_avg_percentage'] > 0 || $center['medication_avg_percentage'] > 0)
+            ->sortByDesc('composite_avg_percentage')
             ->values()
+            ->take($limit)
             ->toArray();
     }
 
@@ -120,19 +204,30 @@ class AnalyticsService
             }], 'percentage')
             ->withCount('staff')
             ->get()
-            ->map(fn ($center) => [
-                'id' => $center->id,
-                'name' => $center->name,
-                'code' => $center->code,
-                'classification' => $center->classification,
-                'region' => $center->region,
-                'latitude' => $center->latitude ? (float) $center->latitude : null,
-                'longitude' => $center->longitude ? (float) $center->longitude : null,
-                'staff_count' => $center->staff_count,
-                'evaluations_count' => $center->evaluations_count,
-                'avg_percentage' => round((float) ($center->evaluations_avg_percentage ?? 0), 2),
-                'is_active' => $center->is_active,
-            ])
+            ->map(function ($center) {
+                $regularAvg = $this->getRegularAvg($center->id);
+                $medicationAvg = $this->getMedicationAvg($center->id);
+                $medicationEvalsCount = MedicationEvaluation::where('phc_center_id', $center->id)
+                    ->where('status', 'completed')
+                    ->count();
+
+                return [
+                    'id' => $center->id,
+                    'name' => $center->name,
+                    'code' => $center->code,
+                    'classification' => $center->classification,
+                    'region' => $center->region,
+                    'latitude' => $center->latitude ? (float) $center->latitude : null,
+                    'longitude' => $center->longitude ? (float) $center->longitude : null,
+                    'staff_count' => $center->staff_count,
+                    'evaluations_count' => $center->evaluations_count + $medicationEvalsCount,
+                    'medication_evaluations_count' => $medicationEvalsCount,
+                    'avg_percentage' => $regularAvg,
+                    'medication_avg_percentage' => $medicationAvg,
+                    'composite_avg_percentage' => $this->computeCompositeScore($regularAvg, $medicationAvg),
+                    'is_active' => $center->is_active,
+                ];
+            })
             ->values()
             ->toArray();
     }
@@ -179,9 +274,14 @@ class AnalyticsService
 
     public function getScoreDistribution(): array
     {
-        $scores = Evaluation::where('status', 'completed')
+        $regularScores = Evaluation::where('status', 'completed')
             ->whereNotNull('percentage')
             ->pluck('percentage');
+        $medicationScores = MedicationEvaluation::where('status', 'completed')
+            ->whereNotNull('percentage')
+            ->pluck('percentage');
+
+        $scores = $regularScores->merge($medicationScores);
 
         $ranges = [
             '0-20' => 0,
@@ -215,14 +315,28 @@ class AnalyticsService
             $query->where('is_active', true);
         }])
             ->get()
-            ->map(fn ($zone) => [
-                'id' => $zone->id,
-                'name' => $zone->name,
-                'level' => $zone->level,
-                'centers_count' => $zone->centers_count,
-                'evaluations_count' => Evaluation::whereIn('phc_center_id', $zone->centers()->pluck('id'))->where('status', 'completed')->count(),
-                'avg_percentage' => round((float) (Evaluation::whereIn('phc_center_id', $zone->centers()->pluck('id'))->where('status', 'completed')->avg('percentage') ?? 0), 2),
-            ])
+            ->map(function ($zone) {
+                $centerIds = $zone->centers()->pluck('id');
+
+                $regularAvg = round((float) (Evaluation::whereIn('phc_center_id', $centerIds)
+                    ->where('status', 'completed')
+                    ->avg('percentage') ?? 0), 2);
+
+                $medicationAvg = round((float) (MedicationEvaluation::whereIn('phc_center_id', $centerIds)
+                    ->where('status', 'completed')
+                    ->avg('percentage') ?? 0), 2);
+
+                return [
+                    'id' => $zone->id,
+                    'name' => $zone->name,
+                    'level' => $zone->level,
+                    'centers_count' => $zone->centers_count,
+                    'evaluations_count' => Evaluation::whereIn('phc_center_id', $centerIds)->where('status', 'completed')->count(),
+                    'avg_percentage' => $regularAvg,
+                    'medication_avg_percentage' => $medicationAvg,
+                    'composite_avg_percentage' => $this->computeCompositeScore($regularAvg, $medicationAvg),
+                ];
+            })
             ->values()
             ->toArray();
     }
@@ -232,37 +346,112 @@ class AnalyticsService
         return PhcCenter::where('is_active', true)
             ->select('classification')
             ->selectRaw('COUNT(*) as count')
-            ->selectRaw('AVG(CASE WHEN e.status = "completed" THEN e.percentage END) as avg_percentage')
-            ->leftJoin('evaluations as e', function ($join) {
-                $join->on('phc_centers.id', '=', 'e.phc_center_id')
-                    ->where('e.status', 'completed');
-            })
             ->groupBy('classification')
             ->get()
-            ->map(fn ($row) => [
-                'classification' => $row->classification,
-                'count' => (int) $row->count,
-                'avg_percentage' => round((float) ($row->avg_percentage ?? 0), 2),
-            ])
+            ->map(function ($row) {
+                $centerIds = PhcCenter::where('classification', $row->classification)
+                    ->where('is_active', true)
+                    ->pluck('id');
+
+                $centersWithRegular = 0;
+                $regularSum = 0;
+                foreach ($centerIds as $id) {
+                    $avg = $this->getRegularAvg($id);
+                    if ($avg > 0) {
+                        $regularSum += $avg;
+                        $centersWithRegular++;
+                    }
+                }
+
+                $medicationAvg = round((float) (MedicationEvaluation::whereIn('phc_center_id', $centerIds)
+                    ->where('status', 'completed')
+                    ->avg('percentage') ?? 0), 2);
+
+                $regularAvg = $centersWithRegular > 0
+                    ? round($regularSum / $centersWithRegular, 2)
+                    : 0;
+
+                return [
+                    'classification' => $row->classification,
+                    'count' => (int) $row->count,
+                    'avg_percentage' => $regularAvg,
+                    'medication_avg_percentage' => $medicationAvg,
+                    'composite_avg_percentage' => $this->computeCompositeScore($regularAvg, $medicationAvg),
+                ];
+            })
             ->values()
             ->toArray();
     }
 
+    public function getCompositeScore(?int $phcCenterId = null): array
+    {
+        if ($phcCenterId) {
+            $regularAvg = $this->getRegularAvg($phcCenterId);
+            $medicationAvg = $this->getMedicationAvg($phcCenterId);
+            $center = PhcCenter::find($phcCenterId);
+
+            return [
+                'phc_center_id' => $phcCenterId,
+                'phc_center_name' => $center?->name,
+                'regular_avg_percentage' => $regularAvg,
+                'medication_avg_percentage' => $medicationAvg,
+                'composite_avg_percentage' => $this->computeCompositeScore($regularAvg, $medicationAvg),
+                'weights' => [
+                    'regular' => $this->regularWeight,
+                    'medication' => $this->medicationWeight,
+                ],
+            ];
+        }
+
+        $centers = PhcCenter::where('is_active', true)->get();
+
+        return $centers->map(fn ($center) => [
+            'id' => $center->id,
+            'name' => $center->name,
+            'code' => $center->code,
+            'regular_avg_percentage' => $this->getRegularAvg($center->id),
+            'medication_avg_percentage' => $this->getMedicationAvg($center->id),
+            'composite_avg_percentage' => $this->computeCompositeScore(
+                $this->getRegularAvg($center->id),
+                $this->getMedicationAvg($center->id)
+            ),
+        ])->values()->toArray();
+    }
+
     public function getRecentActivity(int $limit = 10): array
     {
-        return Evaluation::with(['center', 'template', 'evaluator'])
+        $regular = Evaluation::with(['center', 'template', 'evaluator'])
             ->orderByDesc('updated_at')
             ->limit($limit)
             ->get()
             ->map(fn ($evaluation) => [
                 'id' => $evaluation->id,
+                'type' => 'regular',
                 'template_name' => $evaluation->template?->name,
                 'center_name' => $evaluation->center?->name,
                 'status' => $evaluation->status,
                 'percentage' => $evaluation->percentage ? round((float) $evaluation->percentage, 2) : null,
                 'updated_at' => $evaluation->updated_at?->toISOString(),
-            ])
+            ]);
+
+        $medication = MedicationEvaluation::with(['phcCenter', 'template', 'evaluator'])
+            ->orderByDesc('updated_at')
+            ->limit($limit)
+            ->get()
+            ->map(fn ($evaluation) => [
+                'id' => $evaluation->id,
+                'type' => 'medication',
+                'template_name' => $evaluation->template?->name,
+                'center_name' => $evaluation->phcCenter?->name,
+                'status' => $evaluation->status,
+                'percentage' => $evaluation->percentage ? round((float) $evaluation->percentage, 2) : null,
+                'updated_at' => $evaluation->updated_at?->toISOString(),
+            ]);
+
+        return $regular->concat($medication)
+            ->sortByDesc('updated_at')
             ->values()
+            ->take($limit)
             ->toArray();
     }
 }

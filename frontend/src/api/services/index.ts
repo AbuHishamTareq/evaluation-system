@@ -28,6 +28,8 @@ import type {
   QuestionSubCategoryCreateInput,
 } from '../../types';
 
+import { medicationEvaluationTemplateService, medicationEvaluationService } from './medicationEvaluationService';
+
 // Auth Service
 export const authService = {
   login: async (credentials: { email: string; password: string; remember_me?: boolean }) => {
@@ -874,6 +876,9 @@ export const questionSubCategoryService = {
   },
 };
 
+// Medication Evaluation Services
+export { medicationEvaluationTemplateService, medicationEvaluationService };
+
 // Analytics Service
 export const analyticsService = {
   getDashboard: async () => {
@@ -910,6 +915,11 @@ export const analyticsService = {
 
   getClassificationBreakdown: async () => {
     return apiClient.get(API_ENDPOINTS.analytics.classificationBreakdown);
+  },
+
+  getCompositeScore: async (phcCenterId?: number) => {
+    const params = phcCenterId ? { phc_center_id: phcCenterId } : {};
+    return apiClient.get(API_ENDPOINTS.analytics.compositeScore, { params });
   },
 
   getRecentActivity: async (limit: number = 10) => {
@@ -950,4 +960,6 @@ export default {
   classifications: classificationService,
   educationalDegrees: educationalDegreeService,
   analytics: analyticsService,
+  medicationEvaluationTemplates: medicationEvaluationTemplateService,
+  medicationEvaluations: medicationEvaluationService,
 };

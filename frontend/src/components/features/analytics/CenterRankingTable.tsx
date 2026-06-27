@@ -11,7 +11,10 @@ interface CenterPerformance {
   longitude: number | null;
   staff_count: number;
   evaluations_count: number;
+  medication_evaluations_count: number;
   avg_percentage: number;
+  medication_avg_percentage: number;
+  composite_avg_percentage: number;
   is_active: boolean;
 }
 
@@ -19,11 +22,11 @@ interface CenterRankingTableProps {
   data: CenterPerformance[];
 }
 
-type SortField = 'name' | 'avg_percentage' | 'evaluations_count' | 'staff_count';
+type SortField = 'name' | 'composite_avg_percentage' | 'evaluations_count' | 'staff_count';
 type SortDirection = 'asc' | 'desc';
 
 export const CenterRankingTable: React.FC<CenterRankingTableProps> = ({ data }) => {
-  const [sortField, setSortField] = useState<SortField>('avg_percentage');
+  const [sortField, setSortField] = useState<SortField>('composite_avg_percentage');
   const [sortDirection, setSortDirection] = useState<SortDirection>('desc');
   const [filterClassification, setFilterClassification] = useState<string>('all');
 
@@ -127,9 +130,6 @@ export const CenterRankingTable: React.FC<CenterRankingTableProps> = ({ data }) 
                 >
                   Center Name <SortIcon field="name" />
                 </th>
-                <th className="px-6 py-3 text-left text-xs font-semibold text-slate-500 uppercase tracking-wider">
-                  Classification
-                </th>
                 <th
                   className="px-6 py-3 text-left text-xs font-semibold text-slate-500 uppercase tracking-wider cursor-pointer hover:text-slate-700"
                   onClick={() => handleSort('evaluations_count')}
@@ -144,9 +144,9 @@ export const CenterRankingTable: React.FC<CenterRankingTableProps> = ({ data }) 
                 </th>
                 <th
                   className="px-6 py-3 text-left text-xs font-semibold text-slate-500 uppercase tracking-wider cursor-pointer hover:text-slate-700"
-                  onClick={() => handleSort('avg_percentage')}
+                  onClick={() => handleSort('composite_avg_percentage')}
                 >
-                  Avg Score <SortIcon field="avg_percentage" />
+                  Score <SortIcon field="composite_avg_percentage" />
                 </th>
               </tr>
             </thead>
@@ -167,11 +167,6 @@ export const CenterRankingTable: React.FC<CenterRankingTableProps> = ({ data }) 
                       <p className="text-xs text-slate-500">{center.code}</p>
                     </div>
                   </td>
-                  <td className="px-6 py-4 whitespace-nowrap">
-                    <span className="px-2.5 py-1 text-xs font-medium rounded-full bg-cyan-50 text-cyan-700">
-                      {center.classification}
-                    </span>
-                  </td>
                   <td className="px-6 py-4 whitespace-nowrap text-sm text-slate-600">
                     {center.evaluations_count}
                   </td>
@@ -179,8 +174,8 @@ export const CenterRankingTable: React.FC<CenterRankingTableProps> = ({ data }) 
                     {center.staff_count}
                   </td>
                   <td className="px-6 py-4 whitespace-nowrap">
-                    <div className={`inline-flex items-center px-3 py-1 rounded-full text-sm font-bold ${getScoreBgColor(center.avg_percentage)} ${getScoreColor(center.avg_percentage)}`}>
-                      {center.avg_percentage}%
+                    <div className={`inline-flex items-center px-3 py-1 rounded-full text-sm font-bold ${getScoreBgColor(center.composite_avg_percentage)} ${getScoreColor(center.composite_avg_percentage)}`}>
+                      {center.composite_avg_percentage ?? 0}%
                     </div>
                   </td>
                 </tr>

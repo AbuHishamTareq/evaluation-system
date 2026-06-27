@@ -12,6 +12,8 @@ interface ClassificationData {
   classification: string;
   count: number;
   avg_percentage: number;
+  medication_avg_percentage: number;
+  composite_avg_percentage: number;
 }
 
 interface ClassificationBreakdownChartProps {
@@ -32,6 +34,8 @@ export const ClassificationBreakdownChart: React.FC<ClassificationBreakdownChart
     name: labels[item.classification] || item.classification,
     value: item.count,
     avg_percentage: item.avg_percentage,
+    medication_avg_percentage: item.medication_avg_percentage,
+    composite_avg_percentage: item.composite_avg_percentage,
     classification: item.classification,
   }));
 
@@ -79,8 +83,8 @@ export const ClassificationBreakdownChart: React.FC<ClassificationBreakdownChart
                   borderRadius: '12px',
                   boxShadow: '0 4px 6px -1px rgba(0, 0, 0, 0.1)',
                 }}
-                formatter={(value: unknown, _name: any, props: any) => [
-                  `${value} centers (${((Number(value) / total) * 100).toFixed(1)}%)`,
+                formatter={(_value: unknown, _name: any, props: any) => [
+                  `${props.payload.value} centers (${((Number(props.payload.value) / total) * 100).toFixed(1)}%)`,
                   props.payload.name,
                 ]}
               />
@@ -95,14 +99,19 @@ export const ClassificationBreakdownChart: React.FC<ClassificationBreakdownChart
 
           <div className="grid grid-cols-2 gap-3 mt-4 pt-4 border-t border-slate-100">
             {chartData.map((item, index) => (
-              <div key={item.classification} className="flex items-center gap-3 p-2 rounded-lg bg-slate-50">
+              <div key={item.classification} className="flex items-center gap-3 p-3 rounded-lg bg-slate-50">
                 <div
                   className="w-3 h-3 rounded-full flex-shrink-0"
                   style={{ backgroundColor: colors[index % colors.length] }}
                 />
-                <div className="min-w-0">
+                <div className="min-w-0 flex-1">
                   <p className="text-xs font-medium text-slate-800 truncate">{item.name}</p>
                   <p className="text-xs text-slate-500">{item.value} centers</p>
+                  <div className="flex gap-2 mt-1 text-xs">
+                    <span className="text-emerald-600">R: {item.avg_percentage}%</span>
+                    <span className="text-amber-600">M: {item.medication_avg_percentage ?? 0}%</span>
+                    <span className="text-slate-700 font-medium">C: {item.composite_avg_percentage ?? 0}%</span>
+                  </div>
                 </div>
               </div>
             ))}

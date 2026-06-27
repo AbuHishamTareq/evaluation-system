@@ -1,4 +1,5 @@
-import React, { useEffect, useState } from 'react';
+import React, { useEffect, useState, useRef } from 'react';
+import { Input } from '../../components/ui/forms/Input';
 import { Card, CardContent } from '../../components/ui/cards/Card';
 import { useRoleStore } from '../../stores/roleStore';
 import type { Permission } from '../../types/role';
@@ -48,10 +49,25 @@ function capitalize(str: string): string {
 export const PermissionsPage: React.FC = () => {
   const { allPermissions, isLoading, error, fetchAllPermissions, clearError } = useRoleStore();
   const [searchQuery, setSearchQuery] = useState('');
+  const [dropdownOpen, setDropdownOpen] = useState(false);
+  const [highlightedIndex, setHighlightedIndex] = useState(-1);
+  const dropdownRef = useRef<HTMLDivElement>(null);
+  const inputRef = useRef<HTMLInputElement>(null);
 
   useEffect(() => {
     fetchAllPermissions();
   }, [fetchAllPermissions]);
+
+  // Close dropdown on outside click
+  useEffect(() => {
+    const handleClickOutside = (e: MouseEvent) => {
+      if (dropdownRef.current && !dropdownRef.current.contains(e.target as Node)) {
+        setDropdownOpen(false);
+      }
+    };
+    document.addEventListener('mousedown', handleClickOutside);
+    return () => document.removeEventListener('mousedown', handleClickOutside);
+  }, []);
 
   const groupedPermissions = groupPermissions(allPermissions);
 
@@ -72,6 +88,25 @@ export const PermissionsPage: React.FC = () => {
 
   const totalPermissions = allPermissions.length;
 
+  const handleDropdownKeyDown = (e: React.KeyboardEvent) => {
+    if (!dropdownOpen) return;
+    if (e.key === 'ArrowDown') {
+      e.preventDefault();
+      setHighlightedIndex((prev) => Math.min(prev + 1, allPermissions.length - 1));
+    } else if (e.key === 'ArrowUp') {
+      e.preventDefault();
+      setHighlightedIndex((prev) => Math.max(prev - 1, 0));
+    } else if (e.key === 'Enter' && highlightedIndex >= 0) {
+      e.preventDefault();
+      setSearchQuery(allPermissions[highlightedIndex].name);
+      setDropdownOpen(false);
+      setHighlightedIndex(-1);
+    } else if (e.key === 'Escape') {
+      e.preventDefault();
+      setDropdownOpen(false);
+    }
+  };
+
   return (
     <div className="space-y-6">
       {/* Page Header */}
@@ -85,22 +120,93 @@ export const PermissionsPage: React.FC = () => {
           </p>
         </div>
         <div className="flex items-center gap-2">
-          <div className="relative">
-            <input
-              type="text"
+          <div ref={dropdownRef} className="relative">
+            <Input
+              ref={inputRef}
               placeholder="Search permissions..."
               value={searchQuery}
-              onChange={(e) => setSearchQuery(e.target.value)}
-              className="w-64 px-3 py-2 pl-10 text-sm border border-slate-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-amber-500 focus:border-amber-500"
+              onChange={(e) => {
+                setSearchQuery(e.target.value);
+                setDropdownOpen(true);
+              }}
+              onFocus={() => { setHighlightedIndex(-1); setDropdownOpen(true); }}
+              onKeyDown={handleDropdownKeyDown}
+              leftIcon={
+                <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z" />
+                </svg>
+              }
+              className="w-64"
             />
-            <svg
-              className="w-4 h-4 absolute left-3 top-1/2 -translate-y-1/2 text-slate-400"
-              fill="none"
-              stroke="currentColor"
-              viewBox="0 0 24 24"
-            >
-              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z" />
-            </svg>
+
+            {dropdownOpen && (
+              <div className="absolute z-50 w-full mt-2 bg-white border border-slate-200 rounded-xl shadow-xl shadow-slate-200/50 max-h-80 overflow-y-auto">
+                {isLoading ? (
+                  <div className="flex items-center justify-center py-8">
+                    <div className="animate-spin rounded-full h-6 w-6 border-b-2 border-amber-600"></div>
+                  </div>
+                ) : allPermissions.length === 0 ? (
+                  <div className="text-center py-8 px-4">
+                    <svg className="w-10 h-10 mx-auto text-gray-300" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z" />
+                    </svg>
+                    <p className="mt-2 text-sm text-gray-500">
+                      {searchQuery ? 'No permissions match your search' : 'No permissions found'}
+                    </p>
+                  </div>
+                ) : (
+                  <div role="listbox" className="py-1">
+                    {allPermissions.map((perm, index) => {
+                      const groupName = perm.name.includes('.') ? perm.name.split('.')[0] : 'other';
+                      return (
+                        <div
+                          key={perm.id}
+                          role="option"
+                          onClick={() => {
+                            setSearchQuery(perm.name);
+                            setDropdownOpen(false);
+                            setHighlightedIndex(-1);
+                          }}
+                          className={`
+                            group flex items-start gap-3 px-4 py-3 cursor-pointer transition-all duration-150
+                            ${index === highlightedIndex ? 'bg-amber-50' : 'hover:bg-amber-50'}
+                          `}
+                        >
+                          <div className="shrink-0 w-10 h-10 rounded-xl bg-gradient-to-br from-amber-500 to-orange-500 flex items-center justify-center text-white font-bold text-sm shadow-sm">
+                            <svg className="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 7a2 2 0 012 2m4 0a6 6 0 01-7.743 5.743L11 17H9v2H7v2H4a1 1 0 01-1-1v-2.586a1 1 0 01.293-.707l5.964-5.964A6 6 0 1121 9z" />
+                            </svg>
+                          </div>
+                          <div className="flex-1 min-w-0">
+                            <div className="flex items-center gap-2 flex-wrap">
+                              <span className="font-semibold text-sm text-gray-900">
+                                {perm.name.split('.').pop()!.replace(/_/g, ' ').replace(/\b\w/g, (c) => c.toUpperCase())} {groupName !== 'other' ? groupName.replace(/_/g, ' ') : ''}
+                              </span>
+                              <span className="text-[10px] font-medium px-2 py-0.5 rounded-full bg-amber-100 text-amber-700">
+                                {groupName}
+                              </span>
+                            </div>
+                            <p className="text-xs text-gray-500 mt-0.5 font-mono">{perm.name}</p>
+                          </div>
+                        </div>
+                      );
+                    })}
+                  </div>
+                )}
+
+                {!isLoading && allPermissions.length > 0 && (
+                  <div className="px-4 py-2 bg-slate-50 border-t border-slate-100 text-xs text-slate-400 flex items-center justify-between">
+                    <span>{allPermissions.length} result{allPermissions.length !== 1 ? 's' : ''}</span>
+                    <span className="flex items-center gap-2">
+                      <kbd className="px-1.5 py-0.5 bg-white border border-slate-200 rounded text-[10px]">↑↓</kbd>
+                      navigate
+                      <kbd className="px-1.5 py-0.5 bg-white border border-slate-200 rounded text-[10px]">↵</kbd>
+                      select
+                    </span>
+                  </div>
+                )}
+              </div>
+            )}
           </div>
         </div>
       </div>

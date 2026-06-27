@@ -7,12 +7,14 @@ import {
   ResponsiveContainer,
   Area,
   AreaChart,
+  Legend,
 } from 'recharts';
 
 interface TrendData {
   period: string;
   count: number;
-  avg_percentage: number;
+  regular_avg_percentage: number | null;
+  medication_avg_percentage: number | null;
 }
 
 interface ScoreTrendChartProps {
@@ -65,9 +67,13 @@ export const ScoreTrendChart: React.FC<ScoreTrendChartProps> = ({ data, period, 
         <ResponsiveContainer width="100%" height={280}>
           <AreaChart data={data}>
             <defs>
-              <linearGradient id="colorPercentage" x1="0" y1="0" x2="0" y2="1">
+              <linearGradient id="colorRegular" x1="0" y1="0" x2="0" y2="1">
                 <stop offset="5%" stopColor="#06b6d4" stopOpacity={0.3} />
                 <stop offset="95%" stopColor="#06b6d4" stopOpacity={0} />
+              </linearGradient>
+              <linearGradient id="colorMedication" x1="0" y1="0" x2="0" y2="1">
+                <stop offset="5%" stopColor="#d97706" stopOpacity={0.3} />
+                <stop offset="95%" stopColor="#d97706" stopOpacity={0} />
               </linearGradient>
             </defs>
             <CartesianGrid strokeDasharray="3 3" stroke="#f1f5f9" />
@@ -89,14 +95,26 @@ export const ScoreTrendChart: React.FC<ScoreTrendChartProps> = ({ data, period, 
                 borderRadius: '12px',
                 boxShadow: '0 4px 6px -1px rgba(0, 0, 0, 0.1)',
               }}
-              formatter={(value: unknown) => [`${value}%`, 'Avg Score']}
+              formatter={(value: unknown) => [`${value}%`]}
+            />
+            <Legend />
+            <Area
+              type="monotone"
+              dataKey="regular_avg_percentage"
+              name="Regular"
+              stroke="#06b6d4"
+              strokeWidth={2}
+              fill="url(#colorRegular)"
+              connectNulls
             />
             <Area
               type="monotone"
-              dataKey="avg_percentage"
-              stroke="#06b6d4"
+              dataKey="medication_avg_percentage"
+              name="Medication"
+              stroke="#d97706"
               strokeWidth={2}
-              fill="url(#colorPercentage)"
+              fill="url(#colorMedication)"
+              connectNulls
             />
           </AreaChart>
         </ResponsiveContainer>

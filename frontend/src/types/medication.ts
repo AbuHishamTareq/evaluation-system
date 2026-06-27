@@ -35,6 +35,7 @@ export interface PhcMedication {
   allocation_location: string | null;
   notes: string | null;
   is_active: boolean;
+  created_at?: string;
   phc_center?: Center;
   medication?: Medication;
 }

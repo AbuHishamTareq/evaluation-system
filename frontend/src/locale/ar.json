@@ -73,7 +73,9 @@
     "roles": "الأدوار",
     "permissions": "الصلاحيات",
     "medications": "الأدوية",
-    "phcMedications": "أدوية المراكز"
+    "phcMedications": "أدوية المراكز",
+    "medicationEvaluationTemplates": "قوالب تقييم الأدوية",
+    "medicationEvaluations": "تقييمات الأدوية"
   },
   "classificationTabs": {
     "fields": "المجالات",
@@ -269,5 +271,35 @@
     "confirmDelete": "هل أنت متأكد من حذف هذا العنصر؟",
     "noResultsFound": "لم يتم العثور على نتائج",
     "connectionError": "خطأ في الاتصال. يرجى المحاولة مرة أخرى."
-  }
+  },
+  "medicationEvaluationTemplates": "قوالب تقييم الأدوية",
+  "medicationEvaluationTemplate": "قالب تقييم الأدوية",
+  "medicationEvaluations": "تقييمات الأدوية",
+  "medicationEvaluation": "تقييم الأدوية",
+  "templateInfo": "معلومات القالب",
+  "selectMedications": "اختيار الأدوية",
+  "defineCriteria": "تحديد المعايير",
+  "medication": "الدواء",
+  "criteria": "المعايير",
+  "criterion": "معيار",
+  "allocationLocation": "موقع التخصيص",
+  "recommendedQuantity": "الكمية الموصى بها",
+  "addCriterion": "إضافة معيار",
+  "noOfAvailability": "عدد التوفر",
+  "accessibility": "إمكانية الوصول",
+  "lockedLabeled": "مغلق ومُوسم",
+  "expired": "منتهي الصلاحية",
+  "score": "النتيجة",
+  "subtotal": "المجموع الفرعي",
+  "totalScore": "النتيجة الإجمالية",
+  "maxScore": "الحد الأقصى للنتيجة",
+  "percentage": "النسبة المئوية",
+  "saveDraft": "حفظ المسودة",
+  "submitEvaluation": "إرسال التقييم",
+  "medicationCheck": "فحص الدواء",
+  "draft": "مسودة",
+  "inProgress": "قيد التنفيذ",
+  "completed": "مكتمل",
+  "yes": "نعم",
+  "no": "لا"
 }

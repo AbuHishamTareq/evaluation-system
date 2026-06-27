@@ -101,6 +101,15 @@ class AnalyticsController extends BaseApiController
         return $this->successResponse($activity, 'Recent activity retrieved successfully');
     }
 
+    public function compositeScore(Request $request): JsonResponse
+    {
+        $phcCenterId = $request->get('phc_center_id');
+
+        $score = $this->analyticsService->getCompositeScore($phcCenterId ? (int) $phcCenterId : null);
+
+        return $this->successResponse($score, 'Composite score retrieved successfully');
+    }
+
     public function exportPdf()
     {
         $export = app(DashboardPdfExport::class);

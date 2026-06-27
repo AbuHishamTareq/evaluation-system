@@ -28,6 +28,7 @@ import { ClinicAssignmentsPage } from './pages/clinicAssignments/ClinicAssignmen
 import { ProfessionalsPage } from './pages/professionals/ProfessionalsPage';
 import { RolesPage } from './pages/roles';
 import { PermissionsPage } from './pages/permissions';
+import { TemplatesPage as MedTemplatesPage, EvaluationsListPage, EvaluationTakingPage as MedEvalTakingPage } from './pages/medication-evaluations';
 import { UsersPage } from './pages/users';
 import { LoginPage } from './pages/auth';
 import { useAuthStore } from './stores/authStore';
@@ -125,6 +126,9 @@ function App() {
             <Route path="/users" element={<UsersPage />} />
             <Route path="/roles" element={<RolesPage />} />
             <Route path="/permissions" element={<PermissionsPage />} />
+            <Route path="/medication-evaluation-templates" element={<MedTemplatesPage />} />
+            <Route path="/medication-evaluations" element={<EvaluationsListPage />} />
+            <Route path="/medication-evaluations/:id" element={<MedEvalTakingPage />} />
             <Route
               path="/change-password"
               element={

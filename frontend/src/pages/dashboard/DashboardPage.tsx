@@ -253,20 +253,7 @@ export const DashboardPage: React.FC = () => {
           <h2 className="text-xl font-bold text-slate-800">Overview</h2>
           <span className="text-sm text-slate-500">Live data</span>
         </div>
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
-          <StatsCard
-            title="Total Staff"
-            value={dashboardData?.total_staff ?? 0}
-            change={dashboardData?.active_staff ? Math.round((dashboardData.active_staff / dashboardData.total_staff) * 100) : 0}
-            changeLabel="active"
-            trend="up"
-            color="from-cyan-500 to-teal-500"
-            icon={
-              <svg className="w-6 h-6" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M17 20h5v-2a3 3 0 00-5.356-1.857M17 20H7m10 0v-2c0-.656-.126-1.283-.356-1.857M7 20H2v-2a3 3 0 015.356-1.857M7 20v-2c0-.656.126-1.283.356-1.857m0 0a5.002 5.002 0 019.288 0M15 7a3 3 0 11-6 0 3 3 0 016 0zm6 3a2 2 0 11-4 0 2 2 0 014 0zM7 10a2 2 0 11-4 0 2 2 0 014 0z" />
-              </svg>
-            }
-          />
+        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
           <StatsCard
             title="Total Centers"
             value={dashboardData?.total_centers ?? 0}
@@ -293,19 +280,37 @@ export const DashboardPage: React.FC = () => {
               </svg>
             }
           />
-          <StatsCard
-            title="Avg. Score"
-            value={`${dashboardData?.average_percentage ?? 0}%`}
-            change={dashboardData?.average_percentage ? (dashboardData.average_percentage >= 70 ? 5 : -2) : 0}
-            changeLabel="vs target"
-            trend={dashboardData?.average_percentage >= 70 ? 'up' : 'down'}
-            color="from-emerald-500 to-teal-500"
-            icon={
-              <svg className="w-6 h-6" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13 7h8m0 0v8m0-8l-8 8-4-4-6 6" />
-              </svg>
-            }
-          />
+          <div className="bg-white rounded-2xl border border-slate-100 p-6 shadow-sm">
+            <div className="flex items-start justify-between mb-3">
+              <div>
+                <p className="text-sm font-medium text-slate-500">Composite Score</p>
+                <p className={`text-3xl font-bold mt-1 ${(dashboardData?.composite_average_percentage ?? 0) >= 70 ? 'text-emerald-600' : 'text-amber-600'}`}>
+                  {dashboardData?.composite_average_percentage ?? 0}%
+                </p>
+              </div>
+              <div className="w-12 h-12 rounded-xl bg-gradient-to-br from-emerald-500 to-teal-500 flex items-center justify-center text-white shadow-lg">
+                <svg className="w-6 h-6" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13 7h8m0 0v8m0-8l-8 8-4-4-6 6" />
+                </svg>
+              </div>
+            </div>
+            <div className="space-y-2 pt-3 border-t border-slate-100">
+              <div className="flex items-center justify-between text-sm">
+                <span className="text-slate-500">Regular (70%)</span>
+                <span className="font-semibold text-slate-700">{dashboardData?.average_percentage ?? 0}%</span>
+              </div>
+              <div className="flex items-center justify-between text-sm">
+                <span className="text-slate-500">Medication (30%)</span>
+                <span className="font-semibold text-slate-700">{dashboardData?.medication_average_percentage ?? 0}%</span>
+              </div>
+              <div className="w-full h-1.5 bg-slate-100 rounded-full overflow-hidden mt-1">
+                <div
+                  className="h-full rounded-full bg-gradient-to-r from-teal-500 to-emerald-500 transition-all duration-500"
+                  style={{ width: `${Math.min(dashboardData?.composite_average_percentage ?? 0, 100)}%` }}
+                />
+              </div>
+            </div>
+          </div>
         </div>
       </div>
 

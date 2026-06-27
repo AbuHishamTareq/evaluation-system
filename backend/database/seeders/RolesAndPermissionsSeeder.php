@@ -61,6 +61,9 @@ class RolesAndPermissionsSeeder extends Seeder
             'question-categories.view', 'question-categories.create', 'question-categories.edit', 'question-categories.delete',
             'question-sub-categories.view', 'question-sub-categories.create', 'question-sub-categories.edit', 'question-sub-categories.delete',
             'medications.view', 'medications.create', 'medications.edit', 'medications.delete', 'medications.import',
+            'phc-medications.import', 'phc-medications.export',
+            'medication-eval-templates.view', 'medication-eval-templates.create', 'medication-eval-templates.edit', 'medication-eval-templates.delete',
+            'medication-evaluations.view', 'medication-evaluations.create', 'medication-evaluations.edit', 'medication-evaluations.delete',
         ])->pluck('id');
         $managerRole->permissions()->sync($managerPermissions);
 
@@ -75,6 +78,8 @@ class RolesAndPermissionsSeeder extends Seeder
             'question-categories.view',
             'question-sub-categories.view',
             'medications.view',
+            'medication-eval-templates.view',
+            'medication-evaluations.view',
         ])->pluck('id');
         $evaluatorRole->permissions()->sync($evaluatorPermissions);
 

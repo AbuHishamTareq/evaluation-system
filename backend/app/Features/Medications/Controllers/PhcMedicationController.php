@@ -2,10 +2,22 @@
 
 namespace App\Features\Medications\Controllers;
 
+use App\Features\Medications\Exports\PhcMedicationExport;
+use App\Features\Medications\Imports\PhcMedicationImport;
 use App\Features\Medications\Services\PhcMedicationService;
 use App\Http\Controllers\Api\V1\BaseApiController;
+use App\Models\PhcMedication;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
+use Maatwebsite\Excel\Concerns\FromArray;
+use Maatwebsite\Excel\Concerns\ShouldAutoSize;
+use Maatwebsite\Excel\Concerns\WithHeadings;
+use Maatwebsite\Excel\Concerns\WithStyles;
+use Maatwebsite\Excel\Facades\Excel;
+use Maatwebsite\Excel\Validators\ValidationException;
+use PhpOffice\PhpSpreadsheet\Style\Fill;
+use PhpOffice\PhpSpreadsheet\Worksheet\Worksheet;
+use Symfony\Component\HttpFoundation\Response;
 
 /**
  * @group PHC Medications
@@ -32,11 +44,33 @@ class PhcMedicationController extends BaseApiController
         return $this->paginatedResponse($items, 'PHC medications retrieved successfully');
     }
 
-    public function byCenter(int $phcCenterId): JsonResponse
+    public function byCenter(Request $request, int $phcCenterId): JsonResponse
     {
-        $items = $this->phcMedicationService->getPhcMedicationsByCenter($phcCenterId);
+        $filters = $request->only(['page', 'per_page', 'search', 'allocation_location']);
+        $filters['phc_center_id'] = $phcCenterId;
 
-        return $this->successResponse($items, 'PHC medications retrieved successfully');
+        $items = $this->phcMedicationService->getAllPhcMedications($filters);
+
+        // Aggregate stats for this center
+        $totalLinked = PhcMedication::where('phc_center_id', $phcCenterId)->count();
+        $totalRecommendedQty = PhcMedication::where('phc_center_id', $phcCenterId)->sum('recommended_quantity');
+        $stockBelowRecommended = PhcMedication::where('phc_center_id', $phcCenterId)
+            ->whereNotNull('current_stock')
+            ->whereColumn('current_stock', '<', 'recommended_quantity')
+            ->count();
+        $uniqueLocations = PhcMedication::where('phc_center_id', $phcCenterId)
+            ->whereNotNull('allocation_location')
+            ->distinct('allocation_location')
+            ->count('allocation_location');
+
+        $extraMeta = [
+            'total_linked' => $totalLinked,
+            'total_recommended_qty' => (float) $totalRecommendedQty,
+            'stock_below_recommended' => $stockBelowRecommended,
+            'unique_locations' => $uniqueLocations,
+        ];
+
+        return $this->paginatedResponse($items, 'PHC medications retrieved successfully', $extraMeta);
     }
 
     public function store(Request $request): JsonResponse
@@ -50,6 +84,10 @@ class PhcMedicationController extends BaseApiController
             'is_active' => 'nullable|boolean',
             'notes' => 'nullable|string',
         ]);
+
+        if (isset($validated['allocation_location'])) {
+            $validated['allocation_location'] = trim($validated['allocation_location']);
+        }
 
         $item = $this->phcMedicationService->createPhcMedication($validated);
 
@@ -91,5 +129,122 @@ class PhcMedicationController extends BaseApiController
         }
 
         return $this->successResponse(null, 'PHC medication unlinked successfully');
+    }
+
+    public function template(): Response
+    {
+        $headers = [
+            'PHC Center Name',
+            'Medication Name',
+            'Recommended Quantity',
+            'Current Stock',
+            'Allocation Location',
+            'Notes',
+        ];
+
+        $sampleData = [
+            ['Main Health Center', 'Paracetamol', 200, 50, 'Main Pharmacy', 'Monthly allocation'],
+            ['Main Health Center', 'Amoxicillin', 100, 25, 'Pharmacy Room B', 'Emergency stock'],
+            ['Downtown Clinic', 'Metformin', 150, null, 'Central Storage', 'Quarterly supply'],
+        ];
+
+        $filename = 'phc-medications-sample-'.str_replace(':', '-', now()->toIso8601String());
+
+        return Excel::download(new class($headers, $sampleData) implements FromArray, ShouldAutoSize, WithHeadings, WithStyles
+        {
+            private array $headers;
+
+            private array $sampleData;
+
+            private const HEADER_BG = '4f81bd';
+
+            private const HEADER_FONT_COLOR = 'FFFFFF';
+
+            public function __construct(array $headers, array $sampleData)
+            {
+                $this->headers = $headers;
+                $this->sampleData = $sampleData;
+            }
+
+            public function array(): array
+            {
+                return $this->sampleData;
+            }
+
+            public function headings(): array
+            {
+                return $this->headers;
+            }
+
+            public function styles(Worksheet $sheet): void
+            {
+                $headerRange = 'A1:'.$sheet->getHighestDataColumn().'1';
+                $sheet->getStyle($headerRange)->applyFromArray([
+                    'font' => [
+                        'bold' => true,
+                        'color' => ['rgb' => self::HEADER_FONT_COLOR],
+                        'size' => 11,
+                    ],
+                    'fill' => [
+                        'fillType' => Fill::FILL_SOLID,
+                        'startColor' => ['rgb' => self::HEADER_BG],
+                    ],
+                    'alignment' => [
+                        'horizontal' => 'center',
+                        'vertical' => 'center',
+                    ],
+                ]);
+
+                $lastRow = $sheet->getHighestDataRow();
+                if ($lastRow > 1) {
+                    $dataRange = 'A2:'.$sheet->getHighestDataColumn().$lastRow;
+                    $sheet->getStyle($dataRange)->applyFromArray([
+                        'alignment' => [
+                            'vertical' => 'center',
+                        ],
+                    ]);
+                }
+            }
+        }, "{$filename}.xlsx");
+    }
+
+    public function import(Request $request): JsonResponse
+    {
+        $request->validate([
+            'file' => ['required', 'file', 'mimes:xlsx,xls,csv'],
+        ]);
+
+        try {
+            $import = new PhcMedicationImport;
+            Excel::import($import, $request->file('file'));
+            $importedCount = $import->getImportedCount();
+            $skippedCount = $import->getSkippedCount();
+
+            $message = "{$importedCount} records imported successfully";
+            if ($skippedCount > 0) {
+                $message .= " ({$skippedCount} records skipped)";
+            }
+
+            return $this->successResponse(['imported' => $importedCount], $message);
+        } catch (ValidationException $e) {
+            $errors = [];
+
+            foreach ($e->errors() as $field => $messages) {
+                foreach ($messages as $message) {
+                    $errors[] = $message;
+                }
+            }
+
+            return $this->errorResponse('Validation failed', 422, $errors);
+        } catch (\Exception $e) {
+            return $this->errorResponse('Failed to import PHC medications: '.$e->getMessage(), 500);
+        }
+    }
+
+    public function export(): Response
+    {
+        $filename = 'phc-medications-export-'.now()->format('Y-m-d_His');
+
+        return Excel::download(new PhcMedicationExport, "{$filename}.xlsx");
     }
 }

@@ -1,4 +1,4 @@
-import React, { useEffect, useState, useCallback } from 'react';
+import React, { useEffect, useState, useCallback, useRef } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { Input } from '../../components/ui/forms/Input';
 import { SearchableCombobox } from '../../components/ui/forms/SearchableCombobox';
@@ -425,6 +425,59 @@ const CreateEvaluationModal: React.FC<CreateEvaluationModalProps> = ({
   );
 };
 
+// ─── Dropdown Item ──────────────────────────────────────────────────────────────
+interface EvalDropdownItemProps {
+  evaluation: Evaluation;
+  isHighlighted: boolean;
+  onClick: (evaluation: Evaluation) => void;
+}
+
+const EvalDropdownItem: React.FC<EvalDropdownItemProps> = ({
+  evaluation,
+  isHighlighted,
+  onClick,
+}) => {
+  const percentage = evaluation.percentage ?? 0;
+  const statusBadge = evaluation.status === 'completed'
+    ? 'bg-emerald-100 text-emerald-700'
+    : evaluation.status === 'in_progress'
+      ? 'bg-blue-100 text-blue-700'
+      : evaluation.status === 'archived'
+        ? 'bg-purple-100 text-purple-700'
+        : 'bg-slate-100 text-slate-600';
+
+  return (
+    <div
+      role="option"
+      onClick={() => onClick(evaluation)}
+      className={`
+        group flex items-start gap-3 px-4 py-3 cursor-pointer transition-all duration-150
+        ${isHighlighted ? 'bg-emerald-50' : 'hover:bg-emerald-50'}
+      `}
+    >
+      <div className="shrink-0 w-10 h-10 rounded-xl bg-gradient-to-br from-emerald-500 to-teal-500 flex items-center justify-center text-white font-bold text-sm shadow-sm">
+        <svg className="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2" />
+        </svg>
+      </div>
+      <div className="flex-1 min-w-0">
+        <div className="flex items-center gap-2 flex-wrap">
+          <span className="font-semibold text-sm text-gray-900">
+            {evaluation.center?.name || `Evaluation #${evaluation.id}`}
+          </span>
+          <span className={`text-[10px] font-medium px-2 py-0.5 rounded-full ${statusBadge}`}>
+            {evaluation.status.replace('_', ' ').replace(/\b\w/g, (l) => l.toUpperCase())}
+          </span>
+        </div>
+        <p className="text-xs text-gray-500 mt-0.5 line-clamp-1">
+          {evaluation.template?.name || 'No template'}
+          {evaluation.percentage !== null && ` • ${percentage}% score`}
+        </p>
+      </div>
+    </div>
+  );
+};
+
 // ─── Main Page ──────────────────────────────────────────────────────────────
 export const EvaluationsPage: React.FC = () => {
   const hasPermission = useAuthStore((state) => state.hasPermission);
@@ -446,6 +499,10 @@ export const EvaluationsPage: React.FC = () => {
   const { addToast } = useToast();
 
   const [searchQuery, setSearchQuery] = useState('');
+  const [dropdownOpen, setDropdownOpen] = useState(false);
+  const [highlightedIndex, setHighlightedIndex] = useState(-1);
+  const dropdownRef = useRef<HTMLDivElement>(null);
+  const inputRef = useRef<HTMLInputElement>(null);
   const [statusFilter, setStatusFilter] = useState('');
   const [selectedEvaluation, setSelectedEvaluation] = useState<Evaluation | null>(null);
   const [showCreateModal, setShowCreateModal] = useState(false);
@@ -486,6 +543,41 @@ export const EvaluationsPage: React.FC = () => {
   useEffect(() => {
     fetchStaff({ per_page: 100 });
   }, [fetchStaff]);
+
+  // Close dropdown on outside click
+  useEffect(() => {
+    const handleClickOutside = (e: MouseEvent) => {
+      if (dropdownRef.current && !dropdownRef.current.contains(e.target as Node)) {
+        setDropdownOpen(false);
+      }
+    };
+    document.addEventListener('mousedown', handleClickOutside);
+    return () => document.removeEventListener('mousedown', handleClickOutside);
+  }, []);
+
+  const handleDropdownSelect = (evaluation: Evaluation) => {
+    setSelectedEvaluation(evaluation);
+    setSearchQuery(evaluation.center?.name || `Evaluation #${evaluation.id}`);
+    setDropdownOpen(false);
+    setHighlightedIndex(-1);
+  };
+
+  const handleDropdownKeyDown = (e: React.KeyboardEvent) => {
+    if (!dropdownOpen) return;
+    if (e.key === 'ArrowDown') {
+      e.preventDefault();
+      setHighlightedIndex((prev) => Math.min(prev + 1, evaluations.length - 1));
+    } else if (e.key === 'ArrowUp') {
+      e.preventDefault();
+      setHighlightedIndex((prev) => Math.max(prev - 1, 0));
+    } else if (e.key === 'Enter' && highlightedIndex >= 0) {
+      e.preventDefault();
+      handleDropdownSelect(evaluations[highlightedIndex]);
+    } else if (e.key === 'Escape') {
+      e.preventDefault();
+      setDropdownOpen(false);
+    }
+  };
 
   const handleSearch = (e: React.FormEvent) => {
     e.preventDefault();
@@ -622,16 +714,66 @@ export const EvaluationsPage: React.FC = () => {
             <label className="block text-xs font-medium text-slate-500 mb-1.5 uppercase tracking-wide">
               Search
             </label>
-            <Input
-              placeholder="Search by center name..."
-              value={searchQuery}
-              onChange={(e) => setSearchQuery(e.target.value)}
-              leftIcon={
-                <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z" />
-                </svg>
-              }
-            />
+            <div ref={dropdownRef} className="relative">
+              <Input
+                ref={inputRef}
+                placeholder="Search by center name..."
+                value={searchQuery}
+                onChange={(e) => {
+                  setSearchQuery(e.target.value);
+                  setDropdownOpen(true);
+                }}
+                onFocus={() => { setHighlightedIndex(-1); setDropdownOpen(true); }}
+                onKeyDown={handleDropdownKeyDown}
+                leftIcon={
+                  <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z" />
+                  </svg>
+                }
+              />
+
+              {dropdownOpen && (
+                <div className="absolute z-50 w-full mt-2 bg-white border border-slate-200 rounded-xl shadow-xl shadow-slate-200/50 max-h-80 overflow-y-auto">
+                  {isLoading ? (
+                    <div className="flex items-center justify-center py-8">
+                      <div className="animate-spin rounded-full h-6 w-6 border-b-2 border-emerald-600"></div>
+                    </div>
+                  ) : evaluations.length === 0 ? (
+                    <div className="text-center py-8 px-4">
+                      <svg className="w-10 h-10 mx-auto text-gray-300" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z" />
+                      </svg>
+                      <p className="mt-2 text-sm text-gray-500">
+                        {searchQuery ? 'No evaluations match your search' : 'No evaluations found'}
+                      </p>
+                    </div>
+                  ) : (
+                    <div role="listbox" className="py-1">
+                      {evaluations.map((evalItem, index) => (
+                        <EvalDropdownItem
+                          key={evalItem.id}
+                          evaluation={evalItem}
+                          isHighlighted={index === highlightedIndex}
+                          onClick={handleDropdownSelect}
+                        />
+                      ))}
+                    </div>
+                  )}
+
+                  {!isLoading && evaluations.length > 0 && (
+                    <div className="px-4 py-2 bg-slate-50 border-t border-slate-100 text-xs text-slate-400 flex items-center justify-between">
+                      <span>{evaluations.length} result{evaluations.length !== 1 ? 's' : ''}</span>
+                      <span className="flex items-center gap-2">
+                        <kbd className="px-1.5 py-0.5 bg-white border border-slate-200 rounded text-[10px]">↑↓</kbd>
+                        navigate
+                        <kbd className="px-1.5 py-0.5 bg-white border border-slate-200 rounded text-[10px]">↵</kbd>
+                        select
+                      </span>
+                    </div>
+                  )}
+                </div>
+              )}
+            </div>
           </div>
 
           <div className="w-44">

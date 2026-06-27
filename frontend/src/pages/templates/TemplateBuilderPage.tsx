@@ -1,4 +1,4 @@
-import React, { useEffect, useState, useCallback, useMemo } from 'react';
+import React, { useEffect, useState, useCallback, useMemo, useRef } from 'react';
 import { Input } from '../../components/ui/forms/Input';
 import { Button } from '../../components/ui/buttons/Button';
 import { Card, CardContent, CardHeader } from '../../components/ui/cards/Card';
@@ -1091,6 +1091,56 @@ const TemplateFormModal: React.FC<TemplateFormModalProps> = ({
   );
 };
 
+// ─── Dropdown Item ──────────────────────────────────────────────────────────────
+interface TplDropdownItemProps {
+  template: EvaluationTemplate;
+  isHighlighted: boolean;
+  onClick: (template: EvaluationTemplate) => void;
+}
+
+const TplDropdownItem: React.FC<TplDropdownItemProps> = ({
+  template,
+  isHighlighted,
+  onClick,
+}) => {
+  return (
+    <div
+      role="option"
+      onClick={() => onClick(template)}
+      className={`
+        group flex items-start gap-3 px-4 py-3 cursor-pointer transition-all duration-150
+        ${isHighlighted ? 'bg-teal-50' : 'hover:bg-teal-50'}
+      `}
+    >
+      <div className="shrink-0 w-10 h-10 rounded-xl bg-gradient-to-br from-teal-500 to-cyan-500 flex items-center justify-center text-white font-bold text-sm shadow-sm">
+        {template.name.charAt(0).toUpperCase()}
+      </div>
+      <div className="flex-1 min-w-0">
+        <div className="flex items-center gap-2 flex-wrap">
+          <span className="font-semibold text-sm text-gray-900">
+            {template.name}
+          </span>
+          <span className={`text-[10px] font-medium px-2 py-0.5 rounded-full ${
+            template.is_active
+              ? 'bg-emerald-100 text-emerald-700'
+              : 'bg-gray-100 text-gray-500'
+          }`}>
+            {template.is_active ? 'Active' : 'Inactive'}
+          </span>
+        </div>
+        <div className="flex items-center gap-2 mt-0.5">
+          <span className="text-[10px] font-medium px-2 py-0.5 rounded-full bg-slate-100 text-slate-600 capitalize">
+            {template.schedule_type.replace('_', ' ')}
+          </span>
+          {template.description && (
+            <span className="text-xs text-gray-500 line-clamp-1">{template.description}</span>
+          )}
+        </div>
+      </div>
+    </div>
+  );
+};
+
 // ─── Main Page ──────────────────────────────────────────────────────────────
 export const TemplateBuilderPage: React.FC = () => {
   const {
@@ -1111,6 +1161,10 @@ export const TemplateBuilderPage: React.FC = () => {
   const hasPermission = useAuthStore((state) => state.hasPermission);
 
   const [searchQuery, setSearchQuery] = useState('');
+  const [dropdownOpen, setDropdownOpen] = useState(false);
+  const [highlightedIndex, setHighlightedIndex] = useState(-1);
+  const dropdownRef = useRef<HTMLDivElement>(null);
+  const inputRef = useRef<HTMLInputElement>(null);
   const [statusFilter, setStatusFilter] = useState<boolean | ''>('');
   const [selectedTemplate, setSelectedTemplate] = useState<EvaluationTemplate | null>(null);
   const [showFormModal, setShowFormModal] = useState(false);
@@ -1137,6 +1191,41 @@ export const TemplateBuilderPage: React.FC = () => {
     fetchQuestions({ per_page: 500 });
     fetchCategories();
   }, [fetchQuestions, fetchCategories]);
+
+  // Close dropdown on outside click
+  useEffect(() => {
+    const handleClickOutside = (e: MouseEvent) => {
+      if (dropdownRef.current && !dropdownRef.current.contains(e.target as Node)) {
+        setDropdownOpen(false);
+      }
+    };
+    document.addEventListener('mousedown', handleClickOutside);
+    return () => document.removeEventListener('mousedown', handleClickOutside);
+  }, []);
+
+  const handleDropdownSelect = (template: EvaluationTemplate) => {
+    setSelectedTemplate(template);
+    setSearchQuery(template.name);
+    setDropdownOpen(false);
+    setHighlightedIndex(-1);
+  };
+
+  const handleDropdownKeyDown = (e: React.KeyboardEvent) => {
+    if (!dropdownOpen) return;
+    if (e.key === 'ArrowDown') {
+      e.preventDefault();
+      setHighlightedIndex((prev) => Math.min(prev + 1, templates.length - 1));
+    } else if (e.key === 'ArrowUp') {
+      e.preventDefault();
+      setHighlightedIndex((prev) => Math.max(prev - 1, 0));
+    } else if (e.key === 'Enter' && highlightedIndex >= 0) {
+      e.preventDefault();
+      handleDropdownSelect(templates[highlightedIndex]);
+    } else if (e.key === 'Escape') {
+      e.preventDefault();
+      setDropdownOpen(false);
+    }
+  };
 
   const handleSearch = (e: React.FormEvent) => {
     e.preventDefault();
@@ -1264,16 +1353,66 @@ export const TemplateBuilderPage: React.FC = () => {
             <label className="block text-xs font-medium text-slate-500 mb-1.5 uppercase tracking-wide">
               Search
             </label>
-            <Input
-              placeholder="Search templates..."
-              value={searchQuery}
-              onChange={(e) => setSearchQuery(e.target.value)}
-              leftIcon={
-                <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z" />
-                </svg>
-              }
-            />
+            <div ref={dropdownRef} className="relative">
+              <Input
+                ref={inputRef}
+                placeholder="Search templates..."
+                value={searchQuery}
+                onChange={(e) => {
+                  setSearchQuery(e.target.value);
+                  setDropdownOpen(true);
+                }}
+                onFocus={() => { setHighlightedIndex(-1); setDropdownOpen(true); }}
+                onKeyDown={handleDropdownKeyDown}
+                leftIcon={
+                  <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z" />
+                  </svg>
+                }
+              />
+
+              {dropdownOpen && (
+                <div className="absolute z-50 w-full mt-2 bg-white border border-slate-200 rounded-xl shadow-xl shadow-slate-200/50 max-h-80 overflow-y-auto">
+                  {isLoading ? (
+                    <div className="flex items-center justify-center py-8">
+                      <div className="animate-spin rounded-full h-6 w-6 border-b-2 border-teal-600"></div>
+                    </div>
+                  ) : templates.length === 0 ? (
+                    <div className="text-center py-8 px-4">
+                      <svg className="w-10 h-10 mx-auto text-gray-300" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z" />
+                      </svg>
+                      <p className="mt-2 text-sm text-gray-500">
+                        {searchQuery ? 'No templates match your search' : 'No templates found'}
+                      </p>
+                    </div>
+                  ) : (
+                    <div role="listbox" className="py-1">
+                      {templates.map((tpl, index) => (
+                        <TplDropdownItem
+                          key={tpl.id}
+                          template={tpl}
+                          isHighlighted={index === highlightedIndex}
+                          onClick={handleDropdownSelect}
+                        />
+                      ))}
+                    </div>
+                  )}
+
+                  {!isLoading && templates.length > 0 && (
+                    <div className="px-4 py-2 bg-slate-50 border-t border-slate-100 text-xs text-slate-400 flex items-center justify-between">
+                      <span>{templates.length} result{templates.length !== 1 ? 's' : ''}</span>
+                      <span className="flex items-center gap-2">
+                        <kbd className="px-1.5 py-0.5 bg-white border border-slate-200 rounded text-[10px]">↑↓</kbd>
+                        navigate
+                        <kbd className="px-1.5 py-0.5 bg-white border border-slate-200 rounded text-[10px]">↵</kbd>
+                        select
+                      </span>
+                    </div>
+                  )}
+                </div>
+              )}
+            </div>
           </div>
 
           <SearchableCombobox

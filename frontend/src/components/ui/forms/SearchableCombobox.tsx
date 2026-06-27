@@ -45,7 +45,8 @@ export const SearchableCombobox: React.FC<SearchableComboboxProps> = ({
   // Derive display text from current value
   const getDisplayText = useCallback((): string => {
     if (value === null || value === '') return '';
-    const selected = options.find((o) => o.value === value);
+    const searchValue = typeof value === 'string' ? value.trim() : value;
+    const selected = options.find((o) => o.value === searchValue);
     return selected ? selected.label : '';
   }, [value, options]);
 
@@ -80,7 +81,10 @@ export const SearchableCombobox: React.FC<SearchableComboboxProps> = ({
   const filteredOptions = (() => {
     if (!search) return options;
     // If search matches the selected option's label exactly, show all options
-    const selectedOption = options.find((o) => o.value === value);
+    const selectedOption = options.find((o) => {
+      const v = typeof value === 'string' ? value.trim() : value;
+      return o.value === v;
+    });
     if (selectedOption && search.toLowerCase() === selectedOption.label.toLowerCase()) {
       return options;
     }
@@ -114,7 +118,10 @@ export const SearchableCombobox: React.FC<SearchableComboboxProps> = ({
     setHighlightedIndex(-1);
     // If user types and there's a selected value, check if it still matches
     if (value !== null && value !== '') {
-      const selected = options.find((o) => o.value === value);
+      const selected = options.find((o) => {
+        const v = typeof value === 'string' ? value.trim() : value;
+        return o.value === v;
+      });
       const fullLabel = selected ? selected.label : '';
       if (inputValue !== fullLabel) {
         onChange(null);
@@ -147,6 +154,9 @@ export const SearchableCombobox: React.FC<SearchableComboboxProps> = ({
   };
 
   const isSelected = (optionValue: string | number | boolean | null): boolean => {
+    if (typeof value === 'string' && typeof optionValue === 'string') {
+      return value.trim() === optionValue.trim();
+    }
     return value === optionValue;
   };
 

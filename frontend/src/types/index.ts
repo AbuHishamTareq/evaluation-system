@@ -11,3 +11,4 @@ export * from './classification';
 export * from './educationalDegree';
 export * from './department';
 export * from './role';
+export * from './medicationEvaluation';

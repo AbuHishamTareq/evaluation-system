@@ -24,6 +24,17 @@ class EloquentPhcMedicationRepository implements PhcMedicationRepositoryInterfac
             $query->where('is_active', $filters['is_active']);
         }
 
+        if (isset($filters['allocation_location'])) {
+            $query->where('allocation_location', $filters['allocation_location']);
+        }
+
+        if (isset($filters['search'])) {
+            $search = $filters['search'];
+            $query->whereHas('medication', function ($q) use ($search) {
+                $q->where('name', 'like', "%{$search}%");
+            });
+        }
+
         $perPage = $filters['per_page'] ?? 15;
 
         return $query->orderBy('id')->paginate($perPage);

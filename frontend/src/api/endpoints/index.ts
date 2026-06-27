@@ -312,6 +312,24 @@ export const API_ENDPOINTS = {
     byCategory: (categoryId: string | number) => `/api/v1/question-sub-categories?question_category_id=${categoryId}`,
   },
 
+  // Medication Evaluation Templates
+  medicationEvaluationTemplates: {
+    list: '/api/v1/medication-evaluation-templates',
+    show: (id: string | number) => `/api/v1/medication-evaluation-templates/${id}`,
+    store: '/api/v1/medication-evaluation-templates',
+    update: (id: string | number) => `/api/v1/medication-evaluation-templates/${id}`,
+    destroy: (id: string | number) => `/api/v1/medication-evaluation-templates/${id}`,
+  },
+
+  // Medication Evaluations
+  medicationEvaluations: {
+    list: '/api/v1/medication-evaluations',
+    show: (id: string | number) => `/api/v1/medication-evaluations/${id}`,
+    store: '/api/v1/medication-evaluations',
+    update: (id: string | number) => `/api/v1/medication-evaluations/${id}`,
+    destroy: (id: string | number) => `/api/v1/medication-evaluations/${id}`,
+  },
+
   // Analytics
   analytics: {
     dashboard: '/api/v1/analytics/dashboard',
@@ -324,6 +342,7 @@ export const API_ENDPOINTS = {
     zoneAnalytics: '/api/v1/analytics/zone-analytics',
     classificationBreakdown: '/api/v1/analytics/classification-breakdown',
     recentActivity: '/api/v1/analytics/recent-activity',
+    compositeScore: '/api/v1/analytics/composite-score',
     exportPdf: '/api/v1/analytics/export/pdf',
     exportExcel: '/api/v1/analytics/export/excel',
   },

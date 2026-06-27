@@ -73,7 +73,9 @@
     "roles": "Roles",
     "permissions": "Permissions",
     "medications": "Medications",
-    "phcMedications": "PHC Medications"
+    "phcMedications": "PHC Medications",
+    "medicationEvaluationTemplates": "Medication Templates",
+    "medicationEvaluations": "Medication Evaluations"
   },
   "classificationTabs": {
     "fields": "Fields",
@@ -269,5 +271,35 @@
     "confirmDelete": "Are you sure you want to delete this item?",
     "noResultsFound": "No results found",
     "connectionError": "Connection error. Please try again."
-  }
+  },
+  "medicationEvaluationTemplates": "Medication Evaluation Templates",
+  "medicationEvaluationTemplate": "Medication Evaluation Template",
+  "medicationEvaluations": "Medication Evaluations",
+  "medicationEvaluation": "Medication Evaluation",
+  "templateInfo": "Template Information",
+  "selectMedications": "Select Medications",
+  "defineCriteria": "Define Criteria",
+  "medication": "Medication",
+  "criteria": "Criteria",
+  "criterion": "Criterion",
+  "allocationLocation": "Allocation Location",
+  "recommendedQuantity": "Recommended Quantity",
+  "addCriterion": "Add Criterion",
+  "noOfAvailability": "No. of Availability",
+  "accessibility": "Accessibility",
+  "lockedLabeled": "Locked & Labeled",
+  "expired": "Expired",
+  "score": "Score",
+  "subtotal": "Subtotal",
+  "totalScore": "Total Score",
+  "maxScore": "Max Score",
+  "percentage": "Percentage",
+  "saveDraft": "Save Draft",
+  "submitEvaluation": "Submit Evaluation",
+  "medicationCheck": "Medication Check",
+  "draft": "Draft",
+  "inProgress": "In Progress",
+  "completed": "Completed",
+  "yes": "Yes",
+  "no": "No"
 }

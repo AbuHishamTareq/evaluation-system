@@ -7,3 +7,4 @@ export * from './analytics';
 export * from './zones';
 export * from './centers';
 export * from './classification';
+export * from './medication-evaluations';

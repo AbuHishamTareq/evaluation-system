@@ -172,6 +172,20 @@ class PermissionRegistryService
             'medications.delete' => 'Delete medications',
             'medications.export' => 'Export medication data',
             'medications.import' => 'Import medication data',
+            'phc-medications.import' => 'Import PHC medication links',
+            'phc-medications.export' => 'Export PHC medication links',
+
+            // Medication Evaluation Templates module
+            'medication-eval-templates.view' => 'View medication evaluation templates',
+            'medication-eval-templates.create' => 'Create medication evaluation templates',
+            'medication-eval-templates.edit' => 'Edit medication evaluation templates',
+            'medication-eval-templates.delete' => 'Delete medication evaluation templates',
+
+            // Medication Evaluations module
+            'medication-evaluations.view' => 'View medication evaluations',
+            'medication-evaluations.create' => 'Create medication evaluations',
+            'medication-evaluations.edit' => 'Edit medication evaluations',
+            'medication-evaluations.delete' => 'Delete medication evaluations',
         ];
     }
 

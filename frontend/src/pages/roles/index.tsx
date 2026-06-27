@@ -522,6 +522,10 @@ const AssignUsersModal: React.FC<AssignUsersModalProps> = ({
   const [allUsers, setAllUsers] = useState<User[]>([]);
   const [selectedIds, setSelectedIds] = useState<(string | number)[]>([]);
   const [searchQuery, setSearchQuery] = useState('');
+  const [userDropdownOpen, setUserDropdownOpen] = useState(false);
+  const [userHighlightedIndex, setUserHighlightedIndex] = useState(-1);
+  const userDropdownRef = useRef<HTMLDivElement>(null);
+  const userInputRef = useRef<HTMLInputElement>(null);
   const [loading, setLoading] = useState(false);
   const [saving, setSaving] = useState(false);
   const [fetchError, setFetchError] = useState<string | null>(null);
@@ -553,6 +557,43 @@ const AssignUsersModal: React.FC<AssignUsersModalProps> = ({
       setSearchQuery('');
     }
   }, [isOpen, fetchData]);
+
+  // Close user dropdown on outside click
+  useEffect(() => {
+    const handleClickOutside = (e: MouseEvent) => {
+      if (userDropdownRef.current && !userDropdownRef.current.contains(e.target as Node)) {
+        setUserDropdownOpen(false);
+      }
+    };
+    document.addEventListener('mousedown', handleClickOutside);
+    return () => document.removeEventListener('mousedown', handleClickOutside);
+  }, []);
+
+  const handleUserDropdownSelect = (user: User) => {
+    setSearchQuery(user.name);
+    setUserDropdownOpen(false);
+    setUserHighlightedIndex(-1);
+    if (!selectedIds.includes(user.id)) {
+      toggleUser(user.id);
+    }
+  };
+
+  const handleUserDropdownKeyDown = (e: React.KeyboardEvent) => {
+    if (!userDropdownOpen) return;
+    if (e.key === 'ArrowDown') {
+      e.preventDefault();
+      setUserHighlightedIndex((prev) => Math.min(prev + 1, filteredUsers.length - 1));
+    } else if (e.key === 'ArrowUp') {
+      e.preventDefault();
+      setUserHighlightedIndex((prev) => Math.max(prev - 1, 0));
+    } else if (e.key === 'Enter' && userHighlightedIndex >= 0) {
+      e.preventDefault();
+      handleUserDropdownSelect(filteredUsers[userHighlightedIndex]);
+    } else if (e.key === 'Escape') {
+      e.preventDefault();
+      setUserDropdownOpen(false);
+    }
+  };
 
   const filteredUsers = allUsers.filter((user) => {
     if (!searchQuery) return true;
@@ -609,17 +650,100 @@ const AssignUsersModal: React.FC<AssignUsersModalProps> = ({
         ) : (
           <>
             {/* Search */}
-            <div className="relative mb-4">
+            <div ref={userDropdownRef} className="relative mb-4">
               <Input
+                ref={userInputRef}
                 placeholder="Search users by name or email..."
                 value={searchQuery}
-                onChange={(e) => setSearchQuery(e.target.value)}
+                onChange={(e) => {
+                  setSearchQuery(e.target.value);
+                  setUserDropdownOpen(true);
+                }}
+                onFocus={() => { setUserHighlightedIndex(-1); setUserDropdownOpen(true); }}
+                onKeyDown={handleUserDropdownKeyDown}
                 leftIcon={
                   <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                     <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z" />
                   </svg>
                 }
               />
+
+              {userDropdownOpen && (
+                <div className="absolute z-50 w-full mt-2 bg-white border border-slate-200 rounded-xl shadow-xl shadow-slate-200/50 max-h-80 overflow-y-auto">
+                  {loading ? (
+                    <div className="flex items-center justify-center py-8">
+                      <div className="animate-spin rounded-full h-6 w-6 border-b-2 border-indigo-600" />
+                    </div>
+                  ) : filteredUsers.length === 0 ? (
+                    <div className="text-center py-8 px-4">
+                      <svg className="w-10 h-10 mx-auto text-gray-300" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z" />
+                      </svg>
+                      <p className="mt-2 text-sm text-gray-500">
+                        {searchQuery ? 'No users match your search' : 'No users found'}
+                      </p>
+                    </div>
+                  ) : (
+                    <div role="listbox" className="py-1">
+                      {filteredUsers.map((user, index) => {
+                        const isSelected = selectedIds.includes(user.id);
+                        const isHighlighted = index === userHighlightedIndex;
+                        return (
+                          <div
+                            key={user.id}
+                            role="option"
+                            aria-selected={isSelected}
+                            onClick={() => handleUserDropdownSelect(user)}
+                            className={`
+                              group flex items-start gap-3 px-4 py-3 cursor-pointer transition-all duration-150
+                              ${isSelected
+                                ? 'bg-indigo-50 border-l-4 border-indigo-500'
+                                : isHighlighted
+                                  ? 'bg-slate-50'
+                                  : 'hover:bg-slate-50'
+                              }
+                            `}
+                          >
+                            <div className="shrink-0 w-10 h-10 rounded-full bg-gradient-to-br from-indigo-500 to-blue-500 flex items-center justify-center text-white font-bold text-sm shadow-sm">
+                              {user.name.charAt(0).toUpperCase()}
+                            </div>
+                            <div className="flex-1 min-w-0">
+                              <div className="flex items-center gap-2 flex-wrap">
+                                <span className={`font-semibold text-sm ${isSelected ? 'text-indigo-700' : 'text-gray-900'}`}>
+                                  {user.name}
+                                </span>
+                                {user.roles && user.roles.length > 0 && user.roles.map((role) => (
+                                  <span key={role.id} className="text-[10px] font-medium px-2 py-0.5 rounded-full bg-indigo-100 text-indigo-700">
+                                    {role.name}
+                                  </span>
+                                ))}
+                              </div>
+                              <p className="text-xs text-gray-500 mt-0.5">{user.email}</p>
+                            </div>
+                            {isSelected && (
+                              <svg className="w-5 h-5 text-indigo-600 flex-shrink-0" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7" />
+                              </svg>
+                            )}
+                          </div>
+                        );
+                      })}
+                    </div>
+                  )}
+
+                  {!loading && filteredUsers.length > 0 && (
+                    <div className="px-4 py-2 bg-slate-50 border-t border-slate-100 text-xs text-slate-400 flex items-center justify-between">
+                      <span>{filteredUsers.length} result{filteredUsers.length !== 1 ? 's' : ''}</span>
+                      <span className="flex items-center gap-2">
+                        <kbd className="px-1.5 py-0.5 bg-white border border-slate-200 rounded text-[10px]">↑↓</kbd>
+                        navigate
+                        <kbd className="px-1.5 py-0.5 bg-white border border-slate-200 rounded text-[10px]">↵</kbd>
+                        select
+                      </span>
+                    </div>
+                  )}
+                </div>
+              )}
             </div>
 
             {/* Users list */}
