@@ -251,21 +251,19 @@ const DetailPanel: React.FC<DetailPanelProps> = ({
 };
 
 export const EducationalDegreesPage: React.FC = () => {
-  const {
-    educationalDegrees,
-    isLoading,
-    isImporting,
-    error,
-    pagination,
-    fetchEducationalDegrees,
-    createEducationalDegree,
-    updateEducationalDegree,
-    toggleEducationalDegreeStatus,
-    deleteEducationalDegree,
-    clearError,
-    exportEducationalDegrees,
-    importEducationalDegrees,
-  } = useEducationalDegreeStore();
+  const educationalDegrees = useEducationalDegreeStore((s) => s.educationalDegrees);
+  const isLoading = useEducationalDegreeStore((s) => s.isLoading);
+  const isImporting = useEducationalDegreeStore((s) => s.isImporting);
+  const error = useEducationalDegreeStore((s) => s.error);
+  const pagination = useEducationalDegreeStore((s) => s.pagination);
+  const fetchEducationalDegrees = useEducationalDegreeStore((s) => s.fetchEducationalDegrees);
+  const createEducationalDegree = useEducationalDegreeStore((s) => s.createEducationalDegree);
+  const updateEducationalDegree = useEducationalDegreeStore((s) => s.updateEducationalDegree);
+  const toggleEducationalDegreeStatus = useEducationalDegreeStore((s) => s.toggleEducationalDegreeStatus);
+  const deleteEducationalDegree = useEducationalDegreeStore((s) => s.deleteEducationalDegree);
+  const clearError = useEducationalDegreeStore((s) => s.clearError);
+  const exportEducationalDegrees = useEducationalDegreeStore((s) => s.exportEducationalDegrees);
+  const importEducationalDegrees = useEducationalDegreeStore((s) => s.importEducationalDegrees);
 
   const { addToast } = useToast();
   const fileInputRef = useRef<HTMLInputElement>(null);
@@ -441,10 +439,10 @@ export const EducationalDegreesPage: React.FC = () => {
 
   const handleDownloadSample = async () => {
     try {
-      const token = localStorage.getItem('auth_token');
+      const token = localStorage.getItem('auth_token') || sessionStorage.getItem('auth_token');
       const baseUrl = import.meta.env.VITE_API_URL || 'http://localhost:8000';
       const response = await fetch(`${baseUrl}/api/v1/educational-degrees/sample`, {
-        headers: { Authorization: `Bearer ${token}` },
+        headers: token ? { Authorization: `Bearer ${token}` } : {},
       });
       if (!response.ok) throw new Error('Failed to download sample');
       const blob = await response.blob();

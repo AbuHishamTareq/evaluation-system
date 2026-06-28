@@ -89,7 +89,8 @@ export const useStaffStore = create<StaffState>((set, get) => ({
     set({ isLoading: true, error: null });
     try {
       const response = await apiClient.post<{ success: boolean; data: Staff }>(API_ENDPOINTS.staff.store, data);
-      await get().fetchStaff();
+      // Re-fetch first page to reflect new entry
+      await get().fetchStaff({ page: 1 });
       return response.data;
     } catch (error: any) {
       const message = error.response?.data?.message || 'Failed to create staff member';
@@ -101,29 +102,55 @@ export const useStaffStore = create<StaffState>((set, get) => ({
   },
 
   updateStaff: async (id, data) => {
-    set({ isLoading: true, error: null });
+    const currentStaff = get().staff;
+    // Optimistically update
+    set({
+      staff: currentStaff.map((s) =>
+        s.id === id ? { ...s, ...data } : s
+      ),
+      error: null,
+    });
     try {
       const response = await apiClient.put<{ success: boolean; data: Staff }>(API_ENDPOINTS.staff.update(id), data);
-      await get().fetchStaff();
+      // Update with server response
+      set({
+        staff: get().staff.map((s) =>
+          s.id === id ? response.data : s
+        ),
+      });
       return response.data;
     } catch (error: any) {
+      // Revert on failure
+      set({ staff: currentStaff });
       const message = error.response?.data?.message || 'Failed to update staff member';
       set({ error: message });
       throw error;
-    } finally {
-      set({ isLoading: false });
     }
   },
 
   toggleStaffStatus: async (id, data) => {
+    const currentStaff = get().staff;
+    // Optimistically toggle is_active
+    set({
+      staff: currentStaff.map((s) =>
+        s.id === id ? { ...s, is_active: !s.is_active } : s
+      ),
+    });
     try {
       const response = await apiClient.patch<{ success: boolean; data: Staff }>(
         API_ENDPOINTS.staff.toggleStatus(id),
         data ?? {}
       );
-      await get().fetchStaff();
+      // Update with server response (may include deactivation_reason, etc.)
+      set({
+        staff: get().staff.map((s) =>
+          s.id === id ? response.data : s
+        ),
+      });
       return response.data;
     } catch (error: any) {
+      // Revert on failure
+      set({ staff: currentStaff });
       const message = error.response?.data?.message || 'Failed to toggle staff status';
       set({ error: message });
       throw error;
@@ -131,16 +158,20 @@ export const useStaffStore = create<StaffState>((set, get) => ({
   },
 
   deleteStaff: async (id) => {
-    set({ isLoading: true, error: null });
+    const currentStaff = get().staff;
+    // Optimistically remove
+    set({
+      staff: currentStaff.filter((s) => s.id !== id),
+      error: null,
+    });
     try {
       await apiClient.delete(API_ENDPOINTS.staff.destroy(id));
-      await get().fetchStaff();
     } catch (error: any) {
+      // Revert on failure
+      set({ staff: currentStaff });
       const message = error.response?.data?.message || 'Failed to delete staff member';
       set({ error: message });
       throw error;
-    } finally {
-      set({ isLoading: false });
     }
   },
 
@@ -181,7 +212,7 @@ export const useStaffStore = create<StaffState>((set, get) => ({
         formData,
         { headers: { 'Content-Type': 'multipart/form-data' } }
       );
-      await get().fetchStaff();
+      await get().fetchStaff({ page: 1 });
       return { success: true, message: result.message || 'Imported successfully' };
     } catch (error: any) {
       const message = error.response?.data?.message || 'Failed to import staff';

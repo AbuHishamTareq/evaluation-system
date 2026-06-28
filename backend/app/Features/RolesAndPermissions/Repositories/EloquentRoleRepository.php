@@ -9,9 +9,15 @@ use Illuminate\Support\Collection;
 
 class EloquentRoleRepository implements RoleRepositoryInterface
 {
+    private const ALLOWED_SORT_FIELDS = [
+        'created_at', 'updated_at', 'name', 'description', 'users_count',
+    ];
+
+    private const ALLOWED_SORT_DIRECTIONS = ['asc', 'desc'];
+
     public function getAll(array $filters = []): LengthAwarePaginator
     {
-        $query = Role::query()->with('permissions')->withCount('users');
+        $query = Role::query()->withCount('users');
 
         if (isset($filters['search'])) {
             $search = $filters['search'];
@@ -22,8 +28,12 @@ class EloquentRoleRepository implements RoleRepositoryInterface
         }
 
         $perPage = min((int) ($filters['per_page'] ?? 15), 100);
-        $sortField = $filters['sort_field'] ?? 'created_at';
-        $sortDirection = $filters['sort_direction'] ?? 'desc';
+        $sortField = in_array($filters['sort_field'] ?? '', self::ALLOWED_SORT_FIELDS)
+            ? $filters['sort_field']
+            : 'created_at';
+        $sortDirection = in_array($filters['sort_direction'] ?? '', self::ALLOWED_SORT_DIRECTIONS)
+            ? $filters['sort_direction']
+            : 'desc';
 
         return $query->orderBy($sortField, $sortDirection)->paginate($perPage);
     }

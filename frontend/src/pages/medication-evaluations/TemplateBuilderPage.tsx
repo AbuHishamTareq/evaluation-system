@@ -75,8 +75,13 @@ const MedDropdownItem: React.FC<MedDropdownItemProps> = ({
 export const TemplateBuilderPage: React.FC = () => {
   const { id } = useParams<{ id: string }>();
   const navigate = useNavigate();
-  const { currentTemplate, fetchTemplate, createTemplate, updateTemplate, isLoading } = useMedicationEvaluationTemplateStore();
-  const { medications, fetchMedications } = useMedicationStore();
+  const currentTemplate = useMedicationEvaluationTemplateStore((s) => s.currentTemplate);
+  const fetchTemplate = useMedicationEvaluationTemplateStore((s) => s.fetchTemplate);
+  const createTemplate = useMedicationEvaluationTemplateStore((s) => s.createTemplate);
+  const updateTemplate = useMedicationEvaluationTemplateStore((s) => s.updateTemplate);
+  const isLoading = useMedicationEvaluationTemplateStore((s) => s.isLoading);
+  const medications = useMedicationStore((s) => s.medications);
+  const fetchMedications = useMedicationStore((s) => s.fetchMedications);
   const { addToast } = useToast();
 
   const isEditing = Boolean(id);

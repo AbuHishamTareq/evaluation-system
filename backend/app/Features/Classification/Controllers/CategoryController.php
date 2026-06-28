@@ -11,6 +11,7 @@ use Dompdf\Dompdf;
 use Dompdf\Options;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\Log;
 use Maatwebsite\Excel\Facades\Excel;
 use Maatwebsite\Excel\Validators\ValidationException;
 use Symfony\Component\HttpFoundation\Response;
@@ -166,7 +167,7 @@ class CategoryController extends BaseApiController
     public function import(Request $request): JsonResponse
     {
         $request->validate([
-            'file' => ['required', 'file', 'mimes:xlsx,xls,csv'],
+            'file' => ['required', 'file', 'mimes:xlsx,xls,csv', 'max:10240'],
         ]);
 
         try {
@@ -187,7 +188,12 @@ class CategoryController extends BaseApiController
 
             return $this->errorResponse('Validation failed', 422, $errors);
         } catch (\Exception $e) {
-            return $this->errorResponse('Failed to import categories: '.$e->getMessage(), 500);
+            Log::error('Failed to import categories', [
+                'error' => $e->getMessage(),
+                'trace' => $e->getTraceAsString(),
+            ]);
+
+            return $this->errorResponse('Import failed. Please check your file and try again.', 500);
         }
     }
 

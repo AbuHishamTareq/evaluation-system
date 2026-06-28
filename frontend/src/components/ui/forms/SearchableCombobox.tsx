@@ -116,17 +116,7 @@ export const SearchableCombobox: React.FC<SearchableComboboxProps> = ({
     setSearch(inputValue);
     setDropdownOpen(true);
     setHighlightedIndex(-1);
-    // If user types and there's a selected value, check if it still matches
-    if (value !== null && value !== '') {
-      const selected = options.find((o) => {
-        const v = typeof value === 'string' ? value.trim() : value;
-        return o.value === v;
-      });
-      const fullLabel = selected ? selected.label : '';
-      if (inputValue !== fullLabel) {
-        onChange(null);
-      }
-    }
+    // Don't clear selection on keystroke - only change on explicit select
   };
 
   const handleKeyDown = (e: React.KeyboardEvent) => {

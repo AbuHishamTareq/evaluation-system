@@ -52,7 +52,8 @@ const QuestionFormModal: React.FC<QuestionFormModalProps> = ({
   const [subCategoryId, setSubCategoryId] = useState('');
   const [options, setOptions] = useState<QuestionOption[]>([]);
 
-  const { subCategories, fetchSubCategories } = useQuestionSubCategoryStore();
+  const subCategories = useQuestionSubCategoryStore((s) => s.subCategories);
+  const fetchSubCategories = useQuestionSubCategoryStore((s) => s.fetchSubCategories);
 
   useEffect(() => {
     if (editingQuestion) {
@@ -499,25 +500,23 @@ const DropdownItem: React.FC<DropdownItemProps> = ({
 
 // ─── Main Page ───────────────────────────────────────────────────────────────
 export const QuestionsPage: React.FC = () => {
-  const {
-    questions,
-    isLoading,
-    error,
-    pagination,
-    stats,
-    categories,
-    fetchQuestions,
-    createQuestion,
-    updateQuestion,
-    deleteQuestion,
-    fetchCategories,
-    createCategory,
-    updateCategory,
-    exportQuestions,
-    importQuestions,
-    downloadSample,
-    clearError,
-  } = useQuestionStore();
+  const questions = useQuestionStore((s) => s.questions);
+  const isLoading = useQuestionStore((s) => s.isLoading);
+  const error = useQuestionStore((s) => s.error);
+  const pagination = useQuestionStore((s) => s.pagination);
+  const stats = useQuestionStore((s) => s.stats);
+  const categories = useQuestionStore((s) => s.categories);
+  const fetchQuestions = useQuestionStore((s) => s.fetchQuestions);
+  const createQuestion = useQuestionStore((s) => s.createQuestion);
+  const updateQuestion = useQuestionStore((s) => s.updateQuestion);
+  const deleteQuestion = useQuestionStore((s) => s.deleteQuestion);
+  const fetchCategories = useQuestionStore((s) => s.fetchCategories);
+  const createCategory = useQuestionStore((s) => s.createCategory);
+  const updateCategory = useQuestionStore((s) => s.updateCategory);
+  const exportQuestions = useQuestionStore((s) => s.exportQuestions);
+  const importQuestions = useQuestionStore((s) => s.importQuestions);
+  const downloadSample = useQuestionStore((s) => s.downloadSample);
+  const clearError = useQuestionStore((s) => s.clearError);
 
   const hasPermission = useAuthStore((state) => state.hasPermission);
   const { addToast } = useToast();

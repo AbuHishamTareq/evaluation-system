@@ -482,20 +482,22 @@ const EvalDropdownItem: React.FC<EvalDropdownItemProps> = ({
 export const EvaluationsPage: React.FC = () => {
   const hasPermission = useAuthStore((state) => state.hasPermission);
 
-  const {
-    evaluations,
-    isLoading,
-    error,
-    pagination,
-    fetchEvaluations,
-    deleteEvaluation,
-    submitEvaluation,
-    clearError,
-  } = useEvaluationStore();
+  const evaluations = useEvaluationStore((s) => s.evaluations);
+  const isLoading = useEvaluationStore((s) => s.isLoading);
+  const error = useEvaluationStore((s) => s.error);
+  const pagination = useEvaluationStore((s) => s.pagination);
+  const fetchEvaluations = useEvaluationStore((s) => s.fetchEvaluations);
+  const deleteEvaluation = useEvaluationStore((s) => s.deleteEvaluation);
+  const submitEvaluation = useEvaluationStore((s) => s.submitEvaluation);
+  const clearError = useEvaluationStore((s) => s.clearError);
 
-  const { templates, fetchTemplates, fetchActiveTemplates } = useTemplateStore();
-  const { centers, fetchCenters } = useCenterStore();
-  const { staff: staffList, fetchStaff } = useStaffStore();
+  const templates = useTemplateStore((s) => s.templates);
+  const fetchTemplates = useTemplateStore((s) => s.fetchTemplates);
+  const fetchActiveTemplates = useTemplateStore((s) => s.fetchActiveTemplates);
+  const centers = useCenterStore((s) => s.centers);
+  const fetchCenters = useCenterStore((s) => s.fetchCenters);
+  const staffList = useStaffStore((s) => s.staff);
+  const fetchStaff = useStaffStore((s) => s.fetchStaff);
   const { addToast } = useToast();
 
   const [searchQuery, setSearchQuery] = useState('');

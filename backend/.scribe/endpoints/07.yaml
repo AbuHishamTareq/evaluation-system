@@ -1,19 +1,19 @@
-name: 'Team Codes'
+name: Centers
 description: |-
 
-  APIs for managing team code assignments and lookups.
+  APIs for managing PHC centers, including CRUD, import/export, and statistics.
 endpoints:
   -
     custom: []
     httpMethods:
       - GET
-    uri: api/v1/team-codes
+    uri: api/v1/centers
     metadata:
       custom: []
-      groupName: 'Team Codes'
+      groupName: Centers
       groupDescription: |-
 
-        APIs for managing team code assignments and lookups.
+        APIs for managing PHC centers, including CRUD, import/export, and statistics.
       subgroup: ''
       subgroupDescription: ''
       title: ''
@@ -39,7 +39,12 @@ endpoints:
         headers:
           cache-control: 'no-cache, private'
           content-type: application/json
-          access-control-allow-origin: '*'
+          x-content-type-options: nosniff
+          x-frame-options: DENY
+          referrer-policy: strict-origin-when-cross-origin
+          content-security-policy: "default-src 'self'; script-src 'self'; style-src 'self' 'unsafe-inline'; img-src 'self' data:; font-src 'self'; connect-src 'self'"
+          access-control-allow-origin: 'http://localhost:5173'
+          access-control-allow-credentials: 'true'
         description: null
     responseFields: []
     auth:
@@ -53,13 +58,13 @@ endpoints:
     custom: []
     httpMethods:
       - POST
-    uri: api/v1/team-codes
+    uri: api/v1/centers
     metadata:
       custom: []
-      groupName: 'Team Codes'
+      groupName: Centers
       groupDescription: |-
 
-        APIs for managing team code assignments and lookups.
+        APIs for managing PHC centers, including CRUD, import/export, and statistics.
       subgroup: ''
       subgroupDescription: ''
       title: ''
@@ -75,10 +80,10 @@ endpoints:
     queryParameters: []
     cleanQueryParameters: []
     bodyParameters:
-      code:
+      name:
         custom: []
-        name: code
-        description: 'Must not be greater than 50 characters.'
+        name: name
+        description: 'Must not be greater than 255 characters.'
         required: true
         example: b
         type: string
@@ -86,23 +91,115 @@ endpoints:
         exampleWasSpecified: false
         nullable: false
         deprecated: false
-      description:
+      code:
         custom: []
-        name: description
+        name: code
+        description: 'Must not be greater than 50 characters.'
+        required: true
+        example: 'n'
+        type: string
+        enumValues: []
+        exampleWasSpecified: false
+        nullable: false
+        deprecated: false
+      zone_id:
+        custom: []
+        name: zone_id
+        description: 'Must match an existing stored value.'
+        required: false
+        example: 16
+        type: integer
+        enumValues: []
+        exampleWasSpecified: false
+        nullable: true
+        deprecated: false
+      classification:
+        custom: []
+        name: classification
         description: ''
         required: false
-        example: 'Eius et animi quos velit et.'
+        example: secondary
+        type: string
+        enumValues:
+          - primary
+          - secondary
+          - specialized
+          - community
+        exampleWasSpecified: false
+        nullable: true
+        deprecated: false
+      address:
+        custom: []
+        name: address
+        description: 'Must not be greater than 500 characters.'
+        required: false
+        example: 'n'
         type: string
         enumValues: []
         exampleWasSpecified: false
         nullable: true
         deprecated: false
-      role:
+      latitude:
         custom: []
-        name: role
-        description: 'Must not be greater than 100 characters.'
+        name: latitude
+        description: 'Must be at least -90. Must not be greater than 90.'
         required: false
-        example: v
+        example: 7
+        type: number
+        enumValues: []
+        exampleWasSpecified: false
+        nullable: true
+        deprecated: false
+      longitude:
+        custom: []
+        name: longitude
+        description: 'Must be at least -180. Must not be greater than 180.'
+        required: false
+        example: 16
+        type: number
+        enumValues: []
+        exampleWasSpecified: false
+        nullable: true
+        deprecated: false
+      region:
+        custom: []
+        name: region
+        description: 'Must not be greater than 255 characters.'
+        required: false
+        example: m
+        type: string
+        enumValues: []
+        exampleWasSpecified: false
+        nullable: true
+        deprecated: false
+      zone:
+        custom: []
+        name: zone
+        description: 'Must not be greater than 255 characters.'
+        required: false
+        example: i
+        type: string
+        enumValues: []
+        exampleWasSpecified: false
+        nullable: true
+        deprecated: false
+      phone:
+        custom: []
+        name: phone
+        description: 'Must not be greater than 20 characters.'
+        required: false
+        example: yvdljnikhwaykcmy
+        type: string
+        enumValues: []
+        exampleWasSpecified: false
+        nullable: true
+        deprecated: false
+      email:
+        custom: []
+        name: email
+        description: 'Must be a valid email address. Must not be greater than 255 characters.'
+        required: false
+        example: price.amber@example.org
         type: string
         enumValues: []
         exampleWasSpecified: false
@@ -113,29 +210,37 @@ endpoints:
         name: is_active
         description: ''
         required: false
-        example: false
+        example: true
         type: boolean
         enumValues: []
         exampleWasSpecified: false
         nullable: true
         deprecated: false
-      center_id:
+      notes:
         custom: []
-        name: center_id
-        description: 'Must match an existing stored value.'
+        name: notes
+        description: ''
         required: false
-        example: 16
-        type: integer
+        example: architecto
+        type: string
         enumValues: []
         exampleWasSpecified: false
         nullable: true
         deprecated: false
     cleanBodyParameters:
-      code: b
-      description: 'Eius et animi quos velit et.'
-      role: v
-      is_active: false
-      center_id: 16
+      name: b
+      code: 'n'
+      zone_id: 16
+      classification: secondary
+      address: 'n'
+      latitude: 7
+      longitude: 16
+      region: m
+      zone: i
+      phone: yvdljnikhwaykcmy
+      email: price.amber@example.org
+      is_active: true
+      notes: architecto
     fileParameters: []
     responses: []
     responseFields: []
@@ -150,13 +255,13 @@ endpoints:
     custom: []
     httpMethods:
       - POST
-    uri: api/v1/team-codes/import
+    uri: api/v1/centers/import
     metadata:
       custom: []
-      groupName: 'Team Codes'
+      groupName: Centers
       groupDescription: |-
 
-        APIs for managing team code assignments and lookups.
+        APIs for managing PHC centers, including CRUD, import/export, and statistics.
       subgroup: ''
       subgroupDescription: ''
       title: ''
@@ -199,13 +304,13 @@ endpoints:
     custom: []
     httpMethods:
       - GET
-    uri: api/v1/team-codes/export
+    uri: api/v1/centers/export
     metadata:
       custom: []
-      groupName: 'Team Codes'
+      groupName: Centers
       groupDescription: |-
 
-        APIs for managing team code assignments and lookups.
+        APIs for managing PHC centers, including CRUD, import/export, and statistics.
       subgroup: ''
       subgroupDescription: ''
       title: ''
@@ -231,7 +336,12 @@ endpoints:
         headers:
           cache-control: 'no-cache, private'
           content-type: application/json
-          access-control-allow-origin: '*'
+          x-content-type-options: nosniff
+          x-frame-options: DENY
+          referrer-policy: strict-origin-when-cross-origin
+          content-security-policy: "default-src 'self'; script-src 'self'; style-src 'self' 'unsafe-inline'; img-src 'self' data:; font-src 'self'; connect-src 'self'"
+          access-control-allow-origin: 'http://localhost:5173'
+          access-control-allow-credentials: 'true'
         description: null
     responseFields: []
     auth:
@@ -245,13 +355,13 @@ endpoints:
     custom: []
     httpMethods:
       - GET
-    uri: api/v1/team-codes/sample
+    uri: api/v1/centers/active
     metadata:
       custom: []
-      groupName: 'Team Codes'
+      groupName: Centers
       groupDescription: |-
 
-        APIs for managing team code assignments and lookups.
+        APIs for managing PHC centers, including CRUD, import/export, and statistics.
       subgroup: ''
       subgroupDescription: ''
       title: ''
@@ -277,7 +387,12 @@ endpoints:
         headers:
           cache-control: 'no-cache, private'
           content-type: application/json
-          access-control-allow-origin: '*'
+          x-content-type-options: nosniff
+          x-frame-options: DENY
+          referrer-policy: strict-origin-when-cross-origin
+          content-security-policy: "default-src 'self'; script-src 'self'; style-src 'self' 'unsafe-inline'; img-src 'self' data:; font-src 'self'; connect-src 'self'"
+          access-control-allow-origin: 'http://localhost:5173'
+          access-control-allow-credentials: 'true'
         description: null
     responseFields: []
     auth:
@@ -291,13 +406,13 @@ endpoints:
     custom: []
     httpMethods:
       - GET
-    uri: api/v1/team-codes/active
+    uri: api/v1/centers/search
     metadata:
       custom: []
-      groupName: 'Team Codes'
+      groupName: Centers
       groupDescription: |-
 
-        APIs for managing team code assignments and lookups.
+        APIs for managing PHC centers, including CRUD, import/export, and statistics.
       subgroup: ''
       subgroupDescription: ''
       title: ''
@@ -323,7 +438,12 @@ endpoints:
         headers:
           cache-control: 'no-cache, private'
           content-type: application/json
-          access-control-allow-origin: '*'
+          x-content-type-options: nosniff
+          x-frame-options: DENY
+          referrer-policy: strict-origin-when-cross-origin
+          content-security-policy: "default-src 'self'; script-src 'self'; style-src 'self' 'unsafe-inline'; img-src 'self' data:; font-src 'self'; connect-src 'self'"
+          access-control-allow-origin: 'http://localhost:5173'
+          access-control-allow-credentials: 'true'
         description: null
     responseFields: []
     auth:
@@ -337,59 +457,13 @@ endpoints:
     custom: []
     httpMethods:
       - GET
-    uri: api/v1/team-codes/search
+    uri: 'api/v1/centers/{id}/statistics'
     metadata:
       custom: []
-      groupName: 'Team Codes'
+      groupName: Centers
       groupDescription: |-
 
-        APIs for managing team code assignments and lookups.
-      subgroup: ''
-      subgroupDescription: ''
-      title: ''
-      description: ''
-      authenticated: true
-      deprecated: false
-    headers:
-      Authorization: 'Bearer {YOUR_AUTH_KEY}'
-      Content-Type: application/json
-      Accept: application/json
-    urlParameters: []
-    cleanUrlParameters: []
-    queryParameters: []
-    cleanQueryParameters: []
-    bodyParameters: []
-    cleanBodyParameters: []
-    fileParameters: []
-    responses:
-      -
-        custom: []
-        status: 401
-        content: '{"message":"Unauthenticated."}'
-        headers:
-          cache-control: 'no-cache, private'
-          content-type: application/json
-          access-control-allow-origin: '*'
-        description: null
-    responseFields: []
-    auth:
-      - headers
-      - Authorization
-      - 'Bearer 6g43cv8PD1aE5beadkZfhV6'
-    controller: null
-    method: null
-    route: null
-  -
-    custom: []
-    httpMethods:
-      - GET
-    uri: 'api/v1/team-codes/{id}/statistics'
-    metadata:
-      custom: []
-      groupName: 'Team Codes'
-      groupDescription: |-
-
-        APIs for managing team code assignments and lookups.
+        APIs for managing PHC centers, including CRUD, import/export, and statistics.
       subgroup: ''
       subgroupDescription: ''
       title: ''
@@ -404,7 +478,7 @@ endpoints:
       id:
         custom: []
         name: id
-        description: 'The ID of the team code.'
+        description: 'The ID of the center.'
         required: true
         example: architecto
         type: string
@@ -427,7 +501,12 @@ endpoints:
         headers:
           cache-control: 'no-cache, private'
           content-type: application/json
-          access-control-allow-origin: '*'
+          x-content-type-options: nosniff
+          x-frame-options: DENY
+          referrer-policy: strict-origin-when-cross-origin
+          content-security-policy: "default-src 'self'; script-src 'self'; style-src 'self' 'unsafe-inline'; img-src 'self' data:; font-src 'self'; connect-src 'self'"
+          access-control-allow-origin: 'http://localhost:5173'
+          access-control-allow-credentials: 'true'
         description: null
     responseFields: []
     auth:
@@ -441,13 +520,13 @@ endpoints:
     custom: []
     httpMethods:
       - GET
-    uri: 'api/v1/team-codes/{id}'
+    uri: 'api/v1/centers/{id}'
     metadata:
       custom: []
-      groupName: 'Team Codes'
+      groupName: Centers
       groupDescription: |-
 
-        APIs for managing team code assignments and lookups.
+        APIs for managing PHC centers, including CRUD, import/export, and statistics.
       subgroup: ''
       subgroupDescription: ''
       title: ''
@@ -462,7 +541,7 @@ endpoints:
       id:
         custom: []
         name: id
-        description: 'The ID of the team code.'
+        description: 'The ID of the center.'
         required: true
         example: architecto
         type: string
@@ -485,7 +564,12 @@ endpoints:
         headers:
           cache-control: 'no-cache, private'
           content-type: application/json
-          access-control-allow-origin: '*'
+          x-content-type-options: nosniff
+          x-frame-options: DENY
+          referrer-policy: strict-origin-when-cross-origin
+          content-security-policy: "default-src 'self'; script-src 'self'; style-src 'self' 'unsafe-inline'; img-src 'self' data:; font-src 'self'; connect-src 'self'"
+          access-control-allow-origin: 'http://localhost:5173'
+          access-control-allow-credentials: 'true'
         description: null
     responseFields: []
     auth:
@@ -499,13 +583,13 @@ endpoints:
     custom: []
     httpMethods:
       - PUT
-    uri: 'api/v1/team-codes/{id}'
+    uri: 'api/v1/centers/{id}'
     metadata:
       custom: []
-      groupName: 'Team Codes'
+      groupName: Centers
       groupDescription: |-
 
-        APIs for managing team code assignments and lookups.
+        APIs for managing PHC centers, including CRUD, import/export, and statistics.
       subgroup: ''
       subgroupDescription: ''
       title: ''
@@ -520,7 +604,7 @@ endpoints:
       id:
         custom: []
         name: id
-        description: 'The ID of the team code.'
+        description: 'The ID of the center.'
         required: true
         example: architecto
         type: string
@@ -533,6 +617,17 @@ endpoints:
     queryParameters: []
     cleanQueryParameters: []
     bodyParameters:
+      name:
+        custom: []
+        name: name
+        description: 'Must not be greater than 255 characters.'
+        required: false
+        example: b
+        type: string
+        enumValues: []
+        exampleWasSpecified: false
+        nullable: false
+        deprecated: false
       code:
         custom: []
         name: code
@@ -544,23 +639,104 @@ endpoints:
         exampleWasSpecified: false
         nullable: false
         deprecated: false
-      description:
+      zone_id:
         custom: []
-        name: description
+        name: zone_id
+        description: 'Must match an existing stored value.'
+        required: false
+        example: 16
+        type: integer
+        enumValues: []
+        exampleWasSpecified: false
+        nullable: true
+        deprecated: false
+      classification:
+        custom: []
+        name: classification
         description: ''
         required: false
-        example: 'Eius et animi quos velit et.'
+        example: specialized
+        type: string
+        enumValues:
+          - primary
+          - secondary
+          - specialized
+          - community
+        exampleWasSpecified: false
+        nullable: false
+        deprecated: false
+      address:
+        custom: []
+        name: address
+        description: 'Must not be greater than 500 characters.'
+        required: false
+        example: 'n'
         type: string
         enumValues: []
         exampleWasSpecified: false
         nullable: true
         deprecated: false
-      role:
+      latitude:
         custom: []
-        name: role
-        description: 'Must not be greater than 100 characters.'
+        name: latitude
+        description: 'Must be at least -90. Must not be greater than 90.'
         required: false
-        example: v
+        example: 7
+        type: number
+        enumValues: []
+        exampleWasSpecified: false
+        nullable: true
+        deprecated: false
+      longitude:
+        custom: []
+        name: longitude
+        description: 'Must be at least -180. Must not be greater than 180.'
+        required: false
+        example: 16
+        type: number
+        enumValues: []
+        exampleWasSpecified: false
+        nullable: true
+        deprecated: false
+      region:
+        custom: []
+        name: region
+        description: 'Must not be greater than 255 characters.'
+        required: false
+        example: m
+        type: string
+        enumValues: []
+        exampleWasSpecified: false
+        nullable: true
+        deprecated: false
+      zone:
+        custom: []
+        name: zone
+        description: 'Must not be greater than 255 characters.'
+        required: false
+        example: i
+        type: string
+        enumValues: []
+        exampleWasSpecified: false
+        nullable: true
+        deprecated: false
+      phone:
+        custom: []
+        name: phone
+        description: 'Must not be greater than 20 characters.'
+        required: false
+        example: yvdljnikhwaykcmy
+        type: string
+        enumValues: []
+        exampleWasSpecified: false
+        nullable: true
+        deprecated: false
+      email:
+        custom: []
+        name: email
+        description: 'Must be a valid email address. Must not be greater than 255 characters.'
+        required: false
+        example: price.amber@example.org
         type: string
         enumValues: []
         exampleWasSpecified: false
@@ -577,22 +753,30 @@ endpoints:
         exampleWasSpecified: false
         nullable: true
         deprecated: false
-      center_id:
+      notes:
         custom: []
-        name: center_id
-        description: 'Must match an existing stored value.'
+        name: notes
+        description: ''
         required: false
-        example: 16
-        type: integer
+        example: architecto
+        type: string
         enumValues: []
         exampleWasSpecified: false
         nullable: true
         deprecated: false
     cleanBodyParameters:
-      description: 'Eius et animi quos velit et.'
-      role: v
+      name: b
+      zone_id: 16
+      classification: specialized
+      address: 'n'
+      latitude: 7
+      longitude: 16
+      region: m
+      zone: i
+      phone: yvdljnikhwaykcmy
+      email: price.amber@example.org
       is_active: true
-      center_id: 16
+      notes: architecto
     fileParameters: []
     responses: []
     responseFields: []
@@ -607,13 +791,13 @@ endpoints:
     custom: []
     httpMethods:
       - PATCH
-    uri: 'api/v1/team-codes/{id}/toggle-status'
+    uri: 'api/v1/centers/{id}/status'
     metadata:
       custom: []
-      groupName: 'Team Codes'
+      groupName: Centers
       groupDescription: |-
 
-        APIs for managing team code assignments and lookups.
+        APIs for managing PHC centers, including CRUD, import/export, and statistics.
       subgroup: ''
       subgroupDescription: ''
       title: ''
@@ -628,7 +812,7 @@ endpoints:
       id:
         custom: []
         name: id
-        description: 'The ID of the team code.'
+        description: 'The ID of the center.'
         required: true
         example: architecto
         type: string
@@ -640,8 +824,20 @@ endpoints:
       id: architecto
     queryParameters: []
     cleanQueryParameters: []
-    bodyParameters: []
-    cleanBodyParameters: []
+    bodyParameters:
+      is_active:
+        custom: []
+        name: is_active
+        description: ''
+        required: true
+        example: true
+        type: boolean
+        enumValues: []
+        exampleWasSpecified: false
+        nullable: false
+        deprecated: false
+    cleanBodyParameters:
+      is_active: true
     fileParameters: []
     responses: []
     responseFields: []
@@ -656,13 +852,13 @@ endpoints:
     custom: []
     httpMethods:
       - DELETE
-    uri: 'api/v1/team-codes/{id}'
+    uri: 'api/v1/centers/{id}'
     metadata:
       custom: []
-      groupName: 'Team Codes'
+      groupName: Centers
       groupDescription: |-
 
-        APIs for managing team code assignments and lookups.
+        APIs for managing PHC centers, including CRUD, import/export, and statistics.
       subgroup: ''
       subgroupDescription: ''
       title: ''
@@ -677,7 +873,7 @@ endpoints:
       id:
         custom: []
         name: id
-        description: 'The ID of the team code.'
+        description: 'The ID of the center.'
         required: true
         example: architecto
         type: string

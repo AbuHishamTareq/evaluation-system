@@ -1,4 +1,4 @@
-import React, { createContext, useContext, useState, useCallback } from 'react';
+import React, { createContext, useContext, useState, useCallback, useEffect } from 'react';
 
 interface Toast {
   id: string;
@@ -26,7 +26,7 @@ export const ToastProvider: React.FC<{ children: React.ReactNode }> = ({ childre
   const [toasts, setToasts] = useState<Toast[]>([]);
 
   const addToast = useCallback((message: string, type: Toast['type']) => {
-    const id = Math.random().toString(36).substring(7);
+    const id = crypto.randomUUID();
     setToasts((prev) => [...prev, { id, message, type }]);
     setTimeout(() => {
       setToasts((prev) => prev.filter((t) => t.id !== id));
@@ -36,6 +36,18 @@ export const ToastProvider: React.FC<{ children: React.ReactNode }> = ({ childre
   const removeToast = useCallback((id: string) => {
     setToasts((prev) => prev.filter((t) => t.id !== id));
   }, []);
+
+  // Listen for toast events from non-React contexts
+  useEffect(() => {
+    const handler = (e: Event) => {
+      const detail = (e as CustomEvent).detail;
+      if (detail?.message && detail?.type) {
+        addToast(detail.message, detail.type);
+      }
+    };
+    window.addEventListener('app-toast', handler);
+    return () => window.removeEventListener('app-toast', handler);
+  }, [addToast]);
 
   return (
     <ToastContext.Provider value={{ toasts, addToast, removeToast }}>
@@ -90,8 +102,8 @@ const ToastContainer: React.FC<{ toasts: Toast[]; removeToast: (id: string) => v
     }
   };
 
-   return (
-     <div className="fixed bottom-4 right-4 z-[100] flex flex-col-reverse gap-2 w-full max-w-md">
+    return (
+      <div className="fixed bottom-4 right-4 z-[100] flex flex-col-reverse gap-2 w-full max-w-md" role="alert" aria-live="polite">
        {toasts.map((toast) => (
          <div
            key={toast.id}

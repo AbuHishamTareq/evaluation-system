@@ -4,6 +4,7 @@ namespace App\Features\Users\Imports;
 
 use App\Models\User;
 use Illuminate\Support\Facades\Log;
+use Illuminate\Support\Str;
 use Illuminate\Validation\Rule;
 use Maatwebsite\Excel\Concerns\Importable;
 use Maatwebsite\Excel\Concerns\ToModel;
@@ -37,7 +38,7 @@ class UserImport implements ToModel, WithHeadingRow, WithValidation
         return new User([
             'name' => trim($row['name'] ?? ''),
             'email' => $email,
-            'password' => bcrypt('password'),
+            'password' => bcrypt(Str::password(16)),
             'role' => isset($row['role']) ? trim($row['role']) : 'staff',
             'employee_id' => isset($row['employee_id']) ? trim($row['employee_id']) : null,
             'is_active' => $this->parseBoolean($row['is_active'] ?? true),

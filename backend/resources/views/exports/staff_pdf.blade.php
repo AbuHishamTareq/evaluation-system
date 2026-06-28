@@ -102,9 +102,9 @@
         <h1>Staff Report</h1>
         <p class="subtitle">Generated on {{ $generatedAt }}</p>
         <div class="summary">
-            <span>Total Records: {{ $staff->count() }}</span>
-            <span>Active: {{ $staff->where('is_active', true)->count() }}</span>
-            <span>Inactive: {{ $staff->where('is_active', false)->count() }}</span>
+            <span>Total Records: {{ $totalCount }}</span>
+            <span>Active: {{ $activeCount }}</span>
+            <span>Inactive: {{ $totalCount - $activeCount }}</span>
         </div>
     </div>
 
@@ -124,34 +124,7 @@
             </tr>
         </thead>
         <tbody>
-            @php $rowNumber = 0; @endphp
-            @foreach($staff as $member)
-            @php $rowNumber++; @endphp
-            <tr>
-                <td>{{ $rowNumber }}</td>
-                <td>{{ $member->employee_id }}</td>
-                <td>{{ $member->full_name }}</td>
-                <td>{{ $member->email ?: '-' }}</td>
-                <td>{{ $member->phone ?: '-' }}</td>
-                <td>{{ $member->getRelation('center')?->name ?? $member->center ?: '-' }}</td>
-                <td>{{ $member->getRelation('department')?->name ?? '-' }}</td>
-                <td>{{ $member->getRelation('professional')?->name ?? '-' }}</td>
-                <td>
-                    @if($member->employment_type)
-                        <span class="badge badge-{{ $member->employment_type }}">
-                            {{ ucwords(str_replace('_', ' ', $member->employment_type)) }}
-                        </span>
-                    @else
-                        -
-                    @endif
-                </td>
-                <td>
-                    <span class="badge {{ $member->is_active ? 'badge-active' : 'badge-inactive' }}">
-                        {{ $member->is_active ? 'Active' : 'Inactive' }}
-                    </span>
-                </td>
-            </tr>
-            @endforeach
+            {!! $rowsHtml !!}
         </tbody>
     </table>
 

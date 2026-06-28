@@ -2,6 +2,11 @@ import { create } from 'zustand';
 import type { Center, CenterCreateInput, CenterFilters } from '../types/center';
 import { apiClient } from '../api/client';
 
+// Toast event dispatcher for non-React contexts
+const dispatchToast = (message: string, type: 'success' | 'error' | 'warning' | 'info') => {
+  window.dispatchEvent(new CustomEvent('app-toast', { detail: { message, type } }));
+};
+
 interface CenterState {
   centers: Center[];
   currentCenter: Center | null;
@@ -129,8 +134,8 @@ export const useCenterStore = create<CenterState>((set, get) => ({
     try {
       await apiClient.patch(`/api/v1/centers/${id}/status`, { is_active: isActive });
     } catch (error) {
-      // Revert on failure
       set({ centers: currentCenters });
+      dispatchToast('Failed to update center status. Changes reverted.', 'error');
       set({
         error: error instanceof Error ? error.message : 'Failed to update center status',
       });

@@ -827,20 +827,18 @@ const AssignUsersModal: React.FC<AssignUsersModalProps> = ({
 
 export const RolesPage: React.FC = () => {
   const hasPermission = useAuthStore((state) => state.hasPermission);
-  const {
-    roles,
-    allPermissions,
-    isLoading,
-    error,
-    pagination,
-    fetchRoles,
-    fetchAllPermissions,
-    createRole,
-    updateRole,
-    deleteRole,
-    syncRolePermissions,
-    clearError,
-  } = useRoleStore();
+  const roles = useRoleStore((s) => s.roles);
+  const allPermissions = useRoleStore((s) => s.allPermissions);
+  const isLoading = useRoleStore((s) => s.isLoading);
+  const error = useRoleStore((s) => s.error);
+  const pagination = useRoleStore((s) => s.pagination);
+  const fetchRoles = useRoleStore((s) => s.fetchRoles);
+  const fetchAllPermissions = useRoleStore((s) => s.fetchAllPermissions);
+  const createRole = useRoleStore((s) => s.createRole);
+  const updateRole = useRoleStore((s) => s.updateRole);
+  const deleteRole = useRoleStore((s) => s.deleteRole);
+  const syncRolePermissions = useRoleStore((s) => s.syncRolePermissions);
+  const clearError = useRoleStore((s) => s.clearError);
   const { addToast } = useToast();
 
   const [searchQuery, setSearchQuery] = useState('');

@@ -8,7 +8,12 @@ import { useToast } from '../../components/ui/toast';
 
 export const LoginPage: React.FC = () => {
   const navigate = useNavigate();
-  const { login, clearError, forgotPassword, forgotPasswordSuccess, forgotPasswordError, resetForgotPasswordState } = useAuthStore();
+  const login = useAuthStore((s) => s.login);
+  const clearError = useAuthStore((s) => s.clearError);
+  const forgotPassword = useAuthStore((s) => s.forgotPassword);
+  const forgotPasswordSuccess = useAuthStore((s) => s.forgotPasswordSuccess);
+  const forgotPasswordError = useAuthStore((s) => s.forgotPasswordError);
+  const resetForgotPasswordState = useAuthStore((s) => s.resetForgotPasswordState);
   const { addToast } = useToast();
   const [formData, setFormData] = useState({
     email: '',
@@ -57,7 +62,7 @@ export const LoginPage: React.FC = () => {
         addToast('Login successful! Welcome back.', 'success');
         navigate('/dashboard');
       } else {
-        addToast('Invalid email or password', 'error');
+        addToast(useAuthStore.getState().error || 'Login failed', 'error');
       }
     } catch (err) {
       addToast('An error occurred. Please try again.', 'error');

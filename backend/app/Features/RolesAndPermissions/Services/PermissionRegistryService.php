@@ -41,6 +41,9 @@ class PermissionRegistryService
             'roles.assign_permissions' => 'Assign permissions to roles',
             'roles.assign_users' => 'Assign roles to users',
             'permissions.view' => 'View permissions list',
+            'permissions.create' => 'Create permissions',
+            'permissions.edit' => 'Edit permissions',
+            'permissions.delete' => 'Delete permissions',
 
             // Zones module
             'zones.view' => 'View zones',
@@ -55,6 +58,12 @@ class PermissionRegistryService
             'departments.create' => 'Create departments',
             'departments.edit' => 'Edit departments',
             'departments.delete' => 'Delete departments',
+
+            // Action Plans module
+            'action-plans.view' => 'View action plans',
+            'action-plans.create' => 'Create action plans',
+            'action-plans.edit' => 'Edit action plans',
+            'action-plans.delete' => 'Delete action plans',
 
             // Evaluations module
             'evaluations.view' => 'View evaluations',

@@ -279,17 +279,17 @@ const EvalDropdownItem: React.FC<EvalDropdownItemProps> = ({
 export const EvaluationsListPage: React.FC = () => {
   const hasPermission = useAuthStore((state) => state.hasPermission);
 
-  const {
-    evaluations,
-    isLoading,
-    pagination,
-    fetchEvaluations,
-    createEvaluation,
-    deleteEvaluation,
-  } = useMedicationEvaluationStore();
+  const evaluations = useMedicationEvaluationStore((s) => s.evaluations);
+  const isLoading = useMedicationEvaluationStore((s) => s.isLoading);
+  const pagination = useMedicationEvaluationStore((s) => s.pagination);
+  const fetchEvaluations = useMedicationEvaluationStore((s) => s.fetchEvaluations);
+  const createEvaluation = useMedicationEvaluationStore((s) => s.createEvaluation);
+  const deleteEvaluation = useMedicationEvaluationStore((s) => s.deleteEvaluation);
 
-  const { templates, fetchTemplates } = useMedicationEvaluationTemplateStore();
-  const { centers, fetchCenters } = useCenterStore();
+  const templates = useMedicationEvaluationTemplateStore((s) => s.templates);
+  const fetchTemplates = useMedicationEvaluationTemplateStore((s) => s.fetchTemplates);
+  const centers = useCenterStore((s) => s.centers);
+  const fetchCenters = useCenterStore((s) => s.fetchCenters);
   const { addToast } = useToast();
 
   const [searchQuery, setSearchQuery] = useState('');

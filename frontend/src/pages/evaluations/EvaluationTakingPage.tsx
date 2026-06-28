@@ -44,9 +44,15 @@ const calculateLocalScore = (answer: AnswerEntry, questionType: string, maxScore
 export const EvaluationTakingPage: React.FC = () => {
   const { id } = useParams<{ id: string }>();
   const navigate = useNavigate();
-  const { currentEvaluation, fetchEvaluationById, updateEvaluation, submitEvaluation, approveEvaluation, isLoading } = useEvaluationStore();
+  const currentEvaluation = useEvaluationStore((s) => s.currentEvaluation);
+  const fetchEvaluationById = useEvaluationStore((s) => s.fetchEvaluationById);
+  const updateEvaluation = useEvaluationStore((s) => s.updateEvaluation);
+  const submitEvaluation = useEvaluationStore((s) => s.submitEvaluation);
+  const approveEvaluation = useEvaluationStore((s) => s.approveEvaluation);
+  const isLoading = useEvaluationStore((s) => s.isLoading);
   const hasPermission = useAuthStore((state) => state.hasPermission);
-  const { items: phcMedications, fetchByCenter: fetchPhcMedications } = usePhcMedicationStore();
+  const phcMedications = usePhcMedicationStore((s) => s.items);
+  const fetchPhcMedications = usePhcMedicationStore((s) => s.fetchByCenter);
   const { addToast } = useToast();
 
   const [answers, setAnswers] = useState<AnswerEntry[]>([]);

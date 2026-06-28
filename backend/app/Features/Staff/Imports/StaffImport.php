@@ -262,27 +262,6 @@ class StaffImport implements ToModel, WithFormatData, WithHeadingRow, WithValida
             return $team->id;
         }
 
-        // Auto-create the team code so the import doesn't fail on missing teams
-        try {
-            $team = TeamCode::create([
-                'code' => $code,
-                'description' => 'Auto-created from staff import',
-                'is_active' => true,
-            ]);
-
-            Log::info('StaffImport: Auto-created team code', [
-                'code' => $code,
-                'id' => $team->id,
-            ]);
-
-            return $team->id;
-        } catch (\Exception $e) {
-            Log::error('StaffImport: Failed to auto-create team code', [
-                'code' => $code,
-                'error' => $e->getMessage(),
-            ]);
-
-            return null;
-        }
+        throw new \InvalidArgumentException("Team code '{$code}' does not exist. Please create it first.");
     }
 }

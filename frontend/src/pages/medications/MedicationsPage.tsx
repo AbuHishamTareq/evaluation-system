@@ -295,11 +295,17 @@ const DetailPanel: React.FC<DetailPanelProps> = ({
 };
 
 export const MedicationsPage: React.FC = () => {
-  const {
-    medications, isLoading, pagination, isImporting,
-    fetchMedications, createMedication, updateMedication, deleteMedication,
-    exportMedications, importMedications, downloadTemplate,
-  } = useMedicationStore();
+  const medications = useMedicationStore((s) => s.medications);
+  const isLoading = useMedicationStore((s) => s.isLoading);
+  const pagination = useMedicationStore((s) => s.pagination);
+  const isImporting = useMedicationStore((s) => s.isImporting);
+  const fetchMedications = useMedicationStore((s) => s.fetchMedications);
+  const createMedication = useMedicationStore((s) => s.createMedication);
+  const updateMedication = useMedicationStore((s) => s.updateMedication);
+  const deleteMedication = useMedicationStore((s) => s.deleteMedication);
+  const exportMedications = useMedicationStore((s) => s.exportMedications);
+  const importMedications = useMedicationStore((s) => s.importMedications);
+  const downloadTemplate = useMedicationStore((s) => s.downloadTemplate);
   const { addToast } = useToast();
 
   const [searchQuery, setSearchQuery] = useState('');

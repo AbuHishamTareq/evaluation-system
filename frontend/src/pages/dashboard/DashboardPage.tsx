@@ -1,14 +1,11 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useRef } from 'react';
 import { Link } from 'react-router-dom';
 import { StatsCard } from '../../components/features/analytics/StatsCard';
 import {
-  ScoreTrendChart,
-  ScoreDistributionChart,
-  ClassificationBreakdownChart,
   CenterRankingTable,
-  GeographicMap,
   RecentActivity,
 } from '../../components/features/analytics';
+import { DashboardChartsSection } from './DashboardChartsSection';
 import { analyticsService } from '../../api/services';
 import { useTranslationContext } from '../../contexts/TranslationContext';
 
@@ -62,6 +59,9 @@ const quickActions = [
 export const DashboardPage: React.FC = () => {
   const { t } = useTranslationContext();
 
+  const lastFetchRef = useRef<number>(0);
+  const CACHE_TTL = 30000; // 30 seconds
+
   const [dashboardData, setDashboardData] = useState<any>(null);
   const [trendData, setTrendData] = useState<any[]>([]);
   const [trendPeriod, setTrendPeriod] = useState('month');
@@ -71,6 +71,7 @@ export const DashboardPage: React.FC = () => {
   const [recentActivity, setRecentActivity] = useState<any[]>([]);
   const [loading, setLoading] = useState(true);
   const [exporting, setExporting] = useState(false);
+  const [dashboardError, setDashboardError] = useState<string | null>(null);
 
   useEffect(() => {
     loadDashboardData();
@@ -117,7 +118,13 @@ export const DashboardPage: React.FC = () => {
   };
 
   const loadDashboardData = async () => {
+    const now = Date.now();
+    if (now - lastFetchRef.current < CACHE_TTL && dashboardData) {
+      return;
+    }
     try {
+      lastFetchRef.current = Date.now();
+      setDashboardError(null);
       const [
         dashboardRes,
         distributionRes,
@@ -145,6 +152,7 @@ export const DashboardPage: React.FC = () => {
       setRecentActivity(activity || []);
     } catch (error) {
       console.error('Failed to load dashboard data:', error);
+      setDashboardError('Failed to load dashboard data. Please try again.');
     } finally {
       setLoading(false);
     }
@@ -152,11 +160,13 @@ export const DashboardPage: React.FC = () => {
 
   const loadTrendData = async (period: string) => {
     try {
+      setDashboardError(null);
       const trendsRes = await analyticsService.getEvaluationTrends(period);
       const trends = (trendsRes as any)?.data ?? trendsRes;
       setTrendData(trends || []);
     } catch (error) {
       console.error('Failed to load trend data:', error);
+      setDashboardError('Failed to load trend data.');
       setTrendData([]);
     }
   };
@@ -174,6 +184,24 @@ export const DashboardPage: React.FC = () => {
 
   return (
     <div className="space-y-8">
+      {dashboardError && (
+        <div className="bg-red-50 border border-red-200 text-red-700 px-4 py-3 rounded-xl flex items-center gap-2">
+          <svg className="w-5 h-5 shrink-0" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 8v4m0 4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
+          </svg>
+          <span className="text-sm font-medium">{dashboardError}</span>
+          <div className="ml-auto flex gap-2">
+            <button onClick={() => { setDashboardError(null); loadDashboardData(); }} className="text-sm font-medium text-red-700 hover:text-red-900 underline">
+              Retry
+            </button>
+            <button onClick={() => setDashboardError(null)} className="text-red-500 hover:text-red-700">
+              <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
+              </svg>
+            </button>
+          </div>
+        </div>
+      )}
       {/* Hero Section */}
       <div className="relative overflow-hidden rounded-3xl bg-gradient-to-br from-cyan-500 via-teal-500 to-violet-500 p-8 md:p-12 shadow-2xl">
         <div className="absolute inset-0 opacity-10">
@@ -314,26 +342,17 @@ export const DashboardPage: React.FC = () => {
         </div>
       </div>
 
-      {/* Charts Row 1 */}
-      <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
-        <ScoreTrendChart
-          data={trendData}
-          period={trendPeriod}
-          onPeriodChange={setTrendPeriod}
-        />
-        <ScoreDistributionChart data={scoreDistribution} />
-      </div>
+      <DashboardChartsSection
+        trendData={trendData}
+        trendPeriod={trendPeriod}
+        scoreDistribution={scoreDistribution}
+        classificationBreakdown={classificationBreakdown}
+        centerPerformance={centerPerformance}
+        onTrendPeriodChange={setTrendPeriod}
+      />
 
-      {/* Charts Row 2 */}
-      <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
-        <ClassificationBreakdownChart data={classificationBreakdown} />
-        <GeographicMap data={centerPerformance} />
-      </div>
-
-      {/* Center Rankings */}
       <CenterRankingTable data={centerPerformance} />
 
-      {/* Recent Activity */}
       <RecentActivity data={recentActivity} />
     </div>
   );

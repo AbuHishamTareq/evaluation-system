@@ -303,23 +303,22 @@ const DetailPanel: React.FC<DetailPanelProps> = ({
 
 // ─── Main Page ──────────────────────────────────────────────────────────────
 export const TeamCodesPage: React.FC = () => {
-  const {
-    teamCodes,
-    isLoading,
-    isImporting,
-    error,
-    pagination,
-    fetchTeamCodes,
-    createTeamCode,
-    updateTeamCode,
-    toggleTeamCodeStatus,
-    deleteTeamCode,
-    clearError,
-    exportTeamCodes,
-    importTeamCodes,
-  } = useTeamCodeStore();
+  const teamCodes = useTeamCodeStore((s) => s.teamCodes);
+  const isLoading = useTeamCodeStore((s) => s.isLoading);
+  const isImporting = useTeamCodeStore((s) => s.isImporting);
+  const error = useTeamCodeStore((s) => s.error);
+  const pagination = useTeamCodeStore((s) => s.pagination);
+  const fetchTeamCodes = useTeamCodeStore((s) => s.fetchTeamCodes);
+  const createTeamCode = useTeamCodeStore((s) => s.createTeamCode);
+  const updateTeamCode = useTeamCodeStore((s) => s.updateTeamCode);
+  const toggleTeamCodeStatus = useTeamCodeStore((s) => s.toggleTeamCodeStatus);
+  const deleteTeamCode = useTeamCodeStore((s) => s.deleteTeamCode);
+  const clearError = useTeamCodeStore((s) => s.clearError);
+  const exportTeamCodes = useTeamCodeStore((s) => s.exportTeamCodes);
+  const importTeamCodes = useTeamCodeStore((s) => s.importTeamCodes);
 
-  const { centers, fetchCenters } = useCenterStore();
+  const centers = useCenterStore((s) => s.centers);
+  const fetchCenters = useCenterStore((s) => s.fetchCenters);
   const { addToast } = useToast();
   const fileInputRef = useRef<HTMLInputElement>(null);
 
@@ -510,10 +509,10 @@ export const TeamCodesPage: React.FC = () => {
 
   const handleDownloadSample = async () => {
     try {
-      const token = localStorage.getItem('auth_token');
+      const token = localStorage.getItem('auth_token') || sessionStorage.getItem('auth_token');
       const baseUrl = import.meta.env.VITE_API_URL || 'http://localhost:8000';
       const response = await fetch(`${baseUrl}/api/v1/team-codes/sample`, {
-        headers: { Authorization: `Bearer ${token}` },
+        headers: token ? { Authorization: `Bearer ${token}` } : {},
       });
       if (!response.ok) throw new Error('Failed to download sample');
       const blob = await response.blob();

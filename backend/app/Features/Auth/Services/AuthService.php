@@ -2,7 +2,6 @@
 
 namespace App\Features\Auth\Services;
 
-use App\Models\Role;
 use App\Models\User;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Hash;
@@ -10,33 +9,6 @@ use Illuminate\Support\Facades\Password;
 
 class AuthService
 {
-    public function register(array $data): User
-    {
-        $user = User::create([
-            'name' => $data['name'],
-            'email' => $data['email'],
-            'password' => $data['password'],
-            'employee_id' => $data['employee_id'] ?? null,
-            'role' => $data['role'] ?? 'staff',
-            'team_code_id' => $data['team_code_id'] ?? null,
-        ]);
-
-        // Assign pivot role based on the string role column
-        $pivotRole = match ($data['role'] ?? 'staff') {
-            'admin' => 'Super Admin',
-            'manager' => 'Manager',
-            'evaluator' => 'Evaluator',
-            'staff' => 'Staff',
-            default => 'Staff',
-        };
-        $roleModel = Role::where('name', $pivotRole)->first();
-        if ($roleModel) {
-            $user->roles()->sync([$roleModel->id]);
-        }
-
-        return $user->fresh()->load('roles');
-    }
-
     public function login(string $email, string $password, bool $rememberMe = false): ?array
     {
         $user = User::where('email', $email)->first();
@@ -81,6 +53,11 @@ class AuthService
         $user->update([
             'password' => Hash::make($newPassword),
         ]);
+
+        // Revoke all tokens except the current one
+        $user->tokens()
+            ->when($user->currentAccessToken(), fn ($q) => $q->where('id', '!=', $user->currentAccessToken()->id))
+            ->delete();
 
         return true;
     }

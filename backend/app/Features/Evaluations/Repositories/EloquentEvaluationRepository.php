@@ -9,7 +9,7 @@ class EloquentEvaluationRepository implements EvaluationRepositoryInterface
 {
     public function getAll(array $filters = []): LengthAwarePaginator
     {
-        $query = Evaluation::query()->with(['template', 'center', 'staff', 'evaluator', 'answers.question']);
+        $query = Evaluation::query()->with(['template', 'center', 'staff', 'evaluator', 'answers']);
 
         if (isset($filters['status'])) {
             $query->where('status', $filters['status']);

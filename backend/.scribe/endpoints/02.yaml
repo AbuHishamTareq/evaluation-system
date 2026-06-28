@@ -1,19 +1,19 @@
-name: Questions
+name: 'Question Categories'
 description: |-
 
-  APIs for managing evaluation questions, including categories and types.
+  APIs for managing question categories (separate from classification categories).
 endpoints:
   -
     custom: []
     httpMethods:
       - GET
-    uri: api/v1/questions
+    uri: api/v1/question-categories
     metadata:
       custom: []
-      groupName: Questions
+      groupName: 'Question Categories'
       groupDescription: |-
 
-        APIs for managing evaluation questions, including categories and types.
+        APIs for managing question categories (separate from classification categories).
       subgroup: ''
       subgroupDescription: ''
       title: ''
@@ -39,7 +39,12 @@ endpoints:
         headers:
           cache-control: 'no-cache, private'
           content-type: application/json
-          access-control-allow-origin: '*'
+          x-content-type-options: nosniff
+          x-frame-options: DENY
+          referrer-policy: strict-origin-when-cross-origin
+          content-security-policy: "default-src 'self'; script-src 'self'; style-src 'self' 'unsafe-inline'; img-src 'self' data:; font-src 'self'; connect-src 'self'"
+          access-control-allow-origin: 'http://localhost:5173'
+          access-control-allow-credentials: 'true'
         description: null
     responseFields: []
     auth:
@@ -53,13 +58,13 @@ endpoints:
     custom: []
     httpMethods:
       - POST
-    uri: api/v1/questions
+    uri: api/v1/question-categories
     metadata:
       custom: []
-      groupName: Questions
+      groupName: 'Question Categories'
       groupDescription: |-
 
-        APIs for managing evaluation questions, including categories and types.
+        APIs for managing question categories (separate from classification categories).
       subgroup: ''
       subgroupDescription: ''
       title: ''
@@ -75,41 +80,24 @@ endpoints:
     queryParameters: []
     cleanQueryParameters: []
     bodyParameters:
-      question_text:
+      name:
         custom: []
-        name: question_text
-        description: ''
+        name: name
+        description: 'Must not be greater than 255 characters.'
         required: true
-        example: architecto
+        example: b
         type: string
         enumValues: []
         exampleWasSpecified: false
         nullable: false
         deprecated: false
-      question_type:
+      code:
         custom: []
-        name: question_type
-        description: ''
+        name: code
+        description: 'Must not be greater than 50 characters.'
         required: true
-        example: rating
+        example: 'n'
         type: string
-        enumValues:
-          - text
-          - textarea
-          - select
-          - radio
-          - checkbox
-          - rating
-        exampleWasSpecified: false
-        nullable: false
-        deprecated: false
-      category_id:
-        custom: []
-        name: category_id
-        description: 'Must match an existing stored value.'
-        required: true
-        example: 16
-        type: integer
         enumValues: []
         exampleWasSpecified: false
         nullable: false
@@ -125,46 +113,13 @@ endpoints:
         exampleWasSpecified: false
         nullable: true
         deprecated: false
-      options:
+      order:
         custom: []
-        name: options
-        description: 'Must be a valid JSON string.'
+        name: order
+        description: 'Must be at least 0.'
         required: false
-        example: '["architecto","architecto"]'
-        type: string
-        enumValues: []
-        exampleWasSpecified: false
-        nullable: true
-        deprecated: false
-      weight:
-        custom: []
-        name: weight
-        description: 'Must be at least 0. Must not be greater than 100.'
-        required: false
-        example: 22
+        example: 60
         type: integer
-        enumValues: []
-        exampleWasSpecified: false
-        nullable: true
-        deprecated: false
-      max_score:
-        custom: []
-        name: max_score
-        description: 'Must be at least 0. Must not be greater than 1000.'
-        required: false
-        example: 7
-        type: integer
-        enumValues: []
-        exampleWasSpecified: false
-        nullable: true
-        deprecated: false
-      is_required:
-        custom: []
-        name: is_required
-        description: ''
-        required: false
-        example: false
-        type: boolean
         enumValues: []
         exampleWasSpecified: false
         nullable: true
@@ -174,22 +129,18 @@ endpoints:
         name: is_active
         description: ''
         required: false
-        example: false
+        example: true
         type: boolean
         enumValues: []
         exampleWasSpecified: false
         nullable: true
         deprecated: false
     cleanBodyParameters:
-      question_text: architecto
-      question_type: rating
-      category_id: 16
+      name: b
+      code: 'n'
       description: 'Eius et animi quos velit et.'
-      options: '["architecto","architecto"]'
-      weight: 22
-      max_score: 7
-      is_required: false
-      is_active: false
+      order: 60
+      is_active: true
     fileParameters: []
     responses: []
     responseFields: []
@@ -203,14 +154,179 @@ endpoints:
   -
     custom: []
     httpMethods:
-      - POST
-    uri: api/v1/questions/import
+      - GET
+    uri: api/v1/question-categories/active
     metadata:
       custom: []
-      groupName: Questions
+      groupName: 'Question Categories'
       groupDescription: |-
 
-        APIs for managing evaluation questions, including categories and types.
+        APIs for managing question categories (separate from classification categories).
+      subgroup: ''
+      subgroupDescription: ''
+      title: ''
+      description: ''
+      authenticated: true
+      deprecated: false
+    headers:
+      Authorization: 'Bearer {YOUR_AUTH_KEY}'
+      Content-Type: application/json
+      Accept: application/json
+    urlParameters: []
+    cleanUrlParameters: []
+    queryParameters: []
+    cleanQueryParameters: []
+    bodyParameters: []
+    cleanBodyParameters: []
+    fileParameters: []
+    responses:
+      -
+        custom: []
+        status: 401
+        content: '{"message":"Unauthenticated."}'
+        headers:
+          cache-control: 'no-cache, private'
+          content-type: application/json
+          x-content-type-options: nosniff
+          x-frame-options: DENY
+          referrer-policy: strict-origin-when-cross-origin
+          content-security-policy: "default-src 'self'; script-src 'self'; style-src 'self' 'unsafe-inline'; img-src 'self' data:; font-src 'self'; connect-src 'self'"
+          access-control-allow-origin: 'http://localhost:5173'
+          access-control-allow-credentials: 'true'
+        description: null
+    responseFields: []
+    auth:
+      - headers
+      - Authorization
+      - 'Bearer 6g43cv8PD1aE5beadkZfhV6'
+    controller: null
+    method: null
+    route: null
+  -
+    custom: []
+    httpMethods:
+      - GET
+    uri: api/v1/question-categories/sample
+    metadata:
+      custom: []
+      groupName: 'Question Categories'
+      groupDescription: |-
+
+        APIs for managing question categories (separate from classification categories).
+      subgroup: ''
+      subgroupDescription: ''
+      title: ''
+      description: ''
+      authenticated: true
+      deprecated: false
+    headers:
+      Authorization: 'Bearer {YOUR_AUTH_KEY}'
+      Content-Type: application/json
+      Accept: application/json
+    urlParameters: []
+    cleanUrlParameters: []
+    queryParameters: []
+    cleanQueryParameters: []
+    bodyParameters: []
+    cleanBodyParameters: []
+    fileParameters: []
+    responses:
+      -
+        custom: []
+        status: 401
+        content: '{"message":"Unauthenticated."}'
+        headers:
+          cache-control: 'no-cache, private'
+          content-type: application/json
+          x-content-type-options: nosniff
+          x-frame-options: DENY
+          referrer-policy: strict-origin-when-cross-origin
+          content-security-policy: "default-src 'self'; script-src 'self'; style-src 'self' 'unsafe-inline'; img-src 'self' data:; font-src 'self'; connect-src 'self'"
+          access-control-allow-origin: 'http://localhost:5173'
+          access-control-allow-credentials: 'true'
+        description: null
+    responseFields: []
+    auth:
+      - headers
+      - Authorization
+      - 'Bearer 6g43cv8PD1aE5beadkZfhV6'
+    controller: null
+    method: null
+    route: null
+  -
+    custom: []
+    httpMethods:
+      - GET
+    uri: 'api/v1/question-categories/export/{format?}'
+    metadata:
+      custom: []
+      groupName: 'Question Categories'
+      groupDescription: |-
+
+        APIs for managing question categories (separate from classification categories).
+      subgroup: ''
+      subgroupDescription: ''
+      title: ''
+      description: ''
+      authenticated: true
+      deprecated: false
+    headers:
+      Authorization: 'Bearer {YOUR_AUTH_KEY}'
+      Content-Type: application/json
+      Accept: application/json
+    urlParameters:
+      format:
+        custom: []
+        name: format
+        description: ''
+        required: false
+        example: architecto
+        type: string
+        enumValues: []
+        exampleWasSpecified: false
+        nullable: false
+        deprecated: false
+    cleanUrlParameters:
+      format: architecto
+    queryParameters: []
+    cleanQueryParameters: []
+    bodyParameters: []
+    cleanBodyParameters: []
+    fileParameters: []
+    responses:
+      -
+        custom: []
+        status: 401
+        content: '{"message":"Unauthenticated."}'
+        headers:
+          cache-control: 'no-cache, private'
+          content-type: application/json
+          x-content-type-options: nosniff
+          x-frame-options: DENY
+          referrer-policy: strict-origin-when-cross-origin
+          content-security-policy: "default-src 'self'; script-src 'self'; style-src 'self' 'unsafe-inline'; img-src 'self' data:; font-src 'self'; connect-src 'self'"
+          access-control-allow-origin: 'http://localhost:5173'
+          access-control-allow-credentials: 'true'
+        description: null
+    responseFields: []
+    auth:
+      - headers
+      - Authorization
+      - 'Bearer 6g43cv8PD1aE5beadkZfhV6'
+    controller: null
+    method: null
+    route: null
+  -
+    custom: []
+    httpMethods:
+      - POST
+    uri: api/v1/question-categories/import
+    metadata:
+      custom: []
+      groupName: 'Question Categories'
+      groupDescription: |-
+
+        APIs for managing question categories (separate from classification categories).
       subgroup: ''
       subgroupDescription: ''
       title: ''
@@ -229,7 +345,7 @@ endpoints:
       file:
         custom: []
         name: file
-        description: 'Must be a file.'
+        description: 'Must be a file. Must not be greater than 10240 kilobytes.'
         required: true
         example: null
         type: file
@@ -253,209 +369,13 @@ endpoints:
     custom: []
     httpMethods:
       - GET
-    uri: api/v1/questions/export
+    uri: 'api/v1/question-categories/{id}'
     metadata:
       custom: []
-      groupName: Questions
+      groupName: 'Question Categories'
       groupDescription: |-
 
-        APIs for managing evaluation questions, including categories and types.
-      subgroup: ''
-      subgroupDescription: ''
-      title: ''
-      description: ''
-      authenticated: true
-      deprecated: false
-    headers:
-      Authorization: 'Bearer {YOUR_AUTH_KEY}'
-      Content-Type: application/json
-      Accept: application/json
-    urlParameters: []
-    cleanUrlParameters: []
-    queryParameters: []
-    cleanQueryParameters: []
-    bodyParameters: []
-    cleanBodyParameters: []
-    fileParameters: []
-    responses:
-      -
-        custom: []
-        status: 401
-        content: '{"message":"Unauthenticated."}'
-        headers:
-          cache-control: 'no-cache, private'
-          content-type: application/json
-          access-control-allow-origin: '*'
-        description: null
-    responseFields: []
-    auth:
-      - headers
-      - Authorization
-      - 'Bearer 6g43cv8PD1aE5beadkZfhV6'
-    controller: null
-    method: null
-    route: null
-  -
-    custom: []
-    httpMethods:
-      - GET
-    uri: api/v1/questions/categories
-    metadata:
-      custom: []
-      groupName: Questions
-      groupDescription: |-
-
-        APIs for managing evaluation questions, including categories and types.
-      subgroup: ''
-      subgroupDescription: ''
-      title: ''
-      description: ''
-      authenticated: true
-      deprecated: false
-    headers:
-      Authorization: 'Bearer {YOUR_AUTH_KEY}'
-      Content-Type: application/json
-      Accept: application/json
-    urlParameters: []
-    cleanUrlParameters: []
-    queryParameters: []
-    cleanQueryParameters: []
-    bodyParameters: []
-    cleanBodyParameters: []
-    fileParameters: []
-    responses:
-      -
-        custom: []
-        status: 401
-        content: '{"message":"Unauthenticated."}'
-        headers:
-          cache-control: 'no-cache, private'
-          content-type: application/json
-          access-control-allow-origin: '*'
-        description: null
-    responseFields: []
-    auth:
-      - headers
-      - Authorization
-      - 'Bearer 6g43cv8PD1aE5beadkZfhV6'
-    controller: null
-    method: null
-    route: null
-  -
-    custom: []
-    httpMethods:
-      - GET
-    uri: 'api/v1/questions/category/{categoryId}'
-    metadata:
-      custom: []
-      groupName: Questions
-      groupDescription: |-
-
-        APIs for managing evaluation questions, including categories and types.
-      subgroup: ''
-      subgroupDescription: ''
-      title: ''
-      description: ''
-      authenticated: true
-      deprecated: false
-    headers:
-      Authorization: 'Bearer {YOUR_AUTH_KEY}'
-      Content-Type: application/json
-      Accept: application/json
-    urlParameters:
-      categoryId:
-        custom: []
-        name: categoryId
-        description: ''
-        required: true
-        example: architecto
-        type: string
-        enumValues: []
-        exampleWasSpecified: false
-        nullable: false
-        deprecated: false
-    cleanUrlParameters:
-      categoryId: architecto
-    queryParameters: []
-    cleanQueryParameters: []
-    bodyParameters: []
-    cleanBodyParameters: []
-    fileParameters: []
-    responses:
-      -
-        custom: []
-        status: 401
-        content: '{"message":"Unauthenticated."}'
-        headers:
-          cache-control: 'no-cache, private'
-          content-type: application/json
-          access-control-allow-origin: '*'
-        description: null
-    responseFields: []
-    auth:
-      - headers
-      - Authorization
-      - 'Bearer 6g43cv8PD1aE5beadkZfhV6'
-    controller: null
-    method: null
-    route: null
-  -
-    custom: []
-    httpMethods:
-      - GET
-    uri: api/v1/questions/type
-    metadata:
-      custom: []
-      groupName: Questions
-      groupDescription: |-
-
-        APIs for managing evaluation questions, including categories and types.
-      subgroup: ''
-      subgroupDescription: ''
-      title: ''
-      description: ''
-      authenticated: true
-      deprecated: false
-    headers:
-      Authorization: 'Bearer {YOUR_AUTH_KEY}'
-      Content-Type: application/json
-      Accept: application/json
-    urlParameters: []
-    cleanUrlParameters: []
-    queryParameters: []
-    cleanQueryParameters: []
-    bodyParameters: []
-    cleanBodyParameters: []
-    fileParameters: []
-    responses:
-      -
-        custom: []
-        status: 401
-        content: '{"message":"Unauthenticated."}'
-        headers:
-          cache-control: 'no-cache, private'
-          content-type: application/json
-          access-control-allow-origin: '*'
-        description: null
-    responseFields: []
-    auth:
-      - headers
-      - Authorization
-      - 'Bearer 6g43cv8PD1aE5beadkZfhV6'
-    controller: null
-    method: null
-    route: null
-  -
-    custom: []
-    httpMethods:
-      - GET
-    uri: 'api/v1/questions/{id}'
-    metadata:
-      custom: []
-      groupName: Questions
-      groupDescription: |-
-
-        APIs for managing evaluation questions, including categories and types.
+        APIs for managing question categories (separate from classification categories).
       subgroup: ''
       subgroupDescription: ''
       title: ''
@@ -470,7 +390,7 @@ endpoints:
       id:
         custom: []
         name: id
-        description: 'The ID of the question.'
+        description: 'The ID of the question category.'
         required: true
         example: architecto
         type: string
@@ -493,7 +413,12 @@ endpoints:
         headers:
           cache-control: 'no-cache, private'
           content-type: application/json
-          access-control-allow-origin: '*'
+          x-content-type-options: nosniff
+          x-frame-options: DENY
+          referrer-policy: strict-origin-when-cross-origin
+          content-security-policy: "default-src 'self'; script-src 'self'; style-src 'self' 'unsafe-inline'; img-src 'self' data:; font-src 'self'; connect-src 'self'"
+          access-control-allow-origin: 'http://localhost:5173'
+          access-control-allow-credentials: 'true'
         description: null
     responseFields: []
     auth:
@@ -507,13 +432,13 @@ endpoints:
     custom: []
     httpMethods:
       - PUT
-    uri: 'api/v1/questions/{id}'
+    uri: 'api/v1/question-categories/{id}'
     metadata:
       custom: []
-      groupName: Questions
+      groupName: 'Question Categories'
       groupDescription: |-
 
-        APIs for managing evaluation questions, including categories and types.
+        APIs for managing question categories (separate from classification categories).
       subgroup: ''
       subgroupDescription: ''
       title: ''
@@ -528,7 +453,7 @@ endpoints:
       id:
         custom: []
         name: id
-        description: 'The ID of the question.'
+        description: 'The ID of the question category.'
         required: true
         example: architecto
         type: string
@@ -541,41 +466,24 @@ endpoints:
     queryParameters: []
     cleanQueryParameters: []
     bodyParameters:
-      question_text:
+      name:
         custom: []
-        name: question_text
-        description: ''
+        name: name
+        description: 'Must not be greater than 255 characters.'
         required: false
-        example: architecto
+        example: b
         type: string
         enumValues: []
         exampleWasSpecified: false
         nullable: false
         deprecated: false
-      question_type:
+      code:
         custom: []
-        name: question_type
+        name: code
         description: ''
         required: false
-        example: textarea
+        example: null
         type: string
-        enumValues:
-          - text
-          - textarea
-          - select
-          - radio
-          - checkbox
-          - rating
-        exampleWasSpecified: false
-        nullable: false
-        deprecated: false
-      category_id:
-        custom: []
-        name: category_id
-        description: 'Must match an existing stored value.'
-        required: false
-        example: 16
-        type: integer
         enumValues: []
         exampleWasSpecified: false
         nullable: false
@@ -591,46 +499,13 @@ endpoints:
         exampleWasSpecified: false
         nullable: true
         deprecated: false
-      options:
+      order:
         custom: []
-        name: options
-        description: 'Must be a valid JSON string.'
+        name: order
+        description: 'Must be at least 0.'
         required: false
-        example: '["architecto","architecto"]'
-        type: string
-        enumValues: []
-        exampleWasSpecified: false
-        nullable: true
-        deprecated: false
-      weight:
-        custom: []
-        name: weight
-        description: 'Must be at least 0. Must not be greater than 100.'
-        required: false
-        example: 22
+        example: 60
         type: integer
-        enumValues: []
-        exampleWasSpecified: false
-        nullable: true
-        deprecated: false
-      max_score:
-        custom: []
-        name: max_score
-        description: 'Must be at least 0. Must not be greater than 1000.'
-        required: false
-        example: 7
-        type: integer
-        enumValues: []
-        exampleWasSpecified: false
-        nullable: true
-        deprecated: false
-      is_required:
-        custom: []
-        name: is_required
-        description: ''
-        required: false
-        example: false
-        type: boolean
         enumValues: []
         exampleWasSpecified: false
         nullable: true
@@ -647,14 +522,9 @@ endpoints:
         nullable: true
         deprecated: false
     cleanBodyParameters:
-      question_text: architecto
-      question_type: textarea
-      category_id: 16
+      name: b
       description: 'Eius et animi quos velit et.'
-      options: '["architecto","architecto"]'
-      weight: 22
-      max_score: 7
-      is_required: false
+      order: 60
       is_active: true
     fileParameters: []
     responses: []
@@ -669,14 +539,14 @@ endpoints:
   -
     custom: []
     httpMethods:
-      - DELETE
-    uri: 'api/v1/questions/{id}'
+      - PATCH
+    uri: 'api/v1/question-categories/{id}/toggle-status'
     metadata:
       custom: []
-      groupName: Questions
+      groupName: 'Question Categories'
       groupDescription: |-
 
-        APIs for managing evaluation questions, including categories and types.
+        APIs for managing question categories (separate from classification categories).
       subgroup: ''
       subgroupDescription: ''
       title: ''
@@ -691,7 +561,56 @@ endpoints:
       id:
         custom: []
         name: id
-        description: 'The ID of the question.'
+        description: 'The ID of the question category.'
+        required: true
+        example: architecto
+        type: string
+        enumValues: []
+        exampleWasSpecified: false
+        nullable: false
+        deprecated: false
+    cleanUrlParameters:
+      id: architecto
+    queryParameters: []
+    cleanQueryParameters: []
+    bodyParameters: []
+    cleanBodyParameters: []
+    fileParameters: []
+    responses: []
+    responseFields: []
+    auth:
+      - headers
+      - Authorization
+      - 'Bearer 6g43cv8PD1aE5beadkZfhV6'
+    controller: null
+    method: null
+    route: null
+  -
+    custom: []
+    httpMethods:
+      - DELETE
+    uri: 'api/v1/question-categories/{id}'
+    metadata:
+      custom: []
+      groupName: 'Question Categories'
+      groupDescription: |-
+
+        APIs for managing question categories (separate from classification categories).
+      subgroup: ''
+      subgroupDescription: ''
+      title: ''
+      description: ''
+      authenticated: true
+      deprecated: false
+    headers:
+      Authorization: 'Bearer {YOUR_AUTH_KEY}'
+      Content-Type: application/json
+      Accept: application/json
+    urlParameters:
+      id:
+        custom: []
+        name: id
+        description: 'The ID of the question category.'
         required: true
         example: architecto
         type: string

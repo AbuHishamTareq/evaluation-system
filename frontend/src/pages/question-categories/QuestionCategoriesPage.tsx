@@ -561,22 +561,20 @@ const CategoryFormModal: React.FC<CategoryFormModalProps> = ({
 
 export const QuestionCategoriesPage: React.FC = () => {
   const hasPermission = useAuthStore((state) => state.hasPermission);
-  const {
-    categories,
-    isLoading,
-    isImporting,
-    error,
-    pagination,
-    fetchCategories,
-    createCategory,
-    updateCategory,
-    deleteCategory,
-    toggleStatus,
-    exportCategories,
-    importCategories,
-    downloadSample,
-    clearError,
-  } = useQuestionCategoryStore();
+  const categories = useQuestionCategoryStore((s) => s.categories);
+  const isLoading = useQuestionCategoryStore((s) => s.isLoading);
+  const isImporting = useQuestionCategoryStore((s) => s.isImporting);
+  const error = useQuestionCategoryStore((s) => s.error);
+  const pagination = useQuestionCategoryStore((s) => s.pagination);
+  const fetchCategories = useQuestionCategoryStore((s) => s.fetchCategories);
+  const createCategory = useQuestionCategoryStore((s) => s.createCategory);
+  const updateCategory = useQuestionCategoryStore((s) => s.updateCategory);
+  const deleteCategory = useQuestionCategoryStore((s) => s.deleteCategory);
+  const toggleStatus = useQuestionCategoryStore((s) => s.toggleStatus);
+  const exportCategories = useQuestionCategoryStore((s) => s.exportCategories);
+  const importCategories = useQuestionCategoryStore((s) => s.importCategories);
+  const downloadSample = useQuestionCategoryStore((s) => s.downloadSample);
+  const clearError = useQuestionCategoryStore((s) => s.clearError);
 
   const { addToast } = useToast();
   const fileInputRef = useRef<HTMLInputElement>(null);

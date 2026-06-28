@@ -132,7 +132,7 @@ class TrendsSheet implements FromCollection, WithHeadings, WithTitle
         return collect($trends)->map(fn ($trend) => [
             $trend['period'],
             $trend['count'],
-            $trend['avg_percentage'].'%',
+            ($trend['regular_avg_percentage'] ?? 0).'%',
         ]);
     }
 

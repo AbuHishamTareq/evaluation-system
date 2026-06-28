@@ -601,22 +601,20 @@ const DetailPanel: React.FC<DetailPanelProps> = ({
 
 export const StaffPage: React.FC = () => {
   const hasPermission = useAuthStore((state) => state.hasPermission);
-  const {
-    staff,
-    isLoading,
-    isImporting,
-    error,
-    pagination,
-    fetchStaff,
-    createStaff,
-    updateStaff,
-    toggleStaffStatus,
-    deleteStaff,
-    clearError,
-    exportStaff,
-    downloadSample,
-    importStaff,
-  } = useStaffStore();
+  const staff = useStaffStore((s) => s.staff);
+  const isLoading = useStaffStore((s) => s.isLoading);
+  const isImporting = useStaffStore((s) => s.isImporting);
+  const error = useStaffStore((s) => s.error);
+  const pagination = useStaffStore((s) => s.pagination);
+  const fetchStaff = useStaffStore((s) => s.fetchStaff);
+  const createStaff = useStaffStore((s) => s.createStaff);
+  const updateStaff = useStaffStore((s) => s.updateStaff);
+  const toggleStaffStatus = useStaffStore((s) => s.toggleStaffStatus);
+  const deleteStaff = useStaffStore((s) => s.deleteStaff);
+  const clearError = useStaffStore((s) => s.clearError);
+  const exportStaff = useStaffStore((s) => s.exportStaff);
+  const downloadSample = useStaffStore((s) => s.downloadSample);
+  const importStaff = useStaffStore((s) => s.importStaff);
 
   const { addToast } = useToast();
   const fileInputRef = useRef<HTMLInputElement>(null);
@@ -646,6 +644,8 @@ export const StaffPage: React.FC = () => {
   const [reactivatingStaff, setReactivatingStaff] = useState<Staff | null>(null);
   const [reactivationNotes, setReactivationNotes] = useState('');
 
+  const [isSubmitting, setIsSubmitting] = useState(false);
+
   // Deactivation history modal state
   const [showDeactivationHistory, setShowDeactivationHistory] = useState(false);
   const [deactivationHistory, setDeactivationHistory] = useState<DeactivationRecord[]>([]);
@@ -662,7 +662,7 @@ export const StaffPage: React.FC = () => {
   }, [searchQuery, statusFilter]);
 
   const loadStaff = useCallback(async (page: number = 1) => {
-    await fetchStaff({ page, per_page: 100, filters: buildFilters() });
+    await fetchStaff({ page, per_page: 20, filters: buildFilters() });
   }, [fetchStaff, buildFilters]);
 
   useEffect(() => {
@@ -678,6 +678,16 @@ export const StaffPage: React.FC = () => {
     document.addEventListener('mousedown', handleClickOutside);
     return () => document.removeEventListener('mousedown', handleClickOutside);
   }, []);
+
+  // Debounced auto-search
+  useEffect(() => {
+    const timer = setTimeout(() => {
+      if (searchQuery) {
+        loadStaff(1);
+      }
+    }, 300);
+    return () => clearTimeout(timer);
+  }, [searchQuery, loadStaff]);
 
   const filteredStaff = staff;
 
@@ -736,6 +746,8 @@ export const StaffPage: React.FC = () => {
   };
 
   const handleSubmit = async (data: any, files: { photo: File | null; documents: File[] }) => {
+    if (isSubmitting) return;
+    setIsSubmitting(true);
     let staffId: number;
     try {
       if (editingStaff) {
@@ -773,6 +785,8 @@ export const StaffPage: React.FC = () => {
     } catch (error: unknown) {
       const message = (error as { response?: { data?: { message?: string } } })?.response?.data?.message || 'Failed to save staff member';
       addToast(message, 'error');
+    } finally {
+      setIsSubmitting(false);
     }
   };
 
@@ -880,206 +894,27 @@ export const StaffPage: React.FC = () => {
     }
   };
 
-  const handleExportCv = useCallback((staffMember: Staff) => {
-    const formatDate = (d: string | null) => {
-      if (!d) return '—';
-      const date = new Date(d);
-      if (isNaN(date.getTime())) return d;
-      return date.toLocaleDateString('en-GB', { day: '2-digit', month: 'short', year: 'numeric' });
-    };
-
-    const empTypeLabel = (() => {
-      switch (staffMember.employment_type) {
-        case 'full_time': return 'Full Time';
-        case 'part_time': return 'Part Time';
-        case 'contract': return 'Contract';
-        case 'temporary': return 'Temporary';
-        default: return staffMember.employment_type;
-      }
-    })();
-
-    const age = staffMember.date_of_birth
-      ? (() => {
-          const today = new Date();
-          const dob = new Date(staffMember.date_of_birth!);
-          let y = today.getFullYear() - dob.getFullYear();
-          const m = today.getMonth() - dob.getMonth();
-          if (m < 0 || (m === 0 && today.getDate() < dob.getDate())) y--;
-          return `${y} years`;
-        })()
-      : '—';
-
-    const escape = (str: string | null | undefined) => {
-      if (!str) return '';
-      return str.replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;').replace(/"/g, '&quot;');
-    };
-
-    const degreesHtml = staffMember.educational_degrees?.length
-      ? staffMember.educational_degrees.map(d => `
-        <tr>
-          <td style="padding: 6px 10px; border: 1px solid #ddd;">${escape(d.name)}</td>
-          <td style="padding: 6px 10px; border: 1px solid #ddd;">${escape(d.pivot?.institution) || '—'}</td>
-          <td style="padding: 6px 10px; border: 1px solid #ddd; text-align: center;">${d.pivot?.year_obtained ?? '—'}</td>
-        </tr>`).join('')
-      : '<tr><td colspan="3" style="padding: 6px 10px; border: 1px solid #ddd; text-align: center; color: #999;">No degrees recorded</td></tr>';
-
-    const expHtml = staffMember.experiences?.length
-      ? staffMember.experiences.map(e => `
-        <tr>
-          <td style="padding: 6px 10px; border: 1px solid #ddd;">${escape(e.company)}</td>
-          <td style="padding: 6px 10px; border: 1px solid #ddd;">${escape(e.position) || '—'}</td>
-          <td style="padding: 6px 10px; border: 1px solid #ddd; text-align: center;">${formatDate(e.from_date)} – ${e.is_current ? 'Present' : formatDate(e.to_date)}</td>
-        </tr>`).join('')
-      : '<tr><td colspan="3" style="padding: 6px 10px; border: 1px solid #ddd; text-align: center; color: #999;">No experience recorded</td></tr>';
-
-    const certHtml = staffMember.certifications?.length
-      ? staffMember.certifications.map(c => `
-        <tr>
-          <td style="padding: 6px 10px; border: 1px solid #ddd;">${escape(c.name)}</td>
-          <td style="padding: 6px 10px; border: 1px solid #ddd;">${escape(c.issuing_organization) || '—'}</td>
-          <td style="padding: 6px 10px; border: 1px solid #ddd; text-align: center;">${formatDate(c.issue_date)}</td>
-          <td style="padding: 6px 10px; border: 1px solid #ddd; text-align: center;">${c.expiry_date ? formatDate(c.expiry_date) : '—'}</td>
-          <td style="padding: 6px 10px; border: 1px solid #ddd; text-align: center;">${escape(c.credential_id) || '—'}</td>
-        </tr>`).join('')
-      : '<tr><td colspan="5" style="padding: 6px 10px; border: 1px solid #ddd; text-align: center; color: #999;">No certifications recorded</td></tr>';
-
-    const cvHtml = `<!DOCTYPE html>
-<html lang="en">
-<head>
-  <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>CV — ${escape(staffMember.full_name)}</title>
-  <style>
-    * { margin: 0; padding: 0; box-sizing: border-box; }
-    body { font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Oxygen, Ubuntu, sans-serif; font-size: 11px; color: #1e293b; padding: 28px 36px; line-height: 1.6; }
-    .header { padding-bottom: 12px; margin-bottom: 18px; border-bottom: 1px solid #e2e8f0; }
-    .header h1 { font-size: 20px; color: #0f172a; margin: 0 0 2px 0; font-weight: 700; letter-spacing: 0.3px; }
-    .header .staff-id { font-size: 10px; color: #64748b; margin: 0 0 6px 0; }
-    .header .accent-bar { height: 3px; background: #0d9488; width: 48px; margin: 0 0 8px 0; }
-    .header .contact-row { font-size: 10px; color: #475569; }
-    .section { margin-bottom: 16px; }
-    .section-title { font-size: 11px; font-weight: 700; color: #0f766e; background: #f0fdfa; padding: 5px 9px; margin-bottom: 7px; text-transform: uppercase; letter-spacing: 0.7px; }
-    table.details { width: 100%; border-collapse: collapse; }
-    table.details td { padding: 3px 7px; vertical-align: top; }
-    table.details .label { font-weight: 600; color: #475569; width: 140px; white-space: nowrap; }
-    table.details .value { color: #1e293b; }
-    table.data-table { width: 100%; border-collapse: collapse; margin-top: 3px; }
-    table.data-table th { background: #0d9488; color: #fff; padding: 5px 8px; text-align: left; font-size: 8.5px; font-weight: 600; text-transform: uppercase; letter-spacing: 0.4px; }
-    table.data-table td { padding: 4px 8px; border-bottom: 1px solid #e2e8f0; font-size: 9.5px; }
-    table.data-table tr:nth-child(even) td { background: #f8fafc; }
-    .badge { display: inline-block; padding: 2px 8px; font-size: 9px; font-weight: 600; border-radius: 4px; }
-    .badge-active { background: #d1fae5; color: #065f46; }
-    .badge-inactive { background: #fee2e2; color: #991b1b; }
-    .badge-valid { background: #d1fae5; color: #065f46; }
-    .badge-expired { background: #fef3c7; color: #92400e; }
-    .badge-na { color: #94a3b8; font-style: italic; font-weight: 400; }
-    .footer { margin-top: 22px; padding-top: 9px; border-top: 1px solid #e2e8f0; text-align: center; font-size: 8.5px; color: #94a3b8; }
-    .print-date { text-align: right; font-size: 8.5px; color: #94a3b8; }
-    @media print { body { padding: 18px 28px; } }
-  </style>
-</head>
-<body>
-  <div style="display: flex; justify-content: space-between; align-items: flex-start;" class="header">
-    <div>
-      <h1>${escape(staffMember.full_name)}</h1>
-      <div class="staff-id">Employee ID: ${escape(staffMember.employee_id || staffMember.staff_id || '')}</div>
-      <div class="accent-bar"></div>
-      <div class="contact-row">
-        ${staffMember.email ? `Email: ${escape(staffMember.email)}` : ''}${staffMember.email && (staffMember.phone || staffMember.mobile) ? ' &nbsp;|&nbsp; ' : ''}
-        ${staffMember.phone ? `Phone: ${escape(staffMember.phone)}` : ''}${staffMember.phone && staffMember.mobile ? ' &nbsp;|&nbsp; ' : ''}
-        ${staffMember.mobile ? `Mobile: ${escape(staffMember.mobile)}` : ''}
-      </div>
-    </div>
-    <div class="print-date">
-      Printed: ${new Date().toLocaleDateString('en-GB', { day: '2-digit', month: 'short', year: 'numeric', hour: '2-digit', minute: '2-digit' })}
-    </div>
-  </div>
-
-  <div class="section">
-    <div class="section-title">Personal Information</div>
-    <table class="details">
-      <tr><td class="label">Date of Birth</td><td class="value">${formatDate(staffMember.date_of_birth)}</td></tr>
-      <tr><td class="label">Age</td><td class="value">${age}</td></tr>
-      <tr><td class="label">National ID</td><td class="value">${escape(staffMember.national_id) || '—'}</td></tr>
-      <tr><td class="label">Gender</td><td class="value">${escape(staffMember.gender) || '—'}</td></tr>
-    </table>
-  </div>
-
-  <div class="section">
-    <div class="section-title">Professional Information</div>
-    <table class="details">
-      <tr><td class="label">PHC Center</td><td class="value">${escape(staffMember.center?.name) || '—'}</td></tr>
-      <tr><td class="label">Department</td><td class="value">${escape(staffMember.department?.name) || '—'}</td></tr>
-      <tr><td class="label">Role Name</td><td class="value">${escape(staffMember.professional?.name) || '—'}</td></tr>
-      <tr><td class="label">Clinic Assignment</td><td class="value">${escape(staffMember.clinic_assignment?.name) || '—'}</td></tr>
-      <tr><td class="label">Employment Type</td><td class="value"><span class="badge badge-active">${empTypeLabel}</span></td></tr>
-      <tr><td class="label">Hire Date</td><td class="value">${formatDate(staffMember.hire_date)}</td></tr>
-    </table>
-  </div>
-
-  <div class="section">
-    <div class="section-title">SCFHS Registration</div>
-    <table class="details">
-      <tr><td class="label">Registration No.</td><td class="value">${escape(staffMember.scfhs_registration_no) || '<span class="badge-na">N/A</span>'}</td></tr>
-      <tr><td class="label">Issue Date</td><td class="value">${formatDate(staffMember.scfhs_issue_date)}</td></tr>
-      <tr><td class="label">Expiry Date</td><td class="value">${formatDate(staffMember.scfhs_expiry_date)}</td></tr>
-      <tr><td class="label">Status</td><td class="value">${staffMember.scfhs_registration_no ? (staffMember.scfhs_expiry_date && new Date(staffMember.scfhs_expiry_date) < new Date(new Date().toISOString().split('T')[0]) ? '<span class="badge badge-expired">Expired</span>' : '<span class="badge badge-valid">Valid</span>') : '<span class="badge-na">N/A</span>'}</td></tr>
-    </table>
-  </div>
-
-  <div class="section">
-    <div class="section-title">Malpractice Insurance</div>
-    <table class="details">
-      <tr><td class="label">Policy No.</td><td class="value">${escape(staffMember.malpractice_insurance_no) || '<span class="badge-na">N/A</span>'}</td></tr>
-      <tr><td class="label">Issue Date</td><td class="value">${formatDate(staffMember.malpractice_issue_date)}</td></tr>
-      <tr><td class="label">Expiry Date</td><td class="value">${formatDate(staffMember.malpractice_expiry_date)}</td></tr>
-      <tr><td class="label">Status</td><td class="value">${staffMember.malpractice_insurance_no ? (staffMember.malpractice_expiry_date && new Date(staffMember.malpractice_expiry_date) < new Date(new Date().toISOString().split('T')[0]) ? '<span class="badge badge-expired">Expired</span>' : '<span class="badge badge-valid">Valid</span>') : '<span class="badge-na">N/A</span>'}</td></tr>
-    </table>
-  </div>
-
-  <div class="section">
-    <div class="section-title">Educational Degrees</div>
-    <table class="data-table">
-      <thead><tr><th>Degree</th><th>Institution</th><th style="text-align:center;">Year</th></tr></thead>
-      <tbody>${degreesHtml}</tbody>
-    </table>
-  </div>
-
-  <div class="section">
-    <div class="section-title">Work Experience</div>
-    <table class="data-table">
-      <thead><tr><th>Company</th><th>Position</th><th style="text-align:center;">Period</th></tr></thead>
-      <tbody>${expHtml}</tbody>
-    </table>
-  </div>
-
-  <div class="section">
-    <div class="section-title">Certifications</div>
-    <table class="data-table">
-      <thead><tr><th>Name</th><th>Organization</th><th style="text-align:center;">Issue Date</th><th style="text-align:center;">Expiry Date</th><th style="text-align:center;">Credential ID</th></tr></thead>
-      <tbody>${certHtml}</tbody>
-    </table>
-  </div>
-
-  <div class="footer">
-    PHC Evaluation System — Staff CV — Generated on ${new Date().toLocaleDateString('en-GB', { day: '2-digit', month: 'short', year: 'numeric' })}
-  </div>
-</body>
-</html>`;
-
-    const printWindow = window.open('', '_blank');
-    if (!printWindow) {
-      addToast('Please allow pop-ups to export CV', 'error');
-      return;
+  const handleExportCv = async (staffMember: Staff) => {
+    try {
+      const token = localStorage.getItem('auth_token') || sessionStorage.getItem('auth_token');
+      const response = await fetch(`/api/v1/staff/${staffMember.id}/cv`, {
+        headers: token ? { Authorization: `Bearer ${token}` } : {},
+      });
+      if (!response.ok) throw new Error('Export failed');
+      const blob = await response.blob();
+      const url = window.URL.createObjectURL(blob);
+      const link = document.createElement('a');
+      link.href = url;
+      link.download = `cv-${staffMember.first_name}-${staffMember.last_name}.pdf`;
+      document.body.appendChild(link);
+      link.click();
+      link.remove();
+      window.URL.revokeObjectURL(url);
+      addToast('CV exported successfully', 'success');
+    } catch {
+      addToast('Failed to export CV. Please try again.', 'error');
     }
-    printWindow.document.write(cvHtml);
-    printWindow.document.close();
-    printWindow.focus();
-    // Delay print to allow fonts/styles to render
-    setTimeout(() => {
-      printWindow.print();
-    }, 500);
-  }, [addToast]);
+  };
 
   const handleClearSelection = () => {
     setSelectedStaff(null);
@@ -1525,7 +1360,7 @@ export const StaffPage: React.FC = () => {
             staff={editingStaff || undefined}
             onSubmit={handleSubmit}
             onCancel={handleCloseModal}
-            isLoading={isLoading}
+            isLoading={isLoading || isSubmitting}
           />
         </ModalContent>
       </Modal>

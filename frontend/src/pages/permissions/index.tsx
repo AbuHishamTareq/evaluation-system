@@ -47,7 +47,11 @@ function capitalize(str: string): string {
 // ─── Permissions Page ────────────────────────────────────────────────────────
 
 export const PermissionsPage: React.FC = () => {
-  const { allPermissions, isLoading, error, fetchAllPermissions, clearError } = useRoleStore();
+  const allPermissions = useRoleStore((s) => s.allPermissions);
+  const isLoading = useRoleStore((s) => s.isLoading);
+  const error = useRoleStore((s) => s.error);
+  const fetchAllPermissions = useRoleStore((s) => s.fetchAllPermissions);
+  const clearError = useRoleStore((s) => s.clearError);
   const [searchQuery, setSearchQuery] = useState('');
   const [dropdownOpen, setDropdownOpen] = useState(false);
   const [highlightedIndex, setHighlightedIndex] = useState(-1);

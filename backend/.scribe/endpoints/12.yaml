@@ -1,19 +1,19 @@
-name: 'Classification - Ranks'
+name: 'Classification - Fields'
 description: |-
 
-  APIs for managing classification ranks.
+  APIs for managing classification fields.
 endpoints:
   -
     custom: []
     httpMethods:
       - GET
-    uri: api/v1/ranks
+    uri: api/v1/fields
     metadata:
       custom: []
-      groupName: 'Classification - Ranks'
+      groupName: 'Classification - Fields'
       groupDescription: |-
 
-        APIs for managing classification ranks.
+        APIs for managing classification fields.
       subgroup: ''
       subgroupDescription: ''
       title: ''
@@ -39,7 +39,12 @@ endpoints:
         headers:
           cache-control: 'no-cache, private'
           content-type: application/json
-          access-control-allow-origin: '*'
+          x-content-type-options: nosniff
+          x-frame-options: DENY
+          referrer-policy: strict-origin-when-cross-origin
+          content-security-policy: "default-src 'self'; script-src 'self'; style-src 'self' 'unsafe-inline'; img-src 'self' data:; font-src 'self'; connect-src 'self'"
+          access-control-allow-origin: 'http://localhost:5173'
+          access-control-allow-credentials: 'true'
         description: null
     responseFields: []
     auth:
@@ -53,13 +58,13 @@ endpoints:
     custom: []
     httpMethods:
       - POST
-    uri: api/v1/ranks
+    uri: api/v1/fields
     metadata:
       custom: []
-      groupName: 'Classification - Ranks'
+      groupName: 'Classification - Fields'
       groupDescription: |-
 
-        APIs for managing classification ranks.
+        APIs for managing classification fields.
       subgroup: ''
       subgroupDescription: ''
       title: ''
@@ -97,17 +102,6 @@ endpoints:
         exampleWasSpecified: false
         nullable: true
         deprecated: false
-      level:
-        custom: []
-        name: level
-        description: 'Must be at least 0.'
-        required: false
-        example: 60
-        type: integer
-        enumValues: []
-        exampleWasSpecified: false
-        nullable: true
-        deprecated: false
       is_active:
         custom: []
         name: is_active
@@ -122,7 +116,6 @@ endpoints:
     cleanBodyParameters:
       name: b
       description: 'Eius et animi quos velit et.'
-      level: 60
       is_active: false
     fileParameters: []
     responses: []
@@ -138,13 +131,13 @@ endpoints:
     custom: []
     httpMethods:
       - POST
-    uri: api/v1/ranks/import
+    uri: api/v1/fields/import
     metadata:
       custom: []
-      groupName: 'Classification - Ranks'
+      groupName: 'Classification - Fields'
       groupDescription: |-
 
-        APIs for managing classification ranks.
+        APIs for managing classification fields.
       subgroup: ''
       subgroupDescription: ''
       title: ''
@@ -163,7 +156,7 @@ endpoints:
       file:
         custom: []
         name: file
-        description: 'Must be a file.'
+        description: 'Must be a file. Must not be greater than 10240 kilobytes.'
         required: true
         example: null
         type: file
@@ -187,13 +180,13 @@ endpoints:
     custom: []
     httpMethods:
       - GET
-    uri: api/v1/ranks/export
+    uri: api/v1/fields/export
     metadata:
       custom: []
-      groupName: 'Classification - Ranks'
+      groupName: 'Classification - Fields'
       groupDescription: |-
 
-        APIs for managing classification ranks.
+        APIs for managing classification fields.
       subgroup: ''
       subgroupDescription: ''
       title: ''
@@ -219,7 +212,12 @@ endpoints:
         headers:
           cache-control: 'no-cache, private'
           content-type: application/json
-          access-control-allow-origin: '*'
+          x-content-type-options: nosniff
+          x-frame-options: DENY
+          referrer-policy: strict-origin-when-cross-origin
+          content-security-policy: "default-src 'self'; script-src 'self'; style-src 'self' 'unsafe-inline'; img-src 'self' data:; font-src 'self'; connect-src 'self'"
+          access-control-allow-origin: 'http://localhost:5173'
+          access-control-allow-credentials: 'true'
         description: null
     responseFields: []
     auth:
@@ -233,13 +231,13 @@ endpoints:
     custom: []
     httpMethods:
       - GET
-    uri: api/v1/ranks/sample
+    uri: api/v1/fields/sample
     metadata:
       custom: []
-      groupName: 'Classification - Ranks'
+      groupName: 'Classification - Fields'
       groupDescription: |-
 
-        APIs for managing classification ranks.
+        APIs for managing classification fields.
       subgroup: ''
       subgroupDescription: ''
       title: ''
@@ -265,7 +263,12 @@ endpoints:
         headers:
           cache-control: 'no-cache, private'
           content-type: application/json
-          access-control-allow-origin: '*'
+          x-content-type-options: nosniff
+          x-frame-options: DENY
+          referrer-policy: strict-origin-when-cross-origin
+          content-security-policy: "default-src 'self'; script-src 'self'; style-src 'self' 'unsafe-inline'; img-src 'self' data:; font-src 'self'; connect-src 'self'"
+          access-control-allow-origin: 'http://localhost:5173'
+          access-control-allow-credentials: 'true'
         description: null
     responseFields: []
     auth:
@@ -279,13 +282,13 @@ endpoints:
     custom: []
     httpMethods:
       - GET
-    uri: api/v1/ranks/active
+    uri: api/v1/fields/active
     metadata:
       custom: []
-      groupName: 'Classification - Ranks'
+      groupName: 'Classification - Fields'
       groupDescription: |-
 
-        APIs for managing classification ranks.
+        APIs for managing classification fields.
       subgroup: ''
       subgroupDescription: ''
       title: ''
@@ -311,7 +314,12 @@ endpoints:
         headers:
           cache-control: 'no-cache, private'
           content-type: application/json
-          access-control-allow-origin: '*'
+          x-content-type-options: nosniff
+          x-frame-options: DENY
+          referrer-policy: strict-origin-when-cross-origin
+          content-security-policy: "default-src 'self'; script-src 'self'; style-src 'self' 'unsafe-inline'; img-src 'self' data:; font-src 'self'; connect-src 'self'"
+          access-control-allow-origin: 'http://localhost:5173'
+          access-control-allow-credentials: 'true'
         description: null
     responseFields: []
     auth:
@@ -325,13 +333,13 @@ endpoints:
     custom: []
     httpMethods:
       - GET
-    uri: api/v1/ranks/search
+    uri: api/v1/fields/search
     metadata:
       custom: []
-      groupName: 'Classification - Ranks'
+      groupName: 'Classification - Fields'
       groupDescription: |-
 
-        APIs for managing classification ranks.
+        APIs for managing classification fields.
       subgroup: ''
       subgroupDescription: ''
       title: ''
@@ -357,7 +365,12 @@ endpoints:
         headers:
           cache-control: 'no-cache, private'
           content-type: application/json
-          access-control-allow-origin: '*'
+          x-content-type-options: nosniff
+          x-frame-options: DENY
+          referrer-policy: strict-origin-when-cross-origin
+          content-security-policy: "default-src 'self'; script-src 'self'; style-src 'self' 'unsafe-inline'; img-src 'self' data:; font-src 'self'; connect-src 'self'"
+          access-control-allow-origin: 'http://localhost:5173'
+          access-control-allow-credentials: 'true'
         description: null
     responseFields: []
     auth:
@@ -371,13 +384,13 @@ endpoints:
     custom: []
     httpMethods:
       - GET
-    uri: 'api/v1/ranks/{id}'
+    uri: 'api/v1/fields/{id}'
     metadata:
       custom: []
-      groupName: 'Classification - Ranks'
+      groupName: 'Classification - Fields'
       groupDescription: |-
 
-        APIs for managing classification ranks.
+        APIs for managing classification fields.
       subgroup: ''
       subgroupDescription: ''
       title: ''
@@ -392,7 +405,7 @@ endpoints:
       id:
         custom: []
         name: id
-        description: 'The ID of the rank.'
+        description: 'The ID of the field.'
         required: true
         example: architecto
         type: string
@@ -415,7 +428,12 @@ endpoints:
         headers:
           cache-control: 'no-cache, private'
           content-type: application/json
-          access-control-allow-origin: '*'
+          x-content-type-options: nosniff
+          x-frame-options: DENY
+          referrer-policy: strict-origin-when-cross-origin
+          content-security-policy: "default-src 'self'; script-src 'self'; style-src 'self' 'unsafe-inline'; img-src 'self' data:; font-src 'self'; connect-src 'self'"
+          access-control-allow-origin: 'http://localhost:5173'
+          access-control-allow-credentials: 'true'
         description: null
     responseFields: []
     auth:
@@ -429,13 +447,13 @@ endpoints:
     custom: []
     httpMethods:
       - PUT
-    uri: 'api/v1/ranks/{id}'
+    uri: 'api/v1/fields/{id}'
     metadata:
       custom: []
-      groupName: 'Classification - Ranks'
+      groupName: 'Classification - Fields'
       groupDescription: |-
 
-        APIs for managing classification ranks.
+        APIs for managing classification fields.
       subgroup: ''
       subgroupDescription: ''
       title: ''
@@ -450,7 +468,7 @@ endpoints:
       id:
         custom: []
         name: id
-        description: 'The ID of the rank.'
+        description: 'The ID of the field.'
         required: true
         example: architecto
         type: string
@@ -485,23 +503,12 @@ endpoints:
         exampleWasSpecified: false
         nullable: true
         deprecated: false
-      level:
-        custom: []
-        name: level
-        description: 'Must be at least 0.'
-        required: false
-        example: 60
-        type: integer
-        enumValues: []
-        exampleWasSpecified: false
-        nullable: false
-        deprecated: false
       is_active:
         custom: []
         name: is_active
         description: ''
         required: false
-        example: false
+        example: true
         type: boolean
         enumValues: []
         exampleWasSpecified: false
@@ -509,8 +516,7 @@ endpoints:
         deprecated: false
     cleanBodyParameters:
       description: 'Eius et animi quos velit et.'
-      level: 60
-      is_active: false
+      is_active: true
     fileParameters: []
     responses: []
     responseFields: []
@@ -525,13 +531,13 @@ endpoints:
     custom: []
     httpMethods:
       - DELETE
-    uri: 'api/v1/ranks/{id}'
+    uri: 'api/v1/fields/{id}'
     metadata:
       custom: []
-      groupName: 'Classification - Ranks'
+      groupName: 'Classification - Fields'
       groupDescription: |-
 
-        APIs for managing classification ranks.
+        APIs for managing classification fields.
       subgroup: ''
       subgroupDescription: ''
       title: ''
@@ -546,7 +552,7 @@ endpoints:
       id:
         custom: []
         name: id
-        description: 'The ID of the rank.'
+        description: 'The ID of the field.'
         required: true
         example: architecto
         type: string

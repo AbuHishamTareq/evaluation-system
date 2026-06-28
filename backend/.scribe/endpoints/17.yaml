@@ -1,19 +1,19 @@
-name: 'Clinic Assignments'
+name: 'Educational Degrees'
 description: |-
 
-  APIs for managing clinic assignment records.
+  APIs for managing educational degree records.
 endpoints:
   -
     custom: []
     httpMethods:
       - GET
-    uri: api/v1/clinic-assignments
+    uri: api/v1/educational-degrees
     metadata:
       custom: []
-      groupName: 'Clinic Assignments'
+      groupName: 'Educational Degrees'
       groupDescription: |-
 
-        APIs for managing clinic assignment records.
+        APIs for managing educational degree records.
       subgroup: ''
       subgroupDescription: ''
       title: ''
@@ -39,7 +39,12 @@ endpoints:
         headers:
           cache-control: 'no-cache, private'
           content-type: application/json
-          access-control-allow-origin: '*'
+          x-content-type-options: nosniff
+          x-frame-options: DENY
+          referrer-policy: strict-origin-when-cross-origin
+          content-security-policy: "default-src 'self'; script-src 'self'; style-src 'self' 'unsafe-inline'; img-src 'self' data:; font-src 'self'; connect-src 'self'"
+          access-control-allow-origin: 'http://localhost:5173'
+          access-control-allow-credentials: 'true'
         description: null
     responseFields: []
     auth:
@@ -53,13 +58,13 @@ endpoints:
     custom: []
     httpMethods:
       - POST
-    uri: api/v1/clinic-assignments
+    uri: api/v1/educational-degrees
     metadata:
       custom: []
-      groupName: 'Clinic Assignments'
+      groupName: 'Educational Degrees'
       groupDescription: |-
 
-        APIs for managing clinic assignment records.
+        APIs for managing educational degree records.
       subgroup: ''
       subgroupDescription: ''
       title: ''
@@ -102,7 +107,7 @@ endpoints:
         name: is_active
         description: ''
         required: false
-        example: false
+        example: true
         type: boolean
         enumValues: []
         exampleWasSpecified: false
@@ -111,7 +116,7 @@ endpoints:
     cleanBodyParameters:
       name: b
       description: 'Eius et animi quos velit et.'
-      is_active: false
+      is_active: true
     fileParameters: []
     responses: []
     responseFields: []
@@ -126,13 +131,13 @@ endpoints:
     custom: []
     httpMethods:
       - POST
-    uri: api/v1/clinic-assignments/import
+    uri: api/v1/educational-degrees/import
     metadata:
       custom: []
-      groupName: 'Clinic Assignments'
+      groupName: 'Educational Degrees'
       groupDescription: |-
 
-        APIs for managing clinic assignment records.
+        APIs for managing educational degree records.
       subgroup: ''
       subgroupDescription: ''
       title: ''
@@ -175,71 +180,13 @@ endpoints:
     custom: []
     httpMethods:
       - GET
-    uri: 'api/v1/clinic-assignments/export/{format}'
+    uri: api/v1/educational-degrees/export
     metadata:
       custom: []
-      groupName: 'Clinic Assignments'
+      groupName: 'Educational Degrees'
       groupDescription: |-
 
-        APIs for managing clinic assignment records.
-      subgroup: ''
-      subgroupDescription: ''
-      title: ''
-      description: ''
-      authenticated: true
-      deprecated: false
-    headers:
-      Authorization: 'Bearer {YOUR_AUTH_KEY}'
-      Content-Type: application/json
-      Accept: application/json
-    urlParameters:
-      format:
-        custom: []
-        name: format
-        description: ''
-        required: true
-        example: architecto
-        type: string
-        enumValues: []
-        exampleWasSpecified: false
-        nullable: false
-        deprecated: false
-    cleanUrlParameters:
-      format: architecto
-    queryParameters: []
-    cleanQueryParameters: []
-    bodyParameters: []
-    cleanBodyParameters: []
-    fileParameters: []
-    responses:
-      -
-        custom: []
-        status: 401
-        content: '{"message":"Unauthenticated."}'
-        headers:
-          cache-control: 'no-cache, private'
-          content-type: application/json
-          access-control-allow-origin: '*'
-        description: null
-    responseFields: []
-    auth:
-      - headers
-      - Authorization
-      - 'Bearer 6g43cv8PD1aE5beadkZfhV6'
-    controller: null
-    method: null
-    route: null
-  -
-    custom: []
-    httpMethods:
-      - GET
-    uri: api/v1/clinic-assignments/sample
-    metadata:
-      custom: []
-      groupName: 'Clinic Assignments'
-      groupDescription: |-
-
-        APIs for managing clinic assignment records.
+        APIs for managing educational degree records.
       subgroup: ''
       subgroupDescription: ''
       title: ''
@@ -265,7 +212,12 @@ endpoints:
         headers:
           cache-control: 'no-cache, private'
           content-type: application/json
-          access-control-allow-origin: '*'
+          x-content-type-options: nosniff
+          x-frame-options: DENY
+          referrer-policy: strict-origin-when-cross-origin
+          content-security-policy: "default-src 'self'; script-src 'self'; style-src 'self' 'unsafe-inline'; img-src 'self' data:; font-src 'self'; connect-src 'self'"
+          access-control-allow-origin: 'http://localhost:5173'
+          access-control-allow-credentials: 'true'
         description: null
     responseFields: []
     auth:
@@ -279,13 +231,13 @@ endpoints:
     custom: []
     httpMethods:
       - GET
-    uri: api/v1/clinic-assignments/active
+    uri: api/v1/educational-degrees/sample
     metadata:
       custom: []
-      groupName: 'Clinic Assignments'
+      groupName: 'Educational Degrees'
       groupDescription: |-
 
-        APIs for managing clinic assignment records.
+        APIs for managing educational degree records.
       subgroup: ''
       subgroupDescription: ''
       title: ''
@@ -311,7 +263,12 @@ endpoints:
         headers:
           cache-control: 'no-cache, private'
           content-type: application/json
-          access-control-allow-origin: '*'
+          x-content-type-options: nosniff
+          x-frame-options: DENY
+          referrer-policy: strict-origin-when-cross-origin
+          content-security-policy: "default-src 'self'; script-src 'self'; style-src 'self' 'unsafe-inline'; img-src 'self' data:; font-src 'self'; connect-src 'self'"
+          access-control-allow-origin: 'http://localhost:5173'
+          access-control-allow-credentials: 'true'
         description: null
     responseFields: []
     auth:
@@ -325,13 +282,13 @@ endpoints:
     custom: []
     httpMethods:
       - GET
-    uri: api/v1/clinic-assignments/search
+    uri: api/v1/educational-degrees/active
     metadata:
       custom: []
-      groupName: 'Clinic Assignments'
+      groupName: 'Educational Degrees'
       groupDescription: |-
 
-        APIs for managing clinic assignment records.
+        APIs for managing educational degree records.
       subgroup: ''
       subgroupDescription: ''
       title: ''
@@ -357,7 +314,12 @@ endpoints:
         headers:
           cache-control: 'no-cache, private'
           content-type: application/json
-          access-control-allow-origin: '*'
+          x-content-type-options: nosniff
+          x-frame-options: DENY
+          referrer-policy: strict-origin-when-cross-origin
+          content-security-policy: "default-src 'self'; script-src 'self'; style-src 'self' 'unsafe-inline'; img-src 'self' data:; font-src 'self'; connect-src 'self'"
+          access-control-allow-origin: 'http://localhost:5173'
+          access-control-allow-credentials: 'true'
         description: null
     responseFields: []
     auth:
@@ -371,13 +333,64 @@ endpoints:
     custom: []
     httpMethods:
       - GET
-    uri: 'api/v1/clinic-assignments/{id}'
+    uri: api/v1/educational-degrees/search
     metadata:
       custom: []
-      groupName: 'Clinic Assignments'
+      groupName: 'Educational Degrees'
       groupDescription: |-
 
-        APIs for managing clinic assignment records.
+        APIs for managing educational degree records.
+      subgroup: ''
+      subgroupDescription: ''
+      title: ''
+      description: ''
+      authenticated: true
+      deprecated: false
+    headers:
+      Authorization: 'Bearer {YOUR_AUTH_KEY}'
+      Content-Type: application/json
+      Accept: application/json
+    urlParameters: []
+    cleanUrlParameters: []
+    queryParameters: []
+    cleanQueryParameters: []
+    bodyParameters: []
+    cleanBodyParameters: []
+    fileParameters: []
+    responses:
+      -
+        custom: []
+        status: 401
+        content: '{"message":"Unauthenticated."}'
+        headers:
+          cache-control: 'no-cache, private'
+          content-type: application/json
+          x-content-type-options: nosniff
+          x-frame-options: DENY
+          referrer-policy: strict-origin-when-cross-origin
+          content-security-policy: "default-src 'self'; script-src 'self'; style-src 'self' 'unsafe-inline'; img-src 'self' data:; font-src 'self'; connect-src 'self'"
+          access-control-allow-origin: 'http://localhost:5173'
+          access-control-allow-credentials: 'true'
+        description: null
+    responseFields: []
+    auth:
+      - headers
+      - Authorization
+      - 'Bearer 6g43cv8PD1aE5beadkZfhV6'
+    controller: null
+    method: null
+    route: null
+  -
+    custom: []
+    httpMethods:
+      - GET
+    uri: 'api/v1/educational-degrees/{id}'
+    metadata:
+      custom: []
+      groupName: 'Educational Degrees'
+      groupDescription: |-
+
+        APIs for managing educational degree records.
       subgroup: ''
       subgroupDescription: ''
       title: ''
@@ -392,16 +405,16 @@ endpoints:
       id:
         custom: []
         name: id
-        description: 'The ID of the clinic assignment.'
+        description: 'The ID of the educational degree.'
         required: true
-        example: 1
-        type: integer
+        example: architecto
+        type: string
         enumValues: []
         exampleWasSpecified: false
         nullable: false
         deprecated: false
     cleanUrlParameters:
-      id: 1
+      id: architecto
     queryParameters: []
     cleanQueryParameters: []
     bodyParameters: []
@@ -415,7 +428,12 @@ endpoints:
         headers:
           cache-control: 'no-cache, private'
           content-type: application/json
-          access-control-allow-origin: '*'
+          x-content-type-options: nosniff
+          x-frame-options: DENY
+          referrer-policy: strict-origin-when-cross-origin
+          content-security-policy: "default-src 'self'; script-src 'self'; style-src 'self' 'unsafe-inline'; img-src 'self' data:; font-src 'self'; connect-src 'self'"
+          access-control-allow-origin: 'http://localhost:5173'
+          access-control-allow-credentials: 'true'
         description: null
     responseFields: []
     auth:
@@ -429,13 +447,13 @@ endpoints:
     custom: []
     httpMethods:
       - PUT
-    uri: 'api/v1/clinic-assignments/{id}'
+    uri: 'api/v1/educational-degrees/{id}'
     metadata:
       custom: []
-      groupName: 'Clinic Assignments'
+      groupName: 'Educational Degrees'
       groupDescription: |-
 
-        APIs for managing clinic assignment records.
+        APIs for managing educational degree records.
       subgroup: ''
       subgroupDescription: ''
       title: ''
@@ -450,16 +468,16 @@ endpoints:
       id:
         custom: []
         name: id
-        description: 'The ID of the clinic assignment.'
+        description: 'The ID of the educational degree.'
         required: true
-        example: 1
-        type: integer
+        example: architecto
+        type: string
         enumValues: []
         exampleWasSpecified: false
         nullable: false
         deprecated: false
     cleanUrlParameters:
-      id: 1
+      id: architecto
     queryParameters: []
     cleanQueryParameters: []
     bodyParameters:
@@ -490,7 +508,7 @@ endpoints:
         name: is_active
         description: ''
         required: false
-        example: true
+        example: false
         type: boolean
         enumValues: []
         exampleWasSpecified: false
@@ -498,7 +516,7 @@ endpoints:
         deprecated: false
     cleanBodyParameters:
       description: 'Eius et animi quos velit et.'
-      is_active: true
+      is_active: false
     fileParameters: []
     responses: []
     responseFields: []
@@ -513,13 +531,13 @@ endpoints:
     custom: []
     httpMethods:
       - PATCH
-    uri: 'api/v1/clinic-assignments/{id}/toggle-status'
+    uri: 'api/v1/educational-degrees/{id}/toggle-status'
     metadata:
       custom: []
-      groupName: 'Clinic Assignments'
+      groupName: 'Educational Degrees'
       groupDescription: |-
 
-        APIs for managing clinic assignment records.
+        APIs for managing educational degree records.
       subgroup: ''
       subgroupDescription: ''
       title: ''
@@ -534,16 +552,16 @@ endpoints:
       id:
         custom: []
         name: id
-        description: 'The ID of the clinic assignment.'
+        description: 'The ID of the educational degree.'
         required: true
-        example: 1
-        type: integer
+        example: architecto
+        type: string
         enumValues: []
         exampleWasSpecified: false
         nullable: false
         deprecated: false
     cleanUrlParameters:
-      id: 1
+      id: architecto
     queryParameters: []
     cleanQueryParameters: []
     bodyParameters: []
@@ -562,13 +580,13 @@ endpoints:
     custom: []
     httpMethods:
       - DELETE
-    uri: 'api/v1/clinic-assignments/{id}'
+    uri: 'api/v1/educational-degrees/{id}'
     metadata:
       custom: []
-      groupName: 'Clinic Assignments'
+      groupName: 'Educational Degrees'
       groupDescription: |-
 
-        APIs for managing clinic assignment records.
+        APIs for managing educational degree records.
       subgroup: ''
       subgroupDescription: ''
       title: ''
@@ -583,16 +601,16 @@ endpoints:
       id:
         custom: []
         name: id
-        description: 'The ID of the clinic assignment.'
+        description: 'The ID of the educational degree.'
         required: true
-        example: 1
-        type: integer
+        example: architecto
+        type: string
         enumValues: []
         exampleWasSpecified: false
         nullable: false
         deprecated: false
     cleanUrlParameters:
-      id: 1
+      id: architecto
     queryParameters: []
     cleanQueryParameters: []
     bodyParameters: []

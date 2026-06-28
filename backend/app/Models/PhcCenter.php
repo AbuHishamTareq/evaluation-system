@@ -61,8 +61,18 @@ class PhcCenter extends Model
         return $this->hasMany(Staff::class, 'phc_center_id');
     }
 
+    public function medicationEvaluations(): HasMany
+    {
+        return $this->hasMany(MedicationEvaluation::class, 'phc_center_id');
+    }
+
     public function phcMedications(): HasMany
     {
         return $this->hasMany(PhcMedication::class, 'phc_center_id');
+    }
+
+    public function teamCodes(): HasMany
+    {
+        return $this->hasMany(TeamCode::class, 'center_id');
     }
 }

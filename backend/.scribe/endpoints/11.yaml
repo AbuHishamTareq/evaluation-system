@@ -1,19 +1,19 @@
-name: 'Classification - Specialties'
+name: Zones
 description: |-
 
-  APIs for managing classification specialties.
+  APIs for managing geographic zones and their hierarchical structure.
 endpoints:
   -
     custom: []
     httpMethods:
       - GET
-    uri: api/v1/specialties
+    uri: api/v1/zones
     metadata:
       custom: []
-      groupName: 'Classification - Specialties'
+      groupName: Zones
       groupDescription: |-
 
-        APIs for managing classification specialties.
+        APIs for managing geographic zones and their hierarchical structure.
       subgroup: ''
       subgroupDescription: ''
       title: ''
@@ -39,7 +39,12 @@ endpoints:
         headers:
           cache-control: 'no-cache, private'
           content-type: application/json
-          access-control-allow-origin: '*'
+          x-content-type-options: nosniff
+          x-frame-options: DENY
+          referrer-policy: strict-origin-when-cross-origin
+          content-security-policy: "default-src 'self'; script-src 'self'; style-src 'self' 'unsafe-inline'; img-src 'self' data:; font-src 'self'; connect-src 'self'"
+          access-control-allow-origin: 'http://localhost:5173'
+          access-control-allow-credentials: 'true'
         description: null
     responseFields: []
     auth:
@@ -53,13 +58,13 @@ endpoints:
     custom: []
     httpMethods:
       - POST
-    uri: api/v1/specialties
+    uri: api/v1/zones
     metadata:
       custom: []
-      groupName: 'Classification - Specialties'
+      groupName: Zones
       groupDescription: |-
 
-        APIs for managing classification specialties.
+        APIs for managing geographic zones and their hierarchical structure.
       subgroup: ''
       subgroupDescription: ''
       title: ''
@@ -75,25 +80,50 @@ endpoints:
     queryParameters: []
     cleanQueryParameters: []
     bodyParameters:
-      field_id:
-        custom: []
-        name: field_id
-        description: 'Must match an existing stored value.'
-        required: true
-        example: 16
-        type: integer
-        enumValues: []
-        exampleWasSpecified: false
-        nullable: false
-        deprecated: false
       name:
         custom: []
         name: name
         description: 'Must not be greater than 255 characters.'
         required: true
+        example: b
+        type: string
+        enumValues: []
+        exampleWasSpecified: false
+        nullable: false
+        deprecated: false
+      code:
+        custom: []
+        name: code
+        description: 'Must not be greater than 50 characters.'
+        required: true
         example: 'n'
         type: string
         enumValues: []
+        exampleWasSpecified: false
+        nullable: false
+        deprecated: false
+      parent_id:
+        custom: []
+        name: parent_id
+        description: 'Must match an existing stored value.'
+        required: false
+        example: 16
+        type: integer
+        enumValues: []
+        exampleWasSpecified: false
+        nullable: true
+        deprecated: false
+      level:
+        custom: []
+        name: level
+        description: ''
+        required: true
+        example: sub_district
+        type: string
+        enumValues:
+          - region
+          - district
+          - sub_district
         exampleWasSpecified: false
         nullable: false
         deprecated: false
@@ -108,22 +138,12 @@ endpoints:
         exampleWasSpecified: false
         nullable: true
         deprecated: false
-      is_active:
-        custom: []
-        name: is_active
-        description: ''
-        required: false
-        example: false
-        type: boolean
-        enumValues: []
-        exampleWasSpecified: false
-        nullable: true
-        deprecated: false
     cleanBodyParameters:
-      field_id: 16
-      name: 'n'
+      name: b
+      code: 'n'
+      parent_id: 16
+      level: sub_district
       description: 'Eius et animi quos velit et.'
-      is_active: false
     fileParameters: []
     responses: []
     responseFields: []
@@ -138,13 +158,13 @@ endpoints:
     custom: []
     httpMethods:
       - POST
-    uri: api/v1/specialties/import
+    uri: api/v1/zones/import
     metadata:
       custom: []
-      groupName: 'Classification - Specialties'
+      groupName: Zones
       groupDescription: |-
 
-        APIs for managing classification specialties.
+        APIs for managing geographic zones and their hierarchical structure.
       subgroup: ''
       subgroupDescription: ''
       title: ''
@@ -163,7 +183,7 @@ endpoints:
       file:
         custom: []
         name: file
-        description: 'Must be a file.'
+        description: 'Must be a file. Must not be greater than 10240 kilobytes.'
         required: true
         example: null
         type: file
@@ -187,13 +207,13 @@ endpoints:
     custom: []
     httpMethods:
       - GET
-    uri: api/v1/specialties/export
+    uri: api/v1/zones/export
     metadata:
       custom: []
-      groupName: 'Classification - Specialties'
+      groupName: Zones
       groupDescription: |-
 
-        APIs for managing classification specialties.
+        APIs for managing geographic zones and their hierarchical structure.
       subgroup: ''
       subgroupDescription: ''
       title: ''
@@ -219,7 +239,12 @@ endpoints:
         headers:
           cache-control: 'no-cache, private'
           content-type: application/json
-          access-control-allow-origin: '*'
+          x-content-type-options: nosniff
+          x-frame-options: DENY
+          referrer-policy: strict-origin-when-cross-origin
+          content-security-policy: "default-src 'self'; script-src 'self'; style-src 'self' 'unsafe-inline'; img-src 'self' data:; font-src 'self'; connect-src 'self'"
+          access-control-allow-origin: 'http://localhost:5173'
+          access-control-allow-credentials: 'true'
         description: null
     responseFields: []
     auth:
@@ -233,13 +258,13 @@ endpoints:
     custom: []
     httpMethods:
       - GET
-    uri: api/v1/specialties/sample
+    uri: api/v1/zones/tree
     metadata:
       custom: []
-      groupName: 'Classification - Specialties'
+      groupName: Zones
       groupDescription: |-
 
-        APIs for managing classification specialties.
+        APIs for managing geographic zones and their hierarchical structure.
       subgroup: ''
       subgroupDescription: ''
       title: ''
@@ -265,7 +290,12 @@ endpoints:
         headers:
           cache-control: 'no-cache, private'
           content-type: application/json
-          access-control-allow-origin: '*'
+          x-content-type-options: nosniff
+          x-frame-options: DENY
+          referrer-policy: strict-origin-when-cross-origin
+          content-security-policy: "default-src 'self'; script-src 'self'; style-src 'self' 'unsafe-inline'; img-src 'self' data:; font-src 'self'; connect-src 'self'"
+          access-control-allow-origin: 'http://localhost:5173'
+          access-control-allow-credentials: 'true'
         description: null
     responseFields: []
     auth:
@@ -279,13 +309,13 @@ endpoints:
     custom: []
     httpMethods:
       - GET
-    uri: api/v1/specialties/active
+    uri: api/v1/zones/roots
     metadata:
       custom: []
-      groupName: 'Classification - Specialties'
+      groupName: Zones
       groupDescription: |-
 
-        APIs for managing classification specialties.
+        APIs for managing geographic zones and their hierarchical structure.
       subgroup: ''
       subgroupDescription: ''
       title: ''
@@ -311,7 +341,12 @@ endpoints:
         headers:
           cache-control: 'no-cache, private'
           content-type: application/json
-          access-control-allow-origin: '*'
+          x-content-type-options: nosniff
+          x-frame-options: DENY
+          referrer-policy: strict-origin-when-cross-origin
+          content-security-policy: "default-src 'self'; script-src 'self'; style-src 'self' 'unsafe-inline'; img-src 'self' data:; font-src 'self'; connect-src 'self'"
+          access-control-allow-origin: 'http://localhost:5173'
+          access-control-allow-credentials: 'true'
         description: null
     responseFields: []
     auth:
@@ -325,13 +360,13 @@ endpoints:
     custom: []
     httpMethods:
       - GET
-    uri: api/v1/specialties/search
+    uri: api/v1/zones/search
     metadata:
       custom: []
-      groupName: 'Classification - Specialties'
+      groupName: Zones
       groupDescription: |-
 
-        APIs for managing classification specialties.
+        APIs for managing geographic zones and their hierarchical structure.
       subgroup: ''
       subgroupDescription: ''
       title: ''
@@ -357,7 +392,12 @@ endpoints:
         headers:
           cache-control: 'no-cache, private'
           content-type: application/json
-          access-control-allow-origin: '*'
+          x-content-type-options: nosniff
+          x-frame-options: DENY
+          referrer-policy: strict-origin-when-cross-origin
+          content-security-policy: "default-src 'self'; script-src 'self'; style-src 'self' 'unsafe-inline'; img-src 'self' data:; font-src 'self'; connect-src 'self'"
+          access-control-allow-origin: 'http://localhost:5173'
+          access-control-allow-credentials: 'true'
         description: null
     responseFields: []
     auth:
@@ -371,13 +411,13 @@ endpoints:
     custom: []
     httpMethods:
       - GET
-    uri: 'api/v1/specialties/field/{fieldId}'
+    uri: 'api/v1/zones/level/{level}'
     metadata:
       custom: []
-      groupName: 'Classification - Specialties'
+      groupName: Zones
       groupDescription: |-
 
-        APIs for managing classification specialties.
+        APIs for managing geographic zones and their hierarchical structure.
       subgroup: ''
       subgroupDescription: ''
       title: ''
@@ -389,10 +429,10 @@ endpoints:
       Content-Type: application/json
       Accept: application/json
     urlParameters:
-      fieldId:
+      level:
         custom: []
-        name: fieldId
-        description: ''
+        name: level
+        description: 'The level.'
         required: true
         example: architecto
         type: string
@@ -401,7 +441,7 @@ endpoints:
         nullable: false
         deprecated: false
     cleanUrlParameters:
-      fieldId: architecto
+      level: architecto
     queryParameters: []
     cleanQueryParameters: []
     bodyParameters: []
@@ -415,7 +455,12 @@ endpoints:
         headers:
           cache-control: 'no-cache, private'
           content-type: application/json
-          access-control-allow-origin: '*'
+          x-content-type-options: nosniff
+          x-frame-options: DENY
+          referrer-policy: strict-origin-when-cross-origin
+          content-security-policy: "default-src 'self'; script-src 'self'; style-src 'self' 'unsafe-inline'; img-src 'self' data:; font-src 'self'; connect-src 'self'"
+          access-control-allow-origin: 'http://localhost:5173'
+          access-control-allow-credentials: 'true'
         description: null
     responseFields: []
     auth:
@@ -429,13 +474,13 @@ endpoints:
     custom: []
     httpMethods:
       - GET
-    uri: 'api/v1/specialties/{id}'
+    uri: 'api/v1/zones/{id}/children'
     metadata:
       custom: []
-      groupName: 'Classification - Specialties'
+      groupName: Zones
       groupDescription: |-
 
-        APIs for managing classification specialties.
+        APIs for managing geographic zones and their hierarchical structure.
       subgroup: ''
       subgroupDescription: ''
       title: ''
@@ -450,7 +495,7 @@ endpoints:
       id:
         custom: []
         name: id
-        description: 'The ID of the specialty.'
+        description: 'The ID of the zone.'
         required: true
         example: architecto
         type: string
@@ -473,7 +518,201 @@ endpoints:
         headers:
           cache-control: 'no-cache, private'
           content-type: application/json
-          access-control-allow-origin: '*'
+          x-content-type-options: nosniff
+          x-frame-options: DENY
+          referrer-policy: strict-origin-when-cross-origin
+          content-security-policy: "default-src 'self'; script-src 'self'; style-src 'self' 'unsafe-inline'; img-src 'self' data:; font-src 'self'; connect-src 'self'"
+          access-control-allow-origin: 'http://localhost:5173'
+          access-control-allow-credentials: 'true'
+        description: null
+    responseFields: []
+    auth:
+      - headers
+      - Authorization
+      - 'Bearer 6g43cv8PD1aE5beadkZfhV6'
+    controller: null
+    method: null
+    route: null
+  -
+    custom: []
+    httpMethods:
+      - GET
+    uri: 'api/v1/zones/{id}/centers'
+    metadata:
+      custom: []
+      groupName: Zones
+      groupDescription: |-
+
+        APIs for managing geographic zones and their hierarchical structure.
+      subgroup: ''
+      subgroupDescription: ''
+      title: ''
+      description: ''
+      authenticated: true
+      deprecated: false
+    headers:
+      Authorization: 'Bearer {YOUR_AUTH_KEY}'
+      Content-Type: application/json
+      Accept: application/json
+    urlParameters:
+      id:
+        custom: []
+        name: id
+        description: 'The ID of the zone.'
+        required: true
+        example: architecto
+        type: string
+        enumValues: []
+        exampleWasSpecified: false
+        nullable: false
+        deprecated: false
+    cleanUrlParameters:
+      id: architecto
+    queryParameters: []
+    cleanQueryParameters: []
+    bodyParameters: []
+    cleanBodyParameters: []
+    fileParameters: []
+    responses:
+      -
+        custom: []
+        status: 401
+        content: '{"message":"Unauthenticated."}'
+        headers:
+          cache-control: 'no-cache, private'
+          content-type: application/json
+          x-content-type-options: nosniff
+          x-frame-options: DENY
+          referrer-policy: strict-origin-when-cross-origin
+          content-security-policy: "default-src 'self'; script-src 'self'; style-src 'self' 'unsafe-inline'; img-src 'self' data:; font-src 'self'; connect-src 'self'"
+          access-control-allow-origin: 'http://localhost:5173'
+          access-control-allow-credentials: 'true'
+        description: null
+    responseFields: []
+    auth:
+      - headers
+      - Authorization
+      - 'Bearer 6g43cv8PD1aE5beadkZfhV6'
+    controller: null
+    method: null
+    route: null
+  -
+    custom: []
+    httpMethods:
+      - GET
+    uri: 'api/v1/zones/{id}/hierarchy'
+    metadata:
+      custom: []
+      groupName: Zones
+      groupDescription: |-
+
+        APIs for managing geographic zones and their hierarchical structure.
+      subgroup: ''
+      subgroupDescription: ''
+      title: ''
+      description: ''
+      authenticated: true
+      deprecated: false
+    headers:
+      Authorization: 'Bearer {YOUR_AUTH_KEY}'
+      Content-Type: application/json
+      Accept: application/json
+    urlParameters:
+      id:
+        custom: []
+        name: id
+        description: 'The ID of the zone.'
+        required: true
+        example: architecto
+        type: string
+        enumValues: []
+        exampleWasSpecified: false
+        nullable: false
+        deprecated: false
+    cleanUrlParameters:
+      id: architecto
+    queryParameters: []
+    cleanQueryParameters: []
+    bodyParameters: []
+    cleanBodyParameters: []
+    fileParameters: []
+    responses:
+      -
+        custom: []
+        status: 401
+        content: '{"message":"Unauthenticated."}'
+        headers:
+          cache-control: 'no-cache, private'
+          content-type: application/json
+          x-content-type-options: nosniff
+          x-frame-options: DENY
+          referrer-policy: strict-origin-when-cross-origin
+          content-security-policy: "default-src 'self'; script-src 'self'; style-src 'self' 'unsafe-inline'; img-src 'self' data:; font-src 'self'; connect-src 'self'"
+          access-control-allow-origin: 'http://localhost:5173'
+          access-control-allow-credentials: 'true'
+        description: null
+    responseFields: []
+    auth:
+      - headers
+      - Authorization
+      - 'Bearer 6g43cv8PD1aE5beadkZfhV6'
+    controller: null
+    method: null
+    route: null
+  -
+    custom: []
+    httpMethods:
+      - GET
+    uri: 'api/v1/zones/{id}'
+    metadata:
+      custom: []
+      groupName: Zones
+      groupDescription: |-
+
+        APIs for managing geographic zones and their hierarchical structure.
+      subgroup: ''
+      subgroupDescription: ''
+      title: ''
+      description: ''
+      authenticated: true
+      deprecated: false
+    headers:
+      Authorization: 'Bearer {YOUR_AUTH_KEY}'
+      Content-Type: application/json
+      Accept: application/json
+    urlParameters:
+      id:
+        custom: []
+        name: id
+        description: 'The ID of the zone.'
+        required: true
+        example: architecto
+        type: string
+        enumValues: []
+        exampleWasSpecified: false
+        nullable: false
+        deprecated: false
+    cleanUrlParameters:
+      id: architecto
+    queryParameters: []
+    cleanQueryParameters: []
+    bodyParameters: []
+    cleanBodyParameters: []
+    fileParameters: []
+    responses:
+      -
+        custom: []
+        status: 401
+        content: '{"message":"Unauthenticated."}'
+        headers:
+          cache-control: 'no-cache, private'
+          content-type: application/json
+          x-content-type-options: nosniff
+          x-frame-options: DENY
+          referrer-policy: strict-origin-when-cross-origin
+          content-security-policy: "default-src 'self'; script-src 'self'; style-src 'self' 'unsafe-inline'; img-src 'self' data:; font-src 'self'; connect-src 'self'"
+          access-control-allow-origin: 'http://localhost:5173'
+          access-control-allow-credentials: 'true'
         description: null
     responseFields: []
     auth:
@@ -487,13 +726,13 @@ endpoints:
     custom: []
     httpMethods:
       - PUT
-    uri: 'api/v1/specialties/{id}'
+    uri: 'api/v1/zones/{id}'
     metadata:
       custom: []
-      groupName: 'Classification - Specialties'
+      groupName: Zones
       groupDescription: |-
 
-        APIs for managing classification specialties.
+        APIs for managing geographic zones and their hierarchical structure.
       subgroup: ''
       subgroupDescription: ''
       title: ''
@@ -508,7 +747,7 @@ endpoints:
       id:
         custom: []
         name: id
-        description: 'The ID of the specialty.'
+        description: 'The ID of the zone.'
         required: true
         example: architecto
         type: string
@@ -521,25 +760,50 @@ endpoints:
     queryParameters: []
     cleanQueryParameters: []
     bodyParameters:
-      field_id:
+      name:
         custom: []
-        name: field_id
+        name: name
+        description: 'Must not be greater than 255 characters.'
+        required: false
+        example: b
+        type: string
+        enumValues: []
+        exampleWasSpecified: false
+        nullable: false
+        deprecated: false
+      code:
+        custom: []
+        name: code
+        description: ''
+        required: false
+        example: null
+        type: string
+        enumValues: []
+        exampleWasSpecified: false
+        nullable: false
+        deprecated: false
+      parent_id:
+        custom: []
+        name: parent_id
         description: 'Must match an existing stored value.'
         required: false
         example: 16
         type: integer
         enumValues: []
         exampleWasSpecified: false
-        nullable: false
+        nullable: true
         deprecated: false
-      name:
+      level:
         custom: []
-        name: name
-        description: 'Must not be greater than 255 characters.'
+        name: level
+        description: ''
         required: false
-        example: 'n'
+        example: district
         type: string
-        enumValues: []
+        enumValues:
+          - region
+          - district
+          - sub_district
         exampleWasSpecified: false
         nullable: false
         deprecated: false
@@ -554,22 +818,11 @@ endpoints:
         exampleWasSpecified: false
         nullable: true
         deprecated: false
-      is_active:
-        custom: []
-        name: is_active
-        description: ''
-        required: false
-        example: true
-        type: boolean
-        enumValues: []
-        exampleWasSpecified: false
-        nullable: true
-        deprecated: false
     cleanBodyParameters:
-      field_id: 16
-      name: 'n'
+      name: b
+      parent_id: 16
+      level: district
       description: 'Eius et animi quos velit et.'
-      is_active: true
     fileParameters: []
     responses: []
     responseFields: []
@@ -584,13 +837,13 @@ endpoints:
     custom: []
     httpMethods:
       - DELETE
-    uri: 'api/v1/specialties/{id}'
+    uri: 'api/v1/zones/{id}'
     metadata:
       custom: []
-      groupName: 'Classification - Specialties'
+      groupName: Zones
       groupDescription: |-
 
-        APIs for managing classification specialties.
+        APIs for managing geographic zones and their hierarchical structure.
       subgroup: ''
       subgroupDescription: ''
       title: ''
@@ -605,7 +858,7 @@ endpoints:
       id:
         custom: []
         name: id
-        description: 'The ID of the specialty.'
+        description: 'The ID of the zone.'
         required: true
         example: architecto
         type: string

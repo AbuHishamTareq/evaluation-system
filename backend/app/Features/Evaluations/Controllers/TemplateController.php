@@ -6,6 +6,7 @@ use App\Features\Evaluations\Services\TemplateService;
 use App\Http\Controllers\Api\V1\BaseApiController;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\Log;
 
 /**
  * @group Evaluation Templates
@@ -119,7 +120,12 @@ class TemplateController extends BaseApiController
 
             return $this->successResponse($template, 'Template status updated successfully');
         } catch (\InvalidArgumentException $e) {
-            return $this->errorResponse($e->getMessage(), 404);
+            Log::error('Failed to toggle template status', [
+                'error' => $e->getMessage(),
+                'trace' => $e->getTraceAsString(),
+            ]);
+
+            return $this->errorResponse('Unable to toggle template status.', 404);
         }
     }
 

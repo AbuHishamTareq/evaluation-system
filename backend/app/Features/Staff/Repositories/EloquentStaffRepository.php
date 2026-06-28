@@ -8,9 +8,16 @@ use Illuminate\Pagination\LengthAwarePaginator;
 
 class EloquentStaffRepository implements StaffRepositoryInterface
 {
+    private const ALLOWED_SORT_FIELDS = [
+        'created_at', 'updated_at', 'first_name', 'last_name',
+        'employee_id', 'email', 'status', 'is_active',
+    ];
+
+    private const ALLOWED_SORT_DIRECTIONS = ['asc', 'desc'];
+
     public function getAll(array $filters = []): LengthAwarePaginator
     {
-        $query = Staff::query()->with(['center', 'user', 'educationalDegrees', 'experiences', 'certifications', 'documents', 'teamCode', 'department', 'clinicAssignment', 'professional']);
+        $query = Staff::query()->with(['center', 'department', 'professional']);
 
         if (isset($filters['search'])) {
             $search = $filters['search'];
@@ -44,8 +51,12 @@ class EloquentStaffRepository implements StaffRepositoryInterface
 
         $perPage = min((int) ($filters['per_page'] ?? 15), 100);
 
-        $sortField = $filters['sort_field'] ?? 'created_at';
-        $sortDirection = $filters['sort_direction'] ?? 'desc';
+        $sortField = in_array($filters['sort_field'] ?? '', self::ALLOWED_SORT_FIELDS)
+            ? $filters['sort_field']
+            : 'created_at';
+        $sortDirection = in_array($filters['sort_direction'] ?? '', self::ALLOWED_SORT_DIRECTIONS)
+            ? $filters['sort_direction']
+            : 'desc';
 
         return $query->orderBy($sortField, $sortDirection)->paginate($perPage);
     }

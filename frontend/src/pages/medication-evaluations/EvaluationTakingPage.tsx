@@ -10,7 +10,10 @@ import { useToast } from '../../components/ui/toast';
 export const EvaluationTakingPage: React.FC = () => {
   const { id } = useParams<{ id: string }>();
   const navigate = useNavigate();
-  const { currentEvaluation, fetchEvaluation, updateEvaluation, isLoading } = useMedicationEvaluationStore();
+  const currentEvaluation = useMedicationEvaluationStore((s) => s.currentEvaluation);
+  const fetchEvaluation = useMedicationEvaluationStore((s) => s.fetchEvaluation);
+  const updateEvaluation = useMedicationEvaluationStore((s) => s.updateEvaluation);
+  const isLoading = useMedicationEvaluationStore((s) => s.isLoading);
   const hasPermission = useAuthStore((state) => state.hasPermission);
   const { addToast } = useToast();
 

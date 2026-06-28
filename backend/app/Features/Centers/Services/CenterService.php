@@ -69,7 +69,7 @@ class CenterService
 
         $staffCount = $center->staff()->count();
         $evaluationsCount = Evaluation::whereHas('staff', function ($query) use ($centerId) {
-            $query->where('center_id', $centerId);
+            $query->where('phc_center_id', $centerId);
         })->count();
 
         return [

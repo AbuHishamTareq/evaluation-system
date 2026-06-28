@@ -10,7 +10,6 @@ import type {
   EvaluationTemplate,
   Center,
   ActionPlan,
-  DashboardStats,
   PaginatedResponse,
   Field,
   Specialty,
@@ -33,31 +32,23 @@ import { medicationEvaluationTemplateService, medicationEvaluationService } from
 // Auth Service
 export const authService = {
   login: async (credentials: { email: string; password: string; remember_me?: boolean }) => {
-    const response = await apiClient.post<{ success: boolean; message: string; data: { user: User; token: string; remember_me: boolean } }>(
+    const apiResponse = await apiClient.post<{ success: boolean; message: string; data: { user: User; token: string; remember_me: boolean } }>(
       API_ENDPOINTS.auth.login,
       credentials
     );
-    if (response.data?.token) {
-      const { token, remember_me, user } = response.data;
-      if (remember_me) {
-        localStorage.setItem('auth_token', token);
-      } else {
-        sessionStorage.setItem('auth_token', token);
-      }
-      apiClient.setToken(token);
-      return { user, token, remember_me };
+    const { token, remember_me, user } = apiResponse.data;
+    if (remember_me) {
+      localStorage.setItem('auth_token', token);
+    } else {
+      sessionStorage.setItem('auth_token', token);
     }
-    return response.data;
+    return { user, token, remember_me };
   },
 
   logout: async () => {
-    try {
-      await apiClient.post(API_ENDPOINTS.auth.logout);
-    } finally {
-      apiClient.clearToken();
-      localStorage.removeItem('auth_token');
-      sessionStorage.removeItem('auth_token');
-    }
+    await apiClient.post(API_ENDPOINTS.auth.logout);
+    localStorage.removeItem('auth_token');
+    sessionStorage.removeItem('auth_token');
   },
 
   me: async () => {
@@ -75,6 +66,13 @@ export const authService = {
   resetPassword: async (data: { email: string; token: string; password: string; password_confirmation: string }) => {
     return apiClient.post<{ message: string }>(
       API_ENDPOINTS.auth.resetPassword,
+      data
+    );
+  },
+
+  changePassword: async (data: { current_password: string; new_password: string; new_password_confirmation: string }) => {
+    return apiClient.post<{ success: boolean; message: string }>(
+      API_ENDPOINTS.auth.changePassword,
       data
     );
   },
@@ -352,29 +350,6 @@ export const actionPlanService = {
 
   delete: async (id: string | number) => {
     return apiClient.delete(API_ENDPOINTS.actionPlans.destroy(id));
-  },
-};
-
-// Reports Service
-export const reportsService = {
-  getDashboard: async () => {
-    return apiClient.get<DashboardStats>(API_ENDPOINTS.reports.dashboard);
-  },
-
-  getStaffReport: async (params?: { start_date?: string; end_date?: string }) => {
-    return apiClient.get(API_ENDPOINTS.reports.staff, { params });
-  },
-
-  getEvaluationReport: async (params?: { start_date?: string; end_date?: string }) => {
-    return apiClient.get(API_ENDPOINTS.reports.evaluations, { params });
-  },
-
-  getQuestionReport: async () => {
-    return apiClient.get(API_ENDPOINTS.reports.questions);
-  },
-
-  exportReport: async (type: string, format: string = 'excel') => {
-    return apiClient.get(API_ENDPOINTS.reports.export, { params: { type, format } });
   },
 };
 
@@ -951,7 +926,6 @@ export default {
   templates: templateService,
   centers: centerService,
   actionPlans: actionPlanService,
-  reports: reportsService,
   zones: zoneService,
   fields: fieldService,
   specialties: specialtyService,

@@ -251,21 +251,19 @@ const DetailPanel: React.FC<DetailPanelProps> = ({
 };
 
 export const ProfessionalsPage: React.FC = () => {
-  const {
-    professionals,
-    isLoading,
-    isImporting,
-    error,
-    pagination,
-    fetchProfessionals,
-    createProfessional,
-    updateProfessional,
-    toggleProfessionalStatus,
-    deleteProfessional,
-    clearError,
-    exportProfessionals,
-    importProfessionals,
-  } = useProfessionalStore();
+  const professionals = useProfessionalStore((s) => s.professionals);
+  const isLoading = useProfessionalStore((s) => s.isLoading);
+  const isImporting = useProfessionalStore((s) => s.isImporting);
+  const error = useProfessionalStore((s) => s.error);
+  const pagination = useProfessionalStore((s) => s.pagination);
+  const fetchProfessionals = useProfessionalStore((s) => s.fetchProfessionals);
+  const createProfessional = useProfessionalStore((s) => s.createProfessional);
+  const updateProfessional = useProfessionalStore((s) => s.updateProfessional);
+  const toggleProfessionalStatus = useProfessionalStore((s) => s.toggleProfessionalStatus);
+  const deleteProfessional = useProfessionalStore((s) => s.deleteProfessional);
+  const clearError = useProfessionalStore((s) => s.clearError);
+  const exportProfessionals = useProfessionalStore((s) => s.exportProfessionals);
+  const importProfessionals = useProfessionalStore((s) => s.importProfessionals);
 
   const { addToast } = useToast();
   const fileInputRef = useRef<HTMLInputElement>(null);
@@ -441,10 +439,10 @@ export const ProfessionalsPage: React.FC = () => {
 
   const handleDownloadSample = async () => {
     try {
-      const token = localStorage.getItem('auth_token');
+      const token = localStorage.getItem('auth_token') || sessionStorage.getItem('auth_token');
       const baseUrl = import.meta.env.VITE_API_URL || 'http://localhost:8000';
       const response = await fetch(`${baseUrl}/api/v1/professionals/sample`, {
-        headers: { Authorization: `Bearer ${token}` },
+        headers: token ? { Authorization: `Bearer ${token}` } : {},
       });
       if (!response.ok) throw new Error('Failed to download sample');
       const blob = await response.blob();

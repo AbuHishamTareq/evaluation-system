@@ -493,84 +493,74 @@ export const ClassificationPage: React.FC = () => {
   }, [noneVisible, visibleTabs, activeTab]);
 
   // ─── Store Hooks ────────────────────────────────────────────────────────
-  const {
-    fields,
-    isLoading: fieldsLoading,
-    isImporting: fieldsImporting,
-    error: fieldsError,
-    pagination: fieldsPagination,
-    fetchFields,
-    createField,
-    updateField,
-    deleteField,
-    clearError: clearFieldsError,
-    exportFields,
-    importFields,
-  } = useFieldStore();
+  const fields = useFieldStore((s) => s.fields);
+  const fieldsLoading = useFieldStore((s) => s.isLoading);
+  const fieldsImporting = useFieldStore((s) => s.isImporting);
+  const fieldsError = useFieldStore((s) => s.error);
+  const fieldsPagination = useFieldStore((s) => s.pagination);
+  const fetchFields = useFieldStore((s) => s.fetchFields);
+  const createField = useFieldStore((s) => s.createField);
+  const updateField = useFieldStore((s) => s.updateField);
+  const deleteField = useFieldStore((s) => s.deleteField);
+  const clearFieldsError = useFieldStore((s) => s.clearError);
+  const exportFields = useFieldStore((s) => s.exportFields);
+  const importFields = useFieldStore((s) => s.importFields);
 
-  const {
-    specialties,
-    isLoading: specialtiesLoading,
-    isImporting: specialtiesImporting,
-    error: specialtiesError,
-    pagination: specialtiesPagination,
-    fetchSpecialties,
-    createSpecialty,
-    updateSpecialty,
-    deleteSpecialty,
-    fetchSpecialtiesByField,
-    clearError: clearSpecialtiesError,
-    exportSpecialties,
-    importSpecialties,
-  } = useSpecialtyStore();
+  const specialties = useSpecialtyStore((s) => s.specialties);
+  const specialtiesLoading = useSpecialtyStore((s) => s.isLoading);
+  const specialtiesImporting = useSpecialtyStore((s) => s.isImporting);
+  const specialtiesError = useSpecialtyStore((s) => s.error);
+  const specialtiesPagination = useSpecialtyStore((s) => s.pagination);
+  const fetchSpecialties = useSpecialtyStore((s) => s.fetchSpecialties);
+  const createSpecialty = useSpecialtyStore((s) => s.createSpecialty);
+  const updateSpecialty = useSpecialtyStore((s) => s.updateSpecialty);
+  const deleteSpecialty = useSpecialtyStore((s) => s.deleteSpecialty);
+  const fetchSpecialtiesByField = useSpecialtyStore((s) => s.fetchSpecialtiesByField);
+  const clearSpecialtiesError = useSpecialtyStore((s) => s.clearError);
+  const exportSpecialties = useSpecialtyStore((s) => s.exportSpecialties);
+  const importSpecialties = useSpecialtyStore((s) => s.importSpecialties);
 
-  const {
-    ranks,
-    isLoading: ranksLoading,
-    isImporting: ranksImporting,
-    error: ranksError,
-    pagination: ranksPagination,
-    fetchRanks,
-    createRank,
-    updateRank,
-    deleteRank,
-    clearError: clearRanksError,
-    exportRanks,
-    importRanks,
-  } = useRankStore();
+  const ranks = useRankStore((s) => s.ranks);
+  const ranksLoading = useRankStore((s) => s.isLoading);
+  const ranksImporting = useRankStore((s) => s.isImporting);
+  const ranksError = useRankStore((s) => s.error);
+  const ranksPagination = useRankStore((s) => s.pagination);
+  const fetchRanks = useRankStore((s) => s.fetchRanks);
+  const createRank = useRankStore((s) => s.createRank);
+  const updateRank = useRankStore((s) => s.updateRank);
+  const deleteRank = useRankStore((s) => s.deleteRank);
+  const clearRanksError = useRankStore((s) => s.clearError);
+  const exportRanks = useRankStore((s) => s.exportRanks);
+  const importRanks = useRankStore((s) => s.importRanks);
 
-  const {
-    categories,
-    isLoading: categoriesLoading,
-    isImporting: categoriesImporting,
-    error: categoriesError,
-    pagination: categoriesPagination,
-    fetchCategories,
-    createCategory,
-    updateCategory,
-    deleteCategory,
-    clearError: clearCategoriesError,
-    exportCategories,
-    importCategories,
-  } = useCategoryStore();
+  const categories = useCategoryStore((s) => s.categories);
+  const categoriesLoading = useCategoryStore((s) => s.isLoading);
+  const categoriesImporting = useCategoryStore((s) => s.isImporting);
+  const categoriesError = useCategoryStore((s) => s.error);
+  const categoriesPagination = useCategoryStore((s) => s.pagination);
+  const fetchCategories = useCategoryStore((s) => s.fetchCategories);
+  const createCategory = useCategoryStore((s) => s.createCategory);
+  const updateCategory = useCategoryStore((s) => s.updateCategory);
+  const deleteCategory = useCategoryStore((s) => s.deleteCategory);
+  const clearCategoriesError = useCategoryStore((s) => s.clearError);
+  const exportCategories = useCategoryStore((s) => s.exportCategories);
+  const importCategories = useCategoryStore((s) => s.importCategories);
 
-  const {
-    mappings,
-    isLoading: mappingsLoading,
-    isImporting: mappingsImporting,
-    error: mappingsError,
-    pagination: mappingsPagination,
-    fetchMappings,
-    createMapping,
-    updateMapping,
-    deleteMapping,
-    resolveClassification,
-    resolveResult,
-    clearError: clearMappingsError,
-    clearResolveResult,
-    exportClassifications,
-    importClassifications,
-  } = useClassificationStore();
+  const mappings = useClassificationStore((s) => s.mappings);
+  const mappingsLoading = useClassificationStore((s) => s.isLoading);
+  const mappingsImporting = useClassificationStore((s) => s.isImporting);
+  const mappingsError = useClassificationStore((s) => s.error);
+  const mappingsPagination = useClassificationStore((s) => s.pagination);
+  const fetchMappings = useClassificationStore((s) => s.fetchMappings);
+  const createMapping = useClassificationStore((s) => s.createMapping);
+  const updateMapping = useClassificationStore((s) => s.updateMapping);
+  const deleteMapping = useClassificationStore((s) => s.deleteMapping);
+  const resolveClassification = useClassificationStore((s) => s.resolveClassification);
+  const resolveResult = useClassificationStore((s) => s.resolveResult);
+  const clearMappingsError = useClassificationStore((s) => s.clearError);
+  const clearResolveResult = useClassificationStore((s) => s.clearResolveResult);
+  const exportClassifications = useClassificationStore((s) => s.exportClassifications);
+  const importClassifications = useClassificationStore((s) => s.importClassifications);
 
   // ─── Search & Filter State ──────────────────────────────────────────────
   const [searchQuery, setSearchQuery] = useState('');

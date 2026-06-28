@@ -1576,11 +1576,11 @@ export const StaffForm: React.FC<StaffFormProps> = ({
               <div className="flex flex-col sm:flex-row items-center gap-6">
                 {photoPreview ? (
                   <div className="w-24 h-24 rounded-full overflow-hidden border-4 border-violet-100 shadow-md flex-shrink-0">
-                    <img src={photoPreview} alt="Preview" className="w-full h-full object-cover" />
+                    <img src={photoPreview} alt="Preview" loading="lazy" className="w-full h-full object-cover" />
                   </div>
                 ) : staff?.photo_url ? (
                   <div className="w-24 h-24 rounded-full overflow-hidden border-4 border-violet-100 shadow-md flex-shrink-0">
-                    <img src={staff.photo_url} alt="Staff photo" className="w-full h-full object-cover" />
+                    <img src={staff.photo_url} alt="Staff photo" loading="lazy" className="w-full h-full object-cover" />
                   </div>
                 ) : (
                   <div className="w-24 h-24 rounded-full border-2 border-dashed border-slate-300 flex items-center justify-center flex-shrink-0 bg-slate-50">

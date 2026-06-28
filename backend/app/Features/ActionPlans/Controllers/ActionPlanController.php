@@ -6,6 +6,7 @@ use App\Features\ActionPlans\Services\ActionPlanService;
 use App\Http\Controllers\Api\V1\BaseApiController;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\Log;
 
 /**
  * @group Action Plans
@@ -93,7 +94,12 @@ class ActionPlanController extends BaseApiController
 
             return $this->successResponse($actionPlan, 'Action plan status updated successfully');
         } catch (\RuntimeException $e) {
-            return $this->errorResponse($e->getMessage(), 400);
+            Log::error('Failed to update action plan status', [
+                'error' => $e->getMessage(),
+                'trace' => $e->getTraceAsString(),
+            ]);
+
+            return $this->errorResponse('Unable to update action plan status.', 400);
         }
     }
 

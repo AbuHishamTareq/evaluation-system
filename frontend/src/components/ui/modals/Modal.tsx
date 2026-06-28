@@ -1,4 +1,4 @@
-import React, { useEffect } from 'react';
+import React, { useEffect, useRef, useCallback } from 'react';
 
 interface ModalProps {
   isOpen: boolean;
@@ -9,19 +9,34 @@ interface ModalProps {
 
 export const Modal: React.FC<ModalProps> = ({
   isOpen,
+  onClose,
   children,
   size = 'md',
 }) => {
+  const contentRef = useRef<HTMLDivElement>(null);
+  const previousActiveElement = useRef<HTMLElement | null>(null);
+
+  const handleEscape = useCallback((e: KeyboardEvent) => {
+    if (e.key === 'Escape') {
+      onClose();
+    }
+  }, [onClose]);
+
   useEffect(() => {
     if (isOpen) {
+      previousActiveElement.current = document.activeElement as HTMLElement;
       document.body.style.overflow = 'hidden';
+      document.addEventListener('keydown', handleEscape);
+      setTimeout(() => contentRef.current?.focus(), 50);
     } else {
       document.body.style.overflow = 'unset';
+      previousActiveElement.current?.focus();
     }
     return () => {
       document.body.style.overflow = 'unset';
+      document.removeEventListener('keydown', handleEscape);
     };
-  }, [isOpen]);
+  }, [isOpen, handleEscape]);
 
   if (!isOpen) return null;
 
@@ -36,9 +51,12 @@ export const Modal: React.FC<ModalProps> = ({
     <div className="fixed inset-0 z-50 flex items-center justify-center p-4">
       <div
         className="fixed inset-0 bg-black/50 transition-opacity"
+        onClick={onClose}
       />
       <div
-        className={`relative bg-white rounded-xl shadow-xl ${sizeClasses[size]} w-full max-h-[90vh] overflow-y-auto`}
+        ref={contentRef}
+        tabIndex={-1}
+        className={`relative bg-white rounded-xl shadow-xl outline-none ${sizeClasses[size]} w-full max-h-[90vh] overflow-y-auto`}
       >
         {children}
       </div>

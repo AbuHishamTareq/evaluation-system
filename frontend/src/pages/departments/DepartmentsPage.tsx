@@ -258,23 +258,22 @@ const DetailPanel: React.FC<DetailPanelProps> = ({
 };
 
 export const DepartmentsPage: React.FC = () => {
-  const {
-    departments,
-    isLoading,
-    isImporting,
-    error,
-    pagination,
-    fetchDepartments,
-    createDepartment,
-    updateDepartment,
-    toggleDepartmentStatus,
-    deleteDepartment,
-    clearError,
-    exportDepartments,
-    importDepartments,
-  } = useDepartmentStore();
+  const departments = useDepartmentStore((s) => s.departments);
+  const isLoading = useDepartmentStore((s) => s.isLoading);
+  const isImporting = useDepartmentStore((s) => s.isImporting);
+  const error = useDepartmentStore((s) => s.error);
+  const pagination = useDepartmentStore((s) => s.pagination);
+  const fetchDepartments = useDepartmentStore((s) => s.fetchDepartments);
+  const createDepartment = useDepartmentStore((s) => s.createDepartment);
+  const updateDepartment = useDepartmentStore((s) => s.updateDepartment);
+  const toggleDepartmentStatus = useDepartmentStore((s) => s.toggleDepartmentStatus);
+  const deleteDepartment = useDepartmentStore((s) => s.deleteDepartment);
+  const clearError = useDepartmentStore((s) => s.clearError);
+  const exportDepartments = useDepartmentStore((s) => s.exportDepartments);
+  const importDepartments = useDepartmentStore((s) => s.importDepartments);
 
-  const { centers, fetchCenters } = useCenterStore();
+  const centers = useCenterStore((s) => s.centers);
+  const fetchCenters = useCenterStore((s) => s.fetchCenters);
 
   const { addToast } = useToast();
   const fileInputRef = useRef<HTMLInputElement>(null);
@@ -456,10 +455,10 @@ export const DepartmentsPage: React.FC = () => {
 
   const handleDownloadSample = async () => {
     try {
-      const token = localStorage.getItem('auth_token');
+      const token = localStorage.getItem('auth_token') || sessionStorage.getItem('auth_token');
       const baseUrl = import.meta.env.VITE_API_URL || 'http://localhost:8000';
       const response = await fetch(`${baseUrl}/api/v1/departments/sample`, {
-        headers: { Authorization: `Bearer ${token}` },
+        headers: token ? { Authorization: `Bearer ${token}` } : {},
       });
       if (!response.ok) throw new Error('Failed to download sample');
       const blob = await response.blob();

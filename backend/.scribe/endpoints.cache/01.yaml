@@ -43,7 +43,12 @@ endpoints:
         headers:
           cache-control: 'no-cache, private'
           content-type: application/json
-          access-control-allow-origin: '*'
+          x-content-type-options: nosniff
+          x-frame-options: DENY
+          referrer-policy: strict-origin-when-cross-origin
+          content-security-policy: "default-src 'self'; script-src 'self'; style-src 'self' 'unsafe-inline'; img-src 'self' data:; font-src 'self'; connect-src 'self'"
+          access-control-allow-origin: 'http://localhost:5173'
+          access-control-allow-credentials: 'true'
         description: null
     responseFields: []
     auth:
@@ -184,7 +189,7 @@ endpoints:
         name: employment_type
         description: ''
         required: false
-        example: full_time
+        example: volunteer
         type: string
         enumValues:
           - full_time
@@ -215,7 +220,7 @@ endpoints:
         name: is_active
         description: ''
         required: false
-        example: true
+        example: false
         type: boolean
         enumValues: []
         exampleWasSpecified: false
@@ -248,7 +253,7 @@ endpoints:
         name: gender
         description: ''
         required: false
-        example: male
+        example: female
         type: string
         enumValues:
           - male
@@ -262,7 +267,7 @@ endpoints:
         name: date_of_birth
         description: 'Must be a valid date.'
         required: false
-        example: '2026-06-15T14:14:09'
+        example: '2026-06-27T09:17:13'
         type: string
         enumValues: []
         exampleWasSpecified: false
@@ -328,7 +333,7 @@ endpoints:
         name: hire_date
         description: 'Must be a valid date.'
         required: false
-        example: '2026-06-15T14:14:09'
+        example: '2026-06-27T09:17:13'
         type: string
         enumValues: []
         exampleWasSpecified: false
@@ -339,7 +344,7 @@ endpoints:
         name: termination_date
         description: 'Must be a valid date.'
         required: false
-        example: '2026-06-15T14:14:09'
+        example: '2026-06-27T09:17:13'
         type: string
         enumValues: []
         exampleWasSpecified: false
@@ -427,7 +432,7 @@ endpoints:
         name: scfhs_issue_date
         description: 'Must be a valid date.'
         required: false
-        example: '2026-06-15T14:14:09'
+        example: '2026-06-27T09:17:13'
         type: string
         enumValues: []
         exampleWasSpecified: false
@@ -438,7 +443,7 @@ endpoints:
         name: scfhs_expiry_date
         description: 'Must be a valid date. Must be a date after or equal to <code>scfhs_issue_date</code>.'
         required: false
-        example: '2052-07-08'
+        example: '2052-07-20'
         type: string
         enumValues: []
         exampleWasSpecified: false
@@ -460,7 +465,7 @@ endpoints:
         name: malpractice_issue_date
         description: 'Must be a valid date.'
         required: false
-        example: '2026-06-15T14:14:09'
+        example: '2026-06-27T09:17:13'
         type: string
         enumValues: []
         exampleWasSpecified: false
@@ -471,7 +476,7 @@ endpoints:
         name: malpractice_expiry_date
         description: 'Must be a valid date. Must be a date after or equal to <code>malpractice_issue_date</code>.'
         required: false
-        example: '2052-07-08'
+        example: '2052-07-20'
         type: string
         enumValues: []
         exampleWasSpecified: false
@@ -487,20 +492,20 @@ endpoints:
       department_id: 16
       clinic_assignment_id: 16
       professional_id: 16
-      employment_type: full_time
+      employment_type: volunteer
       status: terminated
-      is_active: true
+      is_active: false
       is_care_provider: true
       phc_center_id: 16
-      gender: male
-      date_of_birth: '2026-06-15T14:14:09'
+      gender: female
+      date_of_birth: '2026-06-27T09:17:13'
       national_id: 'n'
       nationality: g
       mobile: z
       address: architecto
       photo_path: 'n'
-      hire_date: '2026-06-15T14:14:09'
-      termination_date: '2026-06-15T14:14:09'
+      hire_date: '2026-06-27T09:17:13'
+      termination_date: '2026-06-27T09:17:13'
       notes: architecto
       field_id: 16
       specialty_id: 16
@@ -508,11 +513,11 @@ endpoints:
       classification_category_id: 16
       team_code_id: 16
       scfhs_registration_no: 'n'
-      scfhs_issue_date: '2026-06-15T14:14:09'
-      scfhs_expiry_date: '2052-07-08'
+      scfhs_issue_date: '2026-06-27T09:17:13'
+      scfhs_expiry_date: '2052-07-20'
       malpractice_insurance_no: 'n'
-      malpractice_issue_date: '2026-06-15T14:14:09'
-      malpractice_expiry_date: '2052-07-08'
+      malpractice_issue_date: '2026-06-27T09:17:13'
+      malpractice_expiry_date: '2052-07-20'
     fileParameters: []
     responses: []
     responseFields: []
@@ -610,7 +615,12 @@ endpoints:
         headers:
           cache-control: 'no-cache, private'
           content-type: application/json
-          access-control-allow-origin: '*'
+          x-content-type-options: nosniff
+          x-frame-options: DENY
+          referrer-policy: strict-origin-when-cross-origin
+          content-security-policy: "default-src 'self'; script-src 'self'; style-src 'self' 'unsafe-inline'; img-src 'self' data:; font-src 'self'; connect-src 'self'"
+          access-control-allow-origin: 'http://localhost:5173'
+          access-control-allow-credentials: 'true'
         description: null
     responseFields: []
     auth:
@@ -657,7 +667,12 @@ endpoints:
         headers:
           cache-control: 'no-cache, private'
           content-type: application/json
-          access-control-allow-origin: '*'
+          x-content-type-options: nosniff
+          x-frame-options: DENY
+          referrer-policy: strict-origin-when-cross-origin
+          content-security-policy: "default-src 'self'; script-src 'self'; style-src 'self' 'unsafe-inline'; img-src 'self' data:; font-src 'self'; connect-src 'self'"
+          access-control-allow-origin: 'http://localhost:5173'
+          access-control-allow-credentials: 'true'
         description: null
     responseFields: []
     auth:
@@ -704,7 +719,12 @@ endpoints:
         headers:
           cache-control: 'no-cache, private'
           content-type: application/json
-          access-control-allow-origin: '*'
+          x-content-type-options: nosniff
+          x-frame-options: DENY
+          referrer-policy: strict-origin-when-cross-origin
+          content-security-policy: "default-src 'self'; script-src 'self'; style-src 'self' 'unsafe-inline'; img-src 'self' data:; font-src 'self'; connect-src 'self'"
+          access-control-allow-origin: 'http://localhost:5173'
+          access-control-allow-credentials: 'true'
         description: null
     responseFields: []
     auth:
@@ -751,7 +771,12 @@ endpoints:
         headers:
           cache-control: 'no-cache, private'
           content-type: application/json
-          access-control-allow-origin: '*'
+          x-content-type-options: nosniff
+          x-frame-options: DENY
+          referrer-policy: strict-origin-when-cross-origin
+          content-security-policy: "default-src 'self'; script-src 'self'; style-src 'self' 'unsafe-inline'; img-src 'self' data:; font-src 'self'; connect-src 'self'"
+          access-control-allow-origin: 'http://localhost:5173'
+          access-control-allow-credentials: 'true'
         description: null
     responseFields: []
     auth:
@@ -810,7 +835,12 @@ endpoints:
         headers:
           cache-control: 'no-cache, private'
           content-type: application/json
-          access-control-allow-origin: '*'
+          x-content-type-options: nosniff
+          x-frame-options: DENY
+          referrer-policy: strict-origin-when-cross-origin
+          content-security-policy: "default-src 'self'; script-src 'self'; style-src 'self' 'unsafe-inline'; img-src 'self' data:; font-src 'self'; connect-src 'self'"
+          access-control-allow-origin: 'http://localhost:5173'
+          access-control-allow-credentials: 'true'
         description: null
     responseFields: []
     auth:
@@ -869,7 +899,12 @@ endpoints:
         headers:
           cache-control: 'no-cache, private'
           content-type: application/json
-          access-control-allow-origin: '*'
+          x-content-type-options: nosniff
+          x-frame-options: DENY
+          referrer-policy: strict-origin-when-cross-origin
+          content-security-policy: "default-src 'self'; script-src 'self'; style-src 'self' 'unsafe-inline'; img-src 'self' data:; font-src 'self'; connect-src 'self'"
+          access-control-allow-origin: 'http://localhost:5173'
+          access-control-allow-credentials: 'true'
         description: null
     responseFields: []
     auth:
@@ -1014,7 +1049,12 @@ endpoints:
         headers:
           cache-control: 'no-cache, private'
           content-type: application/json
-          access-control-allow-origin: '*'
+          x-content-type-options: nosniff
+          x-frame-options: DENY
+          referrer-policy: strict-origin-when-cross-origin
+          content-security-policy: "default-src 'self'; script-src 'self'; style-src 'self' 'unsafe-inline'; img-src 'self' data:; font-src 'self'; connect-src 'self'"
+          access-control-allow-origin: 'http://localhost:5173'
+          access-control-allow-credentials: 'true'
         description: null
     responseFields: []
     auth:
@@ -1073,7 +1113,12 @@ endpoints:
         headers:
           cache-control: 'no-cache, private'
           content-type: application/json
-          access-control-allow-origin: '*'
+          x-content-type-options: nosniff
+          x-frame-options: DENY
+          referrer-policy: strict-origin-when-cross-origin
+          content-security-policy: "default-src 'self'; script-src 'self'; style-src 'self' 'unsafe-inline'; img-src 'self' data:; font-src 'self'; connect-src 'self'"
+          access-control-allow-origin: 'http://localhost:5173'
+          access-control-allow-credentials: 'true'
         description: null
     responseFields: []
     auth:
@@ -1132,7 +1177,12 @@ endpoints:
         headers:
           cache-control: 'no-cache, private'
           content-type: application/json
-          access-control-allow-origin: '*'
+          x-content-type-options: nosniff
+          x-frame-options: DENY
+          referrer-policy: strict-origin-when-cross-origin
+          content-security-policy: "default-src 'self'; script-src 'self'; style-src 'self' 'unsafe-inline'; img-src 'self' data:; font-src 'self'; connect-src 'self'"
+          access-control-allow-origin: 'http://localhost:5173'
+          access-control-allow-credentials: 'true'
         description: null
     responseFields: []
     auth:
@@ -1285,7 +1335,7 @@ endpoints:
         name: employment_type
         description: ''
         required: false
-        example: contract
+        example: part_time
         type: string
         enumValues:
           - full_time
@@ -1301,7 +1351,7 @@ endpoints:
         name: status
         description: ''
         required: false
-        example: inactive
+        example: terminated
         type: string
         enumValues:
           - active
@@ -1327,7 +1377,7 @@ endpoints:
         name: is_care_provider
         description: ''
         required: false
-        example: true
+        example: false
         type: boolean
         enumValues: []
         exampleWasSpecified: false
@@ -1349,7 +1399,7 @@ endpoints:
         name: gender
         description: ''
         required: false
-        example: other
+        example: male
         type: string
         enumValues:
           - male
@@ -1363,7 +1413,7 @@ endpoints:
         name: date_of_birth
         description: 'Must be a valid date.'
         required: false
-        example: '2026-06-15T14:14:09'
+        example: '2026-06-27T09:17:13'
         type: string
         enumValues: []
         exampleWasSpecified: false
@@ -1429,7 +1479,7 @@ endpoints:
         name: hire_date
         description: 'Must be a valid date.'
         required: false
-        example: '2026-06-15T14:14:09'
+        example: '2026-06-27T09:17:13'
         type: string
         enumValues: []
         exampleWasSpecified: false
@@ -1440,7 +1490,7 @@ endpoints:
         name: termination_date
         description: 'Must be a valid date.'
         required: false
-        example: '2026-06-15T14:14:09'
+        example: '2026-06-27T09:17:13'
         type: string
         enumValues: []
         exampleWasSpecified: false
@@ -1528,7 +1578,7 @@ endpoints:
         name: scfhs_issue_date
         description: 'Must be a valid date.'
         required: false
-        example: '2026-06-15T14:14:09'
+        example: '2026-06-27T09:17:13'
         type: string
         enumValues: []
         exampleWasSpecified: false
@@ -1539,7 +1589,7 @@ endpoints:
         name: scfhs_expiry_date
         description: 'Must be a valid date. Must be a date after or equal to <code>scfhs_issue_date</code>.'
         required: false
-        example: '2052-07-08'
+        example: '2052-07-20'
         type: string
         enumValues: []
         exampleWasSpecified: false
@@ -1561,7 +1611,7 @@ endpoints:
         name: malpractice_issue_date
         description: 'Must be a valid date.'
         required: false
-        example: '2026-06-15T14:14:09'
+        example: '2026-06-27T09:17:13'
         type: string
         enumValues: []
         exampleWasSpecified: false
@@ -1572,7 +1622,7 @@ endpoints:
         name: malpractice_expiry_date
         description: 'Must be a valid date. Must be a date after or equal to <code>malpractice_issue_date</code>.'
         required: false
-        example: '2052-07-08'
+        example: '2052-07-20'
         type: string
         enumValues: []
         exampleWasSpecified: false
@@ -1586,20 +1636,20 @@ endpoints:
       department_id: 16
       clinic_assignment_id: 16
       professional_id: 16
-      employment_type: contract
-      status: inactive
+      employment_type: part_time
+      status: terminated
       is_active: false
-      is_care_provider: true
+      is_care_provider: false
       phc_center_id: 16
-      gender: other
-      date_of_birth: '2026-06-15T14:14:09'
+      gender: male
+      date_of_birth: '2026-06-27T09:17:13'
       national_id: 'n'
       nationality: g
       mobile: z
       address: architecto
       photo_path: 'n'
-      hire_date: '2026-06-15T14:14:09'
-      termination_date: '2026-06-15T14:14:09'
+      hire_date: '2026-06-27T09:17:13'
+      termination_date: '2026-06-27T09:17:13'
       notes: architecto
       field_id: 16
       specialty_id: 16
@@ -1607,11 +1657,11 @@ endpoints:
       classification_category_id: 16
       team_code_id: 16
       scfhs_registration_no: 'n'
-      scfhs_issue_date: '2026-06-15T14:14:09'
-      scfhs_expiry_date: '2052-07-08'
+      scfhs_issue_date: '2026-06-27T09:17:13'
+      scfhs_expiry_date: '2052-07-20'
       malpractice_insurance_no: 'n'
-      malpractice_issue_date: '2026-06-15T14:14:09'
-      malpractice_expiry_date: '2052-07-08'
+      malpractice_issue_date: '2026-06-27T09:17:13'
+      malpractice_expiry_date: '2052-07-20'
     fileParameters: []
     responses: []
     responseFields: []

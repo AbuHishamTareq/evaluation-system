@@ -257,21 +257,19 @@ const DetailPanel: React.FC<DetailPanelProps> = ({
 
 // ─── Main Page ──────────────────────────────────────────────────────────────
 export const ZonesPage: React.FC = () => {
-  const {
-    zones,
-    isLoading,
-    isImporting,
-    error,
-    pagination,
-    fetchZones,
-    createZone,
-    updateZone,
-    deleteZone,
-    fetchZoneTree,
-    clearError,
-    exportZones,
-    importZones,
-  } = useZoneStore();
+  const zones = useZoneStore((s) => s.zones);
+  const isLoading = useZoneStore((s) => s.isLoading);
+  const isImporting = useZoneStore((s) => s.isImporting);
+  const error = useZoneStore((s) => s.error);
+  const pagination = useZoneStore((s) => s.pagination);
+  const fetchZones = useZoneStore((s) => s.fetchZones);
+  const createZone = useZoneStore((s) => s.createZone);
+  const updateZone = useZoneStore((s) => s.updateZone);
+  const deleteZone = useZoneStore((s) => s.deleteZone);
+  const fetchZoneTree = useZoneStore((s) => s.fetchZoneTree);
+  const clearError = useZoneStore((s) => s.clearError);
+  const exportZones = useZoneStore((s) => s.exportZones);
+  const importZones = useZoneStore((s) => s.importZones);
 
   const { addToast } = useToast();
   const fileInputRef = useRef<HTMLInputElement>(null);

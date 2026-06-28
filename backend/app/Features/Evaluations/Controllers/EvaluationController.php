@@ -6,6 +6,7 @@ use App\Features\Evaluations\Services\EvaluationService;
 use App\Http\Controllers\Api\V1\BaseApiController;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\Log;
 
 /**
  * @group Evaluations
@@ -95,7 +96,12 @@ class EvaluationController extends BaseApiController
 
             return $this->successResponse($evaluation, 'Evaluation submitted successfully');
         } catch (\RuntimeException $e) {
-            return $this->errorResponse($e->getMessage(), 400);
+            Log::error('Failed to submit evaluation', [
+                'error' => $e->getMessage(),
+                'trace' => $e->getTraceAsString(),
+            ]);
+
+            return $this->errorResponse('Unable to process the evaluation.', 400);
         }
     }
 
@@ -106,7 +112,12 @@ class EvaluationController extends BaseApiController
 
             return $this->successResponse($evaluation, 'Evaluation approved successfully');
         } catch (\RuntimeException $e) {
-            return $this->errorResponse($e->getMessage(), 400);
+            Log::error('Failed to approve evaluation', [
+                'error' => $e->getMessage(),
+                'trace' => $e->getTraceAsString(),
+            ]);
+
+            return $this->errorResponse('Unable to process the evaluation.', 400);
         }
     }
 

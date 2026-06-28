@@ -374,16 +374,15 @@ const DropdownItem: React.FC<DropdownItemProps> = ({
 export const TemplatesPage: React.FC = () => {
   const hasPermission = useAuthStore((state) => state.hasPermission);
 
-  const {
-    templates,
-    isLoading,
-    pagination,
-    fetchTemplates,
-    deleteTemplate,
-    toggleTemplateStatus,
-  } = useMedicationEvaluationTemplateStore();
+  const templates = useMedicationEvaluationTemplateStore((s) => s.templates);
+  const isLoading = useMedicationEvaluationTemplateStore((s) => s.isLoading);
+  const pagination = useMedicationEvaluationTemplateStore((s) => s.pagination);
+  const fetchTemplates = useMedicationEvaluationTemplateStore((s) => s.fetchTemplates);
+  const deleteTemplate = useMedicationEvaluationTemplateStore((s) => s.deleteTemplate);
+  const toggleTemplateStatus = useMedicationEvaluationTemplateStore((s) => s.toggleTemplateStatus);
 
-  const { medications, fetchMedications } = useMedicationStore();
+  const medications = useMedicationStore((s) => s.medications);
+  const fetchMedications = useMedicationStore((s) => s.fetchMedications);
   const { addToast } = useToast();
 
   const [searchQuery, setSearchQuery] = useState('');

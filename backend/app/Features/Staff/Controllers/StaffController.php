@@ -151,7 +151,6 @@ class StaffController extends BaseApiController
 
             return response()->json([
                 'message' => 'Failed to generate CV PDF. Please try again later.',
-                'error' => $e->getMessage(),
             ], 500);
         } finally {
             error_reporting($previousLevel);
@@ -350,40 +349,72 @@ class StaffController extends BaseApiController
 
     protected function exportPdf(array $filters): Response
     {
-        $query = Staff::query()
-            ->with(['center', 'department', 'professional', 'clinicAssignment']);
+        // Build rows HTML using chunking to avoid loading all records at once
+        $rowsHtml = '';
+        $rowNumber = 0;
+        $totalCount = 0;
+        $activeCount = 0;
 
-        if (! empty($filters['search'])) {
-            $search = $filters['search'];
-            $query->where(function ($q) use ($search) {
-                $q->where('first_name', 'like', "%{$search}%")
-                    ->orWhere('last_name', 'like', "%{$search}%")
-                    ->orWhere('middle_name', 'like', "%{$search}%")
-                    ->orWhere('employee_id', 'like', "%{$search}%")
-                    ->orWhere('email', 'like', "%{$search}%");
+        Staff::query()
+            ->with(['center', 'department', 'professional', 'clinicAssignment'])
+            ->when(! empty($filters['search']), function ($q) use ($filters) {
+                $search = $filters['search'];
+                $q->where(function ($query) use ($search) {
+                    $query->where('first_name', 'like', "%{$search}%")
+                        ->orWhere('last_name', 'like', "%{$search}%")
+                        ->orWhere('middle_name', 'like', "%{$search}%")
+                        ->orWhere('employee_id', 'like', "%{$search}%")
+                        ->orWhere('email', 'like', "%{$search}%");
+                });
+            })
+            ->when(! empty($filters['status']), function ($q) use ($filters) {
+                $q->where('status', $filters['status']);
+            })
+            ->when(! empty($filters['employment_type']), function ($q) use ($filters) {
+                $q->where('employment_type', $filters['employment_type']);
+            })
+            ->when(isset($filters['is_active']), function ($q) use ($filters) {
+                $q->where('is_active', filter_var($filters['is_active'], FILTER_VALIDATE_BOOLEAN));
+            })
+            ->when(! empty($filters['department_id']), function ($q) use ($filters) {
+                $q->where('department_id', $filters['department_id']);
+            })
+            ->orderBy('first_name')
+            ->chunk(100, function ($staffChunk) use (&$rowsHtml, &$rowNumber, &$totalCount, &$activeCount) {
+                foreach ($staffChunk as $member) {
+                    $rowNumber++;
+                    $totalCount++;
+                    if ($member->is_active) {
+                        $activeCount++;
+                    }
+
+                    $rowsHtml .= '<tr>';
+                    $rowsHtml .= '<td>'.$rowNumber.'</td>';
+                    $rowsHtml .= '<td>'.e($member->employee_id).'</td>';
+                    $rowsHtml .= '<td>'.e($member->full_name).'</td>';
+                    $rowsHtml .= '<td>'.e($member->email ?: '-').'</td>';
+                    $rowsHtml .= '<td>'.e($member->phone ?: '-').'</td>';
+                    $rowsHtml .= '<td>'.e($member->getRelation('center')?->name ?? $member->center ?: '-').'</td>';
+                    $rowsHtml .= '<td>'.e($member->getRelation('department')?->name ?? '-').'</td>';
+                    $rowsHtml .= '<td>'.e($member->getRelation('professional')?->name ?? '-').'</td>';
+                    $rowsHtml .= '<td>';
+                    if ($member->employment_type) {
+                        $rowsHtml .= '<span class="badge badge-'.$member->employment_type.'">'.ucwords(str_replace('_', ' ', $member->employment_type)).'</span>';
+                    } else {
+                        $rowsHtml .= '-';
+                    }
+                    $rowsHtml .= '</td>';
+                    $rowsHtml .= '<td>';
+                    $rowsHtml .= '<span class="badge '.($member->is_active ? 'badge-active' : 'badge-inactive').'">'.($member->is_active ? 'Active' : 'Inactive').'</span>';
+                    $rowsHtml .= '</td>';
+                    $rowsHtml .= '</tr>';
+                }
             });
-        }
-
-        if (! empty($filters['status'])) {
-            $query->where('status', $filters['status']);
-        }
-
-        if (! empty($filters['employment_type'])) {
-            $query->where('employment_type', $filters['employment_type']);
-        }
-
-        if (isset($filters['is_active'])) {
-            $query->where('is_active', filter_var($filters['is_active'], FILTER_VALIDATE_BOOLEAN));
-        }
-
-        if (! empty($filters['department_id'])) {
-            $query->where('department_id', $filters['department_id']);
-        }
-
-        $staff = $query->orderBy('first_name')->get();
 
         $html = view('exports.staff_pdf', [
-            'staff' => $staff,
+            'rowsHtml' => $rowsHtml,
+            'totalCount' => $totalCount,
+            'activeCount' => $activeCount,
             'generatedAt' => now()->format('d F Y, h:i A'),
         ])->render();
 
@@ -443,7 +474,12 @@ class StaffController extends BaseApiController
 
             return $this->errorResponse('Validation failed', 422, $errors);
         } catch (\Exception $e) {
-            return $this->errorResponse('Failed to import staff: '.$e->getMessage(), 500);
+            Log::error('Failed to import staff', [
+                'error' => $e->getMessage(),
+                'trace' => $e->getTraceAsString(),
+            ]);
+
+            return $this->errorResponse('Import failed. Please check your file and try again.', 500);
         }
     }
 
@@ -487,7 +523,7 @@ class StaffController extends BaseApiController
 
         $request->validate([
             'documents' => ['required', 'array'],
-            'documents.*' => ['required', 'file', 'max:10240'],
+            'documents.*' => ['required', 'file', 'mimes:pdf,doc,docx,xls,xlsx,ppt,pptx,txt,jpg,jpeg,png', 'max:10240'],
         ]);
 
         $uploaded = [];

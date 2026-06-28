@@ -236,9 +236,23 @@ const MedDropdownItem: React.FC<MedDropdownItemProps> = ({
 };
 
 export const PhcMedicationsPage: React.FC = () => {
-  const { items, isLoading, isImporting, fetchByCenter, create, update, remove, importMedications, exportMedications, downloadTemplate, pagination, extraMeta, error } = usePhcMedicationStore();
-  const { medications, fetchMedications } = useMedicationStore();
-  const { centers, fetchCenters } = useCenterStore();
+  const items = usePhcMedicationStore((s) => s.items);
+  const isLoading = usePhcMedicationStore((s) => s.isLoading);
+  const isImporting = usePhcMedicationStore((s) => s.isImporting);
+  const fetchByCenter = usePhcMedicationStore((s) => s.fetchByCenter);
+  const create = usePhcMedicationStore((s) => s.create);
+  const update = usePhcMedicationStore((s) => s.update);
+  const remove = usePhcMedicationStore((s) => s.remove);
+  const importMedications = usePhcMedicationStore((s) => s.importMedications);
+  const exportMedications = usePhcMedicationStore((s) => s.exportMedications);
+  const downloadTemplate = usePhcMedicationStore((s) => s.downloadTemplate);
+  const pagination = usePhcMedicationStore((s) => s.pagination);
+  const extraMeta = usePhcMedicationStore((s) => s.extraMeta);
+  const error = usePhcMedicationStore((s) => s.error);
+  const medications = useMedicationStore((s) => s.medications);
+  const fetchMedications = useMedicationStore((s) => s.fetchMedications);
+  const centers = useCenterStore((s) => s.centers);
+  const fetchCenters = useCenterStore((s) => s.fetchCenters);
   const { addToast } = useToast();
 
   const [selectedCenter, setSelectedCenter] = useState<Center | null>(null);

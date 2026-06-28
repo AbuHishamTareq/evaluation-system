@@ -9,6 +9,7 @@ use App\Http\Controllers\Api\V1\BaseApiController;
 use App\Models\PhcMedication;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\Log;
 use Maatwebsite\Excel\Concerns\FromArray;
 use Maatwebsite\Excel\Concerns\ShouldAutoSize;
 use Maatwebsite\Excel\Concerns\WithHeadings;
@@ -211,7 +212,7 @@ class PhcMedicationController extends BaseApiController
     public function import(Request $request): JsonResponse
     {
         $request->validate([
-            'file' => ['required', 'file', 'mimes:xlsx,xls,csv'],
+            'file' => ['required', 'file', 'mimes:xlsx,xls,csv', 'max:10240'],
         ]);
 
         try {
@@ -237,7 +238,12 @@ class PhcMedicationController extends BaseApiController
 
             return $this->errorResponse('Validation failed', 422, $errors);
         } catch (\Exception $e) {
-            return $this->errorResponse('Failed to import PHC medications: '.$e->getMessage(), 500);
+            Log::error('Failed to import PHC medications', [
+                'error' => $e->getMessage(),
+                'trace' => $e->getTraceAsString(),
+            ]);
+
+            return $this->errorResponse('Import failed. Please check your file and try again.', 500);
         }
     }
 

@@ -1,19 +1,19 @@
-name: 'Educational Degrees'
+name: 'Classification - Categories'
 description: |-
 
-  APIs for managing educational degree records.
+  APIs for managing classification categories.
 endpoints:
   -
     custom: []
     httpMethods:
       - GET
-    uri: api/v1/educational-degrees
+    uri: api/v1/categories
     metadata:
       custom: []
-      groupName: 'Educational Degrees'
+      groupName: 'Classification - Categories'
       groupDescription: |-
 
-        APIs for managing educational degree records.
+        APIs for managing classification categories.
       subgroup: ''
       subgroupDescription: ''
       title: ''
@@ -39,7 +39,12 @@ endpoints:
         headers:
           cache-control: 'no-cache, private'
           content-type: application/json
-          access-control-allow-origin: '*'
+          x-content-type-options: nosniff
+          x-frame-options: DENY
+          referrer-policy: strict-origin-when-cross-origin
+          content-security-policy: "default-src 'self'; script-src 'self'; style-src 'self' 'unsafe-inline'; img-src 'self' data:; font-src 'self'; connect-src 'self'"
+          access-control-allow-origin: 'http://localhost:5173'
+          access-control-allow-credentials: 'true'
         description: null
     responseFields: []
     auth:
@@ -53,13 +58,13 @@ endpoints:
     custom: []
     httpMethods:
       - POST
-    uri: api/v1/educational-degrees
+    uri: api/v1/categories
     metadata:
       custom: []
-      groupName: 'Educational Degrees'
+      groupName: 'Classification - Categories'
       groupDescription: |-
 
-        APIs for managing educational degree records.
+        APIs for managing classification categories.
       subgroup: ''
       subgroupDescription: ''
       title: ''
@@ -75,16 +80,27 @@ endpoints:
     queryParameters: []
     cleanQueryParameters: []
     bodyParameters:
-      name:
+      code:
         custom: []
-        name: name
-        description: 'Must not be greater than 255 characters.'
+        name: code
+        description: 'Must not be greater than 50 characters.'
         required: true
         example: b
         type: string
         enumValues: []
         exampleWasSpecified: false
         nullable: false
+        deprecated: false
+      name:
+        custom: []
+        name: name
+        description: 'Must not be greater than 255 characters.'
+        required: false
+        example: 'n'
+        type: string
+        enumValues: []
+        exampleWasSpecified: false
+        nullable: true
         deprecated: false
       description:
         custom: []
@@ -109,7 +125,8 @@ endpoints:
         nullable: true
         deprecated: false
     cleanBodyParameters:
-      name: b
+      code: b
+      name: 'n'
       description: 'Eius et animi quos velit et.'
       is_active: true
     fileParameters: []
@@ -126,13 +143,13 @@ endpoints:
     custom: []
     httpMethods:
       - POST
-    uri: api/v1/educational-degrees/import
+    uri: api/v1/categories/import
     metadata:
       custom: []
-      groupName: 'Educational Degrees'
+      groupName: 'Classification - Categories'
       groupDescription: |-
 
-        APIs for managing educational degree records.
+        APIs for managing classification categories.
       subgroup: ''
       subgroupDescription: ''
       title: ''
@@ -175,13 +192,13 @@ endpoints:
     custom: []
     httpMethods:
       - GET
-    uri: api/v1/educational-degrees/export
+    uri: api/v1/categories/export
     metadata:
       custom: []
-      groupName: 'Educational Degrees'
+      groupName: 'Classification - Categories'
       groupDescription: |-
 
-        APIs for managing educational degree records.
+        APIs for managing classification categories.
       subgroup: ''
       subgroupDescription: ''
       title: ''
@@ -207,7 +224,12 @@ endpoints:
         headers:
           cache-control: 'no-cache, private'
           content-type: application/json
-          access-control-allow-origin: '*'
+          x-content-type-options: nosniff
+          x-frame-options: DENY
+          referrer-policy: strict-origin-when-cross-origin
+          content-security-policy: "default-src 'self'; script-src 'self'; style-src 'self' 'unsafe-inline'; img-src 'self' data:; font-src 'self'; connect-src 'self'"
+          access-control-allow-origin: 'http://localhost:5173'
+          access-control-allow-credentials: 'true'
         description: null
     responseFields: []
     auth:
@@ -221,13 +243,13 @@ endpoints:
     custom: []
     httpMethods:
       - GET
-    uri: api/v1/educational-degrees/sample
+    uri: api/v1/categories/sample
     metadata:
       custom: []
-      groupName: 'Educational Degrees'
+      groupName: 'Classification - Categories'
       groupDescription: |-
 
-        APIs for managing educational degree records.
+        APIs for managing classification categories.
       subgroup: ''
       subgroupDescription: ''
       title: ''
@@ -253,7 +275,12 @@ endpoints:
         headers:
           cache-control: 'no-cache, private'
           content-type: application/json
-          access-control-allow-origin: '*'
+          x-content-type-options: nosniff
+          x-frame-options: DENY
+          referrer-policy: strict-origin-when-cross-origin
+          content-security-policy: "default-src 'self'; script-src 'self'; style-src 'self' 'unsafe-inline'; img-src 'self' data:; font-src 'self'; connect-src 'self'"
+          access-control-allow-origin: 'http://localhost:5173'
+          access-control-allow-credentials: 'true'
         description: null
     responseFields: []
     auth:
@@ -267,13 +294,13 @@ endpoints:
     custom: []
     httpMethods:
       - GET
-    uri: api/v1/educational-degrees/active
+    uri: api/v1/categories/active
     metadata:
       custom: []
-      groupName: 'Educational Degrees'
+      groupName: 'Classification - Categories'
       groupDescription: |-
 
-        APIs for managing educational degree records.
+        APIs for managing classification categories.
       subgroup: ''
       subgroupDescription: ''
       title: ''
@@ -299,7 +326,12 @@ endpoints:
         headers:
           cache-control: 'no-cache, private'
           content-type: application/json
-          access-control-allow-origin: '*'
+          x-content-type-options: nosniff
+          x-frame-options: DENY
+          referrer-policy: strict-origin-when-cross-origin
+          content-security-policy: "default-src 'self'; script-src 'self'; style-src 'self' 'unsafe-inline'; img-src 'self' data:; font-src 'self'; connect-src 'self'"
+          access-control-allow-origin: 'http://localhost:5173'
+          access-control-allow-credentials: 'true'
         description: null
     responseFields: []
     auth:
@@ -313,13 +345,13 @@ endpoints:
     custom: []
     httpMethods:
       - GET
-    uri: api/v1/educational-degrees/search
+    uri: api/v1/categories/search
     metadata:
       custom: []
-      groupName: 'Educational Degrees'
+      groupName: 'Classification - Categories'
       groupDescription: |-
 
-        APIs for managing educational degree records.
+        APIs for managing classification categories.
       subgroup: ''
       subgroupDescription: ''
       title: ''
@@ -345,7 +377,12 @@ endpoints:
         headers:
           cache-control: 'no-cache, private'
           content-type: application/json
-          access-control-allow-origin: '*'
+          x-content-type-options: nosniff
+          x-frame-options: DENY
+          referrer-policy: strict-origin-when-cross-origin
+          content-security-policy: "default-src 'self'; script-src 'self'; style-src 'self' 'unsafe-inline'; img-src 'self' data:; font-src 'self'; connect-src 'self'"
+          access-control-allow-origin: 'http://localhost:5173'
+          access-control-allow-credentials: 'true'
         description: null
     responseFields: []
     auth:
@@ -359,13 +396,13 @@ endpoints:
     custom: []
     httpMethods:
       - GET
-    uri: 'api/v1/educational-degrees/{id}'
+    uri: 'api/v1/categories/{id}'
     metadata:
       custom: []
-      groupName: 'Educational Degrees'
+      groupName: 'Classification - Categories'
       groupDescription: |-
 
-        APIs for managing educational degree records.
+        APIs for managing classification categories.
       subgroup: ''
       subgroupDescription: ''
       title: ''
@@ -380,7 +417,7 @@ endpoints:
       id:
         custom: []
         name: id
-        description: 'The ID of the educational degree.'
+        description: 'The ID of the category.'
         required: true
         example: architecto
         type: string
@@ -403,7 +440,12 @@ endpoints:
         headers:
           cache-control: 'no-cache, private'
           content-type: application/json
-          access-control-allow-origin: '*'
+          x-content-type-options: nosniff
+          x-frame-options: DENY
+          referrer-policy: strict-origin-when-cross-origin
+          content-security-policy: "default-src 'self'; script-src 'self'; style-src 'self' 'unsafe-inline'; img-src 'self' data:; font-src 'self'; connect-src 'self'"
+          access-control-allow-origin: 'http://localhost:5173'
+          access-control-allow-credentials: 'true'
         description: null
     responseFields: []
     auth:
@@ -417,13 +459,13 @@ endpoints:
     custom: []
     httpMethods:
       - PUT
-    uri: 'api/v1/educational-degrees/{id}'
+    uri: 'api/v1/categories/{id}'
     metadata:
       custom: []
-      groupName: 'Educational Degrees'
+      groupName: 'Classification - Categories'
       groupDescription: |-
 
-        APIs for managing educational degree records.
+        APIs for managing classification categories.
       subgroup: ''
       subgroupDescription: ''
       title: ''
@@ -438,7 +480,7 @@ endpoints:
       id:
         custom: []
         name: id
-        description: 'The ID of the educational degree.'
+        description: 'The ID of the category.'
         required: true
         example: architecto
         type: string
@@ -451,9 +493,9 @@ endpoints:
     queryParameters: []
     cleanQueryParameters: []
     bodyParameters:
-      name:
+      code:
         custom: []
-        name: name
+        name: code
         description: ''
         required: false
         example: null
@@ -461,6 +503,17 @@ endpoints:
         enumValues: []
         exampleWasSpecified: false
         nullable: false
+        deprecated: false
+      name:
+        custom: []
+        name: name
+        description: 'Must not be greater than 255 characters.'
+        required: false
+        example: b
+        type: string
+        enumValues: []
+        exampleWasSpecified: false
+        nullable: true
         deprecated: false
       description:
         custom: []
@@ -478,64 +531,16 @@ endpoints:
         name: is_active
         description: ''
         required: false
-        example: false
+        example: true
         type: boolean
         enumValues: []
         exampleWasSpecified: false
         nullable: true
         deprecated: false
     cleanBodyParameters:
+      name: b
       description: 'Eius et animi quos velit et.'
-      is_active: false
-    fileParameters: []
-    responses: []
-    responseFields: []
-    auth:
-      - headers
-      - Authorization
-      - 'Bearer 6g43cv8PD1aE5beadkZfhV6'
-    controller: null
-    method: null
-    route: null
-  -
-    custom: []
-    httpMethods:
-      - PATCH
-    uri: 'api/v1/educational-degrees/{id}/toggle-status'
-    metadata:
-      custom: []
-      groupName: 'Educational Degrees'
-      groupDescription: |-
-
-        APIs for managing educational degree records.
-      subgroup: ''
-      subgroupDescription: ''
-      title: ''
-      description: ''
-      authenticated: true
-      deprecated: false
-    headers:
-      Authorization: 'Bearer {YOUR_AUTH_KEY}'
-      Content-Type: application/json
-      Accept: application/json
-    urlParameters:
-      id:
-        custom: []
-        name: id
-        description: 'The ID of the educational degree.'
-        required: true
-        example: architecto
-        type: string
-        enumValues: []
-        exampleWasSpecified: false
-        nullable: false
-        deprecated: false
-    cleanUrlParameters:
-      id: architecto
-    queryParameters: []
-    cleanQueryParameters: []
-    bodyParameters: []
-    cleanBodyParameters: []
+      is_active: true
     fileParameters: []
     responses: []
     responseFields: []
@@ -550,13 +555,13 @@ endpoints:
     custom: []
     httpMethods:
       - DELETE
-    uri: 'api/v1/educational-degrees/{id}'
+    uri: 'api/v1/categories/{id}'
     metadata:
       custom: []
-      groupName: 'Educational Degrees'
+      groupName: 'Classification - Categories'
       groupDescription: |-
 
-        APIs for managing educational degree records.
+        APIs for managing classification categories.
       subgroup: ''
       subgroupDescription: ''
       title: ''
@@ -571,7 +576,7 @@ endpoints:
       id:
         custom: []
         name: id
-        description: 'The ID of the educational degree.'
+        description: 'The ID of the category.'
         required: true
         example: architecto
         type: string

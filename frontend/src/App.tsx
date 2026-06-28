@@ -1,37 +1,41 @@
-import { useEffect } from 'react';
+import React, { useEffect } from 'react';
 import { BrowserRouter, Routes, Route, Navigate, useLocation } from 'react-router-dom';
 import { MainLayout } from './layouts/MainLayout';
 import { BlankLayout } from './layouts/BlankLayout';
 import { ToastProvider } from './components/ui/toast';
 import { TranslationProvider } from './contexts/TranslationContext';
 import { ErrorBoundary } from './components/ui/ErrorBoundary';
-
-// Pages
-import { DashboardPage } from './pages/dashboard/DashboardPage';
-import { StaffPage } from './pages/staff';
-import { QuestionsPage } from './pages/questions';
-import { TemplateBuilderPage } from './pages/templates';
-import { EvaluationsPage, EvaluationTakingPage } from './pages/evaluations';
-import { CentersPage } from './pages/centers';
-import { ReportsPage } from './pages/reports';
-import ZonesPage from './pages/zones';
-import ActionPlansPage from './pages/action-plans';
-import { TeamCodesPage } from './pages/team-codes';
-import { MedicationsPage } from './pages/medications/MedicationsPage';
-import { PhcMedicationsPage } from './pages/medications/PhcMedicationsPage';
-import { ClassificationPage } from './pages/classification/ClassificationPage';
-import { QuestionCategoriesPage } from './pages/question-categories';
-import { QuestionSubCategoriesPage } from './pages/question-sub-categories';
-import { EducationalDegreesPage } from './pages/educational-degrees/EducationalDegreesPage';
-import { DepartmentsPage } from './pages/departments/DepartmentsPage';
-import { ClinicAssignmentsPage } from './pages/clinicAssignments/ClinicAssignmentsPage';
-import { ProfessionalsPage } from './pages/professionals/ProfessionalsPage';
-import { RolesPage } from './pages/roles';
-import { PermissionsPage } from './pages/permissions';
-import { TemplatesPage as MedTemplatesPage, EvaluationsListPage, EvaluationTakingPage as MedEvalTakingPage } from './pages/medication-evaluations';
-import { UsersPage } from './pages/users';
-import { LoginPage } from './pages/auth';
 import { useAuthStore } from './stores/authStore';
+
+// Lazy-loaded pages
+const DashboardPage = React.lazy(() => import('./pages/dashboard/DashboardPage'));
+const StaffPage = React.lazy(() => import('./pages/staff').then(m => ({ default: m.StaffPage })));
+const QuestionsPage = React.lazy(() => import('./pages/questions').then(m => ({ default: m.QuestionsPage })));
+const TemplateBuilderPage = React.lazy(() => import('./pages/templates').then(m => ({ default: m.TemplateBuilderPage })));
+const EvaluationsPage = React.lazy(() => import('./pages/evaluations').then(m => ({ default: m.EvaluationsPage })));
+const EvaluationTakingPage = React.lazy(() => import('./pages/evaluations').then(m => ({ default: m.EvaluationTakingPage })));
+const CentersPage = React.lazy(() => import('./pages/centers').then(m => ({ default: m.CentersPage })));
+const ReportsPage = React.lazy(() => import('./pages/reports').then(m => ({ default: m.ReportsPage })));
+const ZonesPage = React.lazy(() => import('./pages/zones'));
+const ActionPlansPage = React.lazy(() => import('./pages/action-plans'));
+const TeamCodesPage = React.lazy(() => import('./pages/team-codes').then(m => ({ default: m.TeamCodesPage })));
+const MedicationsPage = React.lazy(() => import('./pages/medications/MedicationsPage').then(m => ({ default: m.MedicationsPage })));
+const PhcMedicationsPage = React.lazy(() => import('./pages/medications/PhcMedicationsPage').then(m => ({ default: m.PhcMedicationsPage })));
+const ClassificationPage = React.lazy(() => import('./pages/classification/ClassificationPage').then(m => ({ default: m.ClassificationPage })));
+const QuestionCategoriesPage = React.lazy(() => import('./pages/question-categories').then(m => ({ default: m.QuestionCategoriesPage })));
+const QuestionSubCategoriesPage = React.lazy(() => import('./pages/question-sub-categories').then(m => ({ default: m.QuestionSubCategoriesPage })));
+const EducationalDegreesPage = React.lazy(() => import('./pages/educational-degrees/EducationalDegreesPage').then(m => ({ default: m.EducationalDegreesPage })));
+const DepartmentsPage = React.lazy(() => import('./pages/departments/DepartmentsPage').then(m => ({ default: m.DepartmentsPage })));
+const ClinicAssignmentsPage = React.lazy(() => import('./pages/clinicAssignments/ClinicAssignmentsPage').then(m => ({ default: m.ClinicAssignmentsPage })));
+const ProfessionalsPage = React.lazy(() => import('./pages/professionals/ProfessionalsPage').then(m => ({ default: m.ProfessionalsPage })));
+const RolesPage = React.lazy(() => import('./pages/roles').then(m => ({ default: m.RolesPage })));
+const PermissionsPage = React.lazy(() => import('./pages/permissions').then(m => ({ default: m.PermissionsPage })));
+const MedTemplatesPage = React.lazy(() => import('./pages/medication-evaluations').then(m => ({ default: m.TemplatesPage })));
+const EvaluationsListPage = React.lazy(() => import('./pages/medication-evaluations').then(m => ({ default: m.EvaluationsListPage })));
+const MedEvalTakingPage = React.lazy(() => import('./pages/medication-evaluations').then(m => ({ default: m.EvaluationTakingPage })));
+const UsersPage = React.lazy(() => import('./pages/users').then(m => ({ default: m.UsersPage })));
+const ChangePasswordPage = React.lazy(() => import('./pages/change-password/ChangePasswordPage').then(m => ({ default: m.ChangePasswordPage })));
+const LoginPage = React.lazy(() => import('./pages/auth').then(m => ({ default: m.LoginPage })));
 
 // Protected Route Wrapper
 const ProtectedRoute = ({ children }: { children: React.ReactNode }) => {
@@ -129,17 +133,7 @@ function App() {
             <Route path="/medication-evaluation-templates" element={<MedTemplatesPage />} />
             <Route path="/medication-evaluations" element={<EvaluationsListPage />} />
             <Route path="/medication-evaluations/:id" element={<MedEvalTakingPage />} />
-            <Route
-              path="/change-password"
-              element={
-                <div className="flex items-center justify-center min-h-[60vh]">
-                  <div className="text-center">
-                    <h2 className="text-2xl font-bold text-slate-800">Change Password</h2>
-                    <p className="text-slate-500 mt-2">Password change form coming soon.</p>
-                  </div>
-                </div>
-              }
-            />
+            <Route path="/change-password" element={<ChangePasswordPage />} />
           </Route>
 
           {/* Fallback */}

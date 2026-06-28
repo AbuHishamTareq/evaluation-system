@@ -4,6 +4,7 @@ namespace App\Models;
 
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
+use Illuminate\Database\Eloquent\Relations\HasMany;
 use Illuminate\Database\Eloquent\SoftDeletes;
 
 class Question extends Model
@@ -41,5 +42,10 @@ class Question extends Model
     public function subCategory(): BelongsTo
     {
         return $this->belongsTo(QuestionSubCategory::class, 'sub_category_id');
+    }
+
+    public function answers(): HasMany
+    {
+        return $this->hasMany(EvaluationAnswer::class, 'question_id');
     }
 }

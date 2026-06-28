@@ -369,23 +369,22 @@ const DetailPanel: React.FC<DetailPanelProps> = ({
 
 export const CentersPage: React.FC = () => {
   const hasPermission = useAuthStore((state) => state.hasPermission);
-  const {
-    centers,
-    isLoading,
-    isImporting,
-    error,
-    pagination,
-    fetchCenters,
-    createCenter,
-    updateCenter,
-    updateCenterStatus,
-    deleteCenter,
-    clearError,
-    exportCenters,
-    importCenters,
-  } = useCenterStore();
+  const centers = useCenterStore((s) => s.centers);
+  const isLoading = useCenterStore((s) => s.isLoading);
+  const isImporting = useCenterStore((s) => s.isImporting);
+  const error = useCenterStore((s) => s.error);
+  const pagination = useCenterStore((s) => s.pagination);
+  const fetchCenters = useCenterStore((s) => s.fetchCenters);
+  const createCenter = useCenterStore((s) => s.createCenter);
+  const updateCenter = useCenterStore((s) => s.updateCenter);
+  const updateCenterStatus = useCenterStore((s) => s.updateCenterStatus);
+  const deleteCenter = useCenterStore((s) => s.deleteCenter);
+  const clearError = useCenterStore((s) => s.clearError);
+  const exportCenters = useCenterStore((s) => s.exportCenters);
+  const importCenters = useCenterStore((s) => s.importCenters);
 
-  const { fetchZones, zones: zoneList } = useZoneStore();
+  const fetchZones = useZoneStore((s) => s.fetchZones);
+  const zoneList = useZoneStore((s) => s.zones);
   const { addToast } = useToast();
   const fileInputRef = useRef<HTMLInputElement>(null);
 
@@ -405,6 +404,8 @@ export const CentersPage: React.FC = () => {
   const [showStaffListModal, setShowStaffListModal] = useState(false);
   const [staffList, setStaffList] = useState<Staff[]>([]);
   const [loadingStaffList, setLoadingStaffList] = useState(false);
+  const [pendingImportFile, setPendingImportFile] = useState<File | null>(null);
+  const [isSubmitting, setIsSubmitting] = useState(false);
 
   const dropdownRef = useRef<HTMLDivElement>(null);
   const inputRef = useRef<HTMLInputElement>(null);
@@ -418,7 +419,7 @@ export const CentersPage: React.FC = () => {
   }, [searchQuery, zoneFilter, classificationFilter]);
 
   const loadCenters = useCallback(async (page: number = 1) => {
-    await fetchCenters({ page, per_page: 100, filters: buildFilters() });
+    await fetchCenters({ page, per_page: 20, filters: buildFilters() });
   }, [fetchCenters, buildFilters]);
 
   useEffect(() => {
@@ -497,8 +498,14 @@ export const CentersPage: React.FC = () => {
       return;
     }
 
+    setPendingImportFile(file);
+  };
+
+  const confirmImport = async () => {
+    if (!pendingImportFile) return;
+    setPendingImportFile(null);
     try {
-      const result = await importCenters(file);
+      const result = await importCenters(pendingImportFile);
       if (result.success) {
         addToast(result.message || 'Centers imported successfully', 'success');
       } else {
@@ -579,12 +586,18 @@ export const CentersPage: React.FC = () => {
   };
 
   const handleSubmit = async (data: CenterCreateInput) => {
-    if (editingCenter) {
-      await updateCenter(editingCenter.id, data);
-    } else {
-      await createCenter(data);
+    if (isSubmitting) return;
+    setIsSubmitting(true);
+    try {
+      if (editingCenter) {
+        await updateCenter(editingCenter.id, data);
+      } else {
+        await createCenter(data);
+      }
+      handleCloseModal();
+    } finally {
+      setIsSubmitting(false);
     }
-    handleCloseModal();
   };
 
   const handleDelete = async () => {
@@ -935,7 +948,7 @@ export const CentersPage: React.FC = () => {
             center={editingCenter || undefined}
             onSubmit={handleSubmit}
             onCancel={handleCloseModal}
-            isLoading={isLoading}
+            isLoading={isLoading || isSubmitting}
             zones={zoneList}
           />
         </ModalContent>
@@ -992,6 +1005,20 @@ export const CentersPage: React.FC = () => {
         <ModalFooter>
           <Button variant="outline" onClick={() => setShowStaffListModal(false)}>Close</Button>
         </ModalFooter>
+      </Modal>
+
+      {/* Import Confirmation Modal */}
+      <Modal isOpen={pendingImportFile !== null} onClose={() => setPendingImportFile(null)} size="sm">
+        <ModalHeader title="Confirm Import" onClose={() => setPendingImportFile(null)} />
+        <div className="p-6">
+          <p className="text-slate-600">
+            Are you sure you want to import <strong>{pendingImportFile?.name}</strong>? This may overwrite existing data.
+          </p>
+          <div className="flex justify-end gap-3 mt-6">
+            <Button variant="outline" onClick={() => setPendingImportFile(null)}>Cancel</Button>
+            <Button variant="primary" onClick={confirmImport}>Yes, Import</Button>
+          </div>
+        </div>
       </Modal>
 
       {/* Import/Export Data Modal */}

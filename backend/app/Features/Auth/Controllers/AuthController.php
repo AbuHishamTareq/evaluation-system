@@ -7,65 +7,13 @@ use App\Http\Controllers\Api\V1\BaseApiController;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
+use Illuminate\Support\Facades\Log;
 
 class AuthController extends BaseApiController
 {
     public function __construct(
         protected AuthService $authService
     ) {}
-
-    /**
-     * Register a new user.
-     *
-     * Creates a new user account with the provided details and returns an authentication token.
-     *
-     * @group Authentication
-     *
-     * @unauthenticated
-     *
-     * @bodyParam name string required The full name of the user. Example: John Doe
-     * @bodyParam email string required The email address of the user. Example: john@example.com
-     * @bodyParam password string required The password (minimum 8 characters). Example: securePass123
-     * @bodyParam role string optional The role assigned to the user. Must be one of: admin, manager, evaluator, staff. Example: evaluator
-     * @bodyParam employee_id string optional The employee ID for the user. Example: EMP-001
-     *
-     * @response {
-     *   "success": true,
-     *   "message": "User registered successfully",
-     *   "data": {
-     *     "user": {
-     *       "id": "uuid",
-     *       "name": "John Doe",
-     *       "email": "john@example.com",
-     *       "employee_id": "EMP-001",
-     *       "created_at": "2026-06-15T00:00:00.000000Z"
-     *     },
-     *     "token": "1|abc123def456..."
-     *   }
-     * }
-     * @response status=422 {
-     *   "success": false,
-     *   "message": "The email field is required. (and 2 more errors)",
-     *   "errors": {
-     *     "email": ["The email field is required."],
-     *     "password": ["The password field is required."]
-     *   }
-     * }
-     */
-    public function register(Request $request): JsonResponse
-    {
-        $validated = $request->validate([
-            'name' => 'required|string|max:255',
-            'email' => 'required|email|max:255|unique:users,email',
-            'password' => 'required|string|min:8',
-            'role' => 'nullable|string|in:admin,manager,evaluator,staff',
-            'employee_id' => 'nullable|string|max:255',
-        ]);
-
-        $user = $this->authService->register($validated);
-
-        return $this->successResponse($user, 'User registered successfully', 201);
-    }
 
     /**
      * Log in an existing user.
@@ -125,7 +73,12 @@ class AuthController extends BaseApiController
                 'Login successful'
             );
         } catch (\RuntimeException $e) {
-            return $this->errorResponse($e->getMessage(), 403);
+            Log::error('Login failed', [
+                'error' => $e->getMessage(),
+                'trace' => $e->getTraceAsString(),
+            ]);
+
+            return $this->errorResponse('Authentication failed. Please try again.', 403);
         }
     }
 
@@ -220,7 +173,12 @@ class AuthController extends BaseApiController
 
             return $this->successResponse(null, 'Password changed successfully');
         } catch (\RuntimeException $e) {
-            return $this->errorResponse($e->getMessage(), 400);
+            Log::error('Password change failed', [
+                'error' => $e->getMessage(),
+                'trace' => $e->getTraceAsString(),
+            ]);
+
+            return $this->errorResponse('Unable to change password. Please try again.', 400);
         }
     }
 
@@ -251,13 +209,9 @@ class AuthController extends BaseApiController
             'email' => 'required|email',
         ]);
 
-        $reset = $this->authService->resetPassword($validated['email']);
+        $this->authService->resetPassword($validated['email']);
 
-        if (! $reset) {
-            return $this->errorResponse('Email not found', 404);
-        }
-
-        return $this->successResponse(null, 'Password reset link sent to email');
+        return $this->successResponse(null, 'If the email exists, a password reset link has been sent');
     }
 
     /**

@@ -16,6 +16,9 @@ export const MainLayout: React.FC = () => {
 
   return (
     <div className="min-h-screen bg-gradient-to-br from-slate-50 via-teal-50/30 to-violet-50/30 flex flex-col">
+      <a href="#main-content" className="sr-only focus:not-sr-only focus:absolute focus:top-4 focus:left-4 focus:z-[60] focus:px-4 focus:py-2 focus:bg-white focus:text-cyan-600 focus:rounded-xl focus:shadow-lg focus:outline-none focus:ring-2 focus:ring-cyan-500">
+        Skip to main content
+      </a>
       <Header
         isOpen={sidebarOpen}
         isRtl={isRtl}
@@ -26,10 +29,12 @@ export const MainLayout: React.FC = () => {
 
       <Sidebar isOpen={sidebarOpen} isRtl={isRtl} />
 
-      <main className={`pt-20 min-h-screen transition-all duration-300 ${mainContentMargin} flex-1`}>
+      <main id="main-content" className={`pt-20 min-h-screen transition-all duration-300 ${mainContentMargin} flex-1`}>
         <Container>
           <div className="py-6 animate-fade-in">
-            <Outlet />
+            <React.Suspense fallback={<div className="flex items-center justify-center min-h-[60vh]"><div className="w-12 h-12 border-4 border-cyan-500 border-t-transparent rounded-full animate-spin" /></div>}>
+              <Outlet />
+            </React.Suspense>
           </div>
         </Container>
       </main>

@@ -1,19 +1,19 @@
-name: 'Classification - Categories'
+name: 'Classification - Specialties'
 description: |-
 
-  APIs for managing classification categories.
+  APIs for managing classification specialties.
 endpoints:
   -
     custom: []
     httpMethods:
       - GET
-    uri: api/v1/categories
+    uri: api/v1/specialties
     metadata:
       custom: []
-      groupName: 'Classification - Categories'
+      groupName: 'Classification - Specialties'
       groupDescription: |-
 
-        APIs for managing classification categories.
+        APIs for managing classification specialties.
       subgroup: ''
       subgroupDescription: ''
       title: ''
@@ -39,7 +39,12 @@ endpoints:
         headers:
           cache-control: 'no-cache, private'
           content-type: application/json
-          access-control-allow-origin: '*'
+          x-content-type-options: nosniff
+          x-frame-options: DENY
+          referrer-policy: strict-origin-when-cross-origin
+          content-security-policy: "default-src 'self'; script-src 'self'; style-src 'self' 'unsafe-inline'; img-src 'self' data:; font-src 'self'; connect-src 'self'"
+          access-control-allow-origin: 'http://localhost:5173'
+          access-control-allow-credentials: 'true'
         description: null
     responseFields: []
     auth:
@@ -53,13 +58,13 @@ endpoints:
     custom: []
     httpMethods:
       - POST
-    uri: api/v1/categories
+    uri: api/v1/specialties
     metadata:
       custom: []
-      groupName: 'Classification - Categories'
+      groupName: 'Classification - Specialties'
       groupDescription: |-
 
-        APIs for managing classification categories.
+        APIs for managing classification specialties.
       subgroup: ''
       subgroupDescription: ''
       title: ''
@@ -75,13 +80,13 @@ endpoints:
     queryParameters: []
     cleanQueryParameters: []
     bodyParameters:
-      code:
+      field_id:
         custom: []
-        name: code
-        description: 'Must not be greater than 50 characters.'
+        name: field_id
+        description: 'Must match an existing stored value.'
         required: true
-        example: b
-        type: string
+        example: 16
+        type: integer
         enumValues: []
         exampleWasSpecified: false
         nullable: false
@@ -90,12 +95,12 @@ endpoints:
         custom: []
         name: name
         description: 'Must not be greater than 255 characters.'
-        required: false
+        required: true
         example: 'n'
         type: string
         enumValues: []
         exampleWasSpecified: false
-        nullable: true
+        nullable: false
         deprecated: false
       description:
         custom: []
@@ -113,17 +118,17 @@ endpoints:
         name: is_active
         description: ''
         required: false
-        example: false
+        example: true
         type: boolean
         enumValues: []
         exampleWasSpecified: false
         nullable: true
         deprecated: false
     cleanBodyParameters:
-      code: b
+      field_id: 16
       name: 'n'
       description: 'Eius et animi quos velit et.'
-      is_active: false
+      is_active: true
     fileParameters: []
     responses: []
     responseFields: []
@@ -138,13 +143,13 @@ endpoints:
     custom: []
     httpMethods:
       - POST
-    uri: api/v1/categories/import
+    uri: api/v1/specialties/import
     metadata:
       custom: []
-      groupName: 'Classification - Categories'
+      groupName: 'Classification - Specialties'
       groupDescription: |-
 
-        APIs for managing classification categories.
+        APIs for managing classification specialties.
       subgroup: ''
       subgroupDescription: ''
       title: ''
@@ -163,7 +168,7 @@ endpoints:
       file:
         custom: []
         name: file
-        description: 'Must be a file.'
+        description: 'Must be a file. Must not be greater than 10240 kilobytes.'
         required: true
         example: null
         type: file
@@ -187,13 +192,13 @@ endpoints:
     custom: []
     httpMethods:
       - GET
-    uri: api/v1/categories/export
+    uri: api/v1/specialties/export
     metadata:
       custom: []
-      groupName: 'Classification - Categories'
+      groupName: 'Classification - Specialties'
       groupDescription: |-
 
-        APIs for managing classification categories.
+        APIs for managing classification specialties.
       subgroup: ''
       subgroupDescription: ''
       title: ''
@@ -219,7 +224,12 @@ endpoints:
         headers:
           cache-control: 'no-cache, private'
           content-type: application/json
-          access-control-allow-origin: '*'
+          x-content-type-options: nosniff
+          x-frame-options: DENY
+          referrer-policy: strict-origin-when-cross-origin
+          content-security-policy: "default-src 'self'; script-src 'self'; style-src 'self' 'unsafe-inline'; img-src 'self' data:; font-src 'self'; connect-src 'self'"
+          access-control-allow-origin: 'http://localhost:5173'
+          access-control-allow-credentials: 'true'
         description: null
     responseFields: []
     auth:
@@ -233,13 +243,13 @@ endpoints:
     custom: []
     httpMethods:
       - GET
-    uri: api/v1/categories/sample
+    uri: api/v1/specialties/sample
     metadata:
       custom: []
-      groupName: 'Classification - Categories'
+      groupName: 'Classification - Specialties'
       groupDescription: |-
 
-        APIs for managing classification categories.
+        APIs for managing classification specialties.
       subgroup: ''
       subgroupDescription: ''
       title: ''
@@ -265,7 +275,12 @@ endpoints:
         headers:
           cache-control: 'no-cache, private'
           content-type: application/json
-          access-control-allow-origin: '*'
+          x-content-type-options: nosniff
+          x-frame-options: DENY
+          referrer-policy: strict-origin-when-cross-origin
+          content-security-policy: "default-src 'self'; script-src 'self'; style-src 'self' 'unsafe-inline'; img-src 'self' data:; font-src 'self'; connect-src 'self'"
+          access-control-allow-origin: 'http://localhost:5173'
+          access-control-allow-credentials: 'true'
         description: null
     responseFields: []
     auth:
@@ -279,13 +294,13 @@ endpoints:
     custom: []
     httpMethods:
       - GET
-    uri: api/v1/categories/active
+    uri: api/v1/specialties/active
     metadata:
       custom: []
-      groupName: 'Classification - Categories'
+      groupName: 'Classification - Specialties'
       groupDescription: |-
 
-        APIs for managing classification categories.
+        APIs for managing classification specialties.
       subgroup: ''
       subgroupDescription: ''
       title: ''
@@ -311,7 +326,12 @@ endpoints:
         headers:
           cache-control: 'no-cache, private'
           content-type: application/json
-          access-control-allow-origin: '*'
+          x-content-type-options: nosniff
+          x-frame-options: DENY
+          referrer-policy: strict-origin-when-cross-origin
+          content-security-policy: "default-src 'self'; script-src 'self'; style-src 'self' 'unsafe-inline'; img-src 'self' data:; font-src 'self'; connect-src 'self'"
+          access-control-allow-origin: 'http://localhost:5173'
+          access-control-allow-credentials: 'true'
         description: null
     responseFields: []
     auth:
@@ -325,13 +345,13 @@ endpoints:
     custom: []
     httpMethods:
       - GET
-    uri: api/v1/categories/search
+    uri: api/v1/specialties/search
     metadata:
       custom: []
-      groupName: 'Classification - Categories'
+      groupName: 'Classification - Specialties'
       groupDescription: |-
 
-        APIs for managing classification categories.
+        APIs for managing classification specialties.
       subgroup: ''
       subgroupDescription: ''
       title: ''
@@ -357,7 +377,12 @@ endpoints:
         headers:
           cache-control: 'no-cache, private'
           content-type: application/json
-          access-control-allow-origin: '*'
+          x-content-type-options: nosniff
+          x-frame-options: DENY
+          referrer-policy: strict-origin-when-cross-origin
+          content-security-policy: "default-src 'self'; script-src 'self'; style-src 'self' 'unsafe-inline'; img-src 'self' data:; font-src 'self'; connect-src 'self'"
+          access-control-allow-origin: 'http://localhost:5173'
+          access-control-allow-credentials: 'true'
         description: null
     responseFields: []
     auth:
@@ -371,13 +396,76 @@ endpoints:
     custom: []
     httpMethods:
       - GET
-    uri: 'api/v1/categories/{id}'
+    uri: 'api/v1/specialties/field/{fieldId}'
     metadata:
       custom: []
-      groupName: 'Classification - Categories'
+      groupName: 'Classification - Specialties'
       groupDescription: |-
 
-        APIs for managing classification categories.
+        APIs for managing classification specialties.
+      subgroup: ''
+      subgroupDescription: ''
+      title: ''
+      description: ''
+      authenticated: true
+      deprecated: false
+    headers:
+      Authorization: 'Bearer {YOUR_AUTH_KEY}'
+      Content-Type: application/json
+      Accept: application/json
+    urlParameters:
+      fieldId:
+        custom: []
+        name: fieldId
+        description: ''
+        required: true
+        example: architecto
+        type: string
+        enumValues: []
+        exampleWasSpecified: false
+        nullable: false
+        deprecated: false
+    cleanUrlParameters:
+      fieldId: architecto
+    queryParameters: []
+    cleanQueryParameters: []
+    bodyParameters: []
+    cleanBodyParameters: []
+    fileParameters: []
+    responses:
+      -
+        custom: []
+        status: 401
+        content: '{"message":"Unauthenticated."}'
+        headers:
+          cache-control: 'no-cache, private'
+          content-type: application/json
+          x-content-type-options: nosniff
+          x-frame-options: DENY
+          referrer-policy: strict-origin-when-cross-origin
+          content-security-policy: "default-src 'self'; script-src 'self'; style-src 'self' 'unsafe-inline'; img-src 'self' data:; font-src 'self'; connect-src 'self'"
+          access-control-allow-origin: 'http://localhost:5173'
+          access-control-allow-credentials: 'true'
+        description: null
+    responseFields: []
+    auth:
+      - headers
+      - Authorization
+      - 'Bearer 6g43cv8PD1aE5beadkZfhV6'
+    controller: null
+    method: null
+    route: null
+  -
+    custom: []
+    httpMethods:
+      - GET
+    uri: 'api/v1/specialties/{id}'
+    metadata:
+      custom: []
+      groupName: 'Classification - Specialties'
+      groupDescription: |-
+
+        APIs for managing classification specialties.
       subgroup: ''
       subgroupDescription: ''
       title: ''
@@ -392,7 +480,7 @@ endpoints:
       id:
         custom: []
         name: id
-        description: 'The ID of the category.'
+        description: 'The ID of the specialty.'
         required: true
         example: architecto
         type: string
@@ -415,7 +503,12 @@ endpoints:
         headers:
           cache-control: 'no-cache, private'
           content-type: application/json
-          access-control-allow-origin: '*'
+          x-content-type-options: nosniff
+          x-frame-options: DENY
+          referrer-policy: strict-origin-when-cross-origin
+          content-security-policy: "default-src 'self'; script-src 'self'; style-src 'self' 'unsafe-inline'; img-src 'self' data:; font-src 'self'; connect-src 'self'"
+          access-control-allow-origin: 'http://localhost:5173'
+          access-control-allow-credentials: 'true'
         description: null
     responseFields: []
     auth:
@@ -429,13 +522,13 @@ endpoints:
     custom: []
     httpMethods:
       - PUT
-    uri: 'api/v1/categories/{id}'
+    uri: 'api/v1/specialties/{id}'
     metadata:
       custom: []
-      groupName: 'Classification - Categories'
+      groupName: 'Classification - Specialties'
       groupDescription: |-
 
-        APIs for managing classification categories.
+        APIs for managing classification specialties.
       subgroup: ''
       subgroupDescription: ''
       title: ''
@@ -450,7 +543,7 @@ endpoints:
       id:
         custom: []
         name: id
-        description: 'The ID of the category.'
+        description: 'The ID of the specialty.'
         required: true
         example: architecto
         type: string
@@ -463,13 +556,13 @@ endpoints:
     queryParameters: []
     cleanQueryParameters: []
     bodyParameters:
-      code:
+      field_id:
         custom: []
-        name: code
-        description: ''
+        name: field_id
+        description: 'Must match an existing stored value.'
         required: false
-        example: null
-        type: string
+        example: 16
+        type: integer
         enumValues: []
         exampleWasSpecified: false
         nullable: false
@@ -479,11 +572,11 @@ endpoints:
         name: name
         description: 'Must not be greater than 255 characters.'
         required: false
-        example: b
+        example: 'n'
         type: string
         enumValues: []
         exampleWasSpecified: false
-        nullable: true
+        nullable: false
         deprecated: false
       description:
         custom: []
@@ -508,7 +601,8 @@ endpoints:
         nullable: true
         deprecated: false
     cleanBodyParameters:
-      name: b
+      field_id: 16
+      name: 'n'
       description: 'Eius et animi quos velit et.'
       is_active: false
     fileParameters: []
@@ -525,13 +619,13 @@ endpoints:
     custom: []
     httpMethods:
       - DELETE
-    uri: 'api/v1/categories/{id}'
+    uri: 'api/v1/specialties/{id}'
     metadata:
       custom: []
-      groupName: 'Classification - Categories'
+      groupName: 'Classification - Specialties'
       groupDescription: |-
 
-        APIs for managing classification categories.
+        APIs for managing classification specialties.
       subgroup: ''
       subgroupDescription: ''
       title: ''
@@ -546,7 +640,7 @@ endpoints:
       id:
         custom: []
         name: id
-        description: 'The ID of the category.'
+        description: 'The ID of the specialty.'
         required: true
         example: architecto
         type: string

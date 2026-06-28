@@ -11,6 +11,7 @@ use Dompdf\Dompdf;
 use Dompdf\Options;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\Log;
 use Maatwebsite\Excel\Facades\Excel;
 use Maatwebsite\Excel\Validators\ValidationException;
 use Symfony\Component\HttpFoundation\Response;
@@ -200,7 +201,12 @@ class ProfessionalController extends BaseApiController
 
             return $this->errorResponse('Validation failed', 422, $errors);
         } catch (\Exception $e) {
-            return $this->errorResponse('Failed to import professionals: '.$e->getMessage(), 500);
+            Log::error('Failed to import professionals', [
+                'error' => $e->getMessage(),
+                'trace' => $e->getTraceAsString(),
+            ]);
+
+            return $this->errorResponse('Import failed. Please check your file and try again.', 500);
         }
     }
 

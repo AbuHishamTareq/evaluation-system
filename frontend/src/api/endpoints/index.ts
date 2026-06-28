@@ -4,12 +4,12 @@ export const API_ENDPOINTS = {
   auth: {
     login: '/api/v1/auth/login',
     logout: '/api/v1/auth/logout',
-    register: '/api/v1/auth/register',
     me: '/api/v1/auth/me',
     refresh: '/api/v1/auth/refresh',
     forgotPassword: '/api/v1/auth/forgot-password',
     resetPassword: '/api/v1/auth/reset-password',
     permissions: '/api/v1/auth/permissions',
+    changePassword: '/api/v1/auth/change-password',
   },
 
   // Staff
@@ -84,31 +84,39 @@ export const API_ENDPOINTS = {
 
   // Action Plans
   actionPlans: {
-    list: '/api/action-plans',
-    show: (id: string | number) => `/api/action-plans/${id}`,
-    store: '/api/action-plans',
-    update: (id: string | number) => `/api/action-plans/${id}`,
-    destroy: (id: string | number) => `/api/action-plans/${id}`,
+    list: '/api/v1/action-plans',
+    show: (id: string | number) => `/api/v1/action-plans/${id}`,
+    store: '/api/v1/action-plans',
+    update: (id: string | number) => `/api/v1/action-plans/${id}`,
+    destroy: (id: string | number) => `/api/v1/action-plans/${id}`,
   },
 
-  // Reports/Analytics
-  reports: {
-    dashboard: '/api/reports/dashboard',
-    staff: '/api/reports/staff',
-    evaluations: '/api/reports/evaluations',
-    questions: '/api/reports/questions',
-    export: '/api/reports/export',
+  // Analytics
+  analytics: {
+    dashboard: '/api/v1/analytics/dashboard',
+    evaluationTrends: '/api/v1/analytics/evaluation-trends',
+    topPerformers: '/api/v1/analytics/top-performers',
+    centerPerformance: '/api/v1/analytics/center-performance',
+    questionAnalytics: '/api/v1/analytics/question-analytics',
+    actionPlanStatistics: '/api/v1/analytics/action-plan-statistics',
+    scoreDistribution: '/api/v1/analytics/score-distribution',
+    zoneAnalytics: '/api/v1/analytics/zone-analytics',
+    classificationBreakdown: '/api/v1/analytics/classification-breakdown',
+    recentActivity: '/api/v1/analytics/recent-activity',
+    compositeScore: '/api/v1/analytics/composite-score',
+    exportPdf: '/api/v1/analytics/export/pdf',
+    exportExcel: '/api/v1/analytics/export/excel',
   },
 
   // Categories
   categories: {
-    list: '/api/categories',
-    show: (id: string | number) => `/api/categories/${id}`,
-    store: '/api/categories',
-    update: (id: string | number) => `/api/categories/${id}`,
-    destroy: (id: string | number) => `/api/categories/${id}`,
-    active: '/api/categories/active',
-    search: '/api/categories/search',
+    list: '/api/v1/categories',
+    show: (id: string | number) => `/api/v1/categories/${id}`,
+    store: '/api/v1/categories',
+    update: (id: string | number) => `/api/v1/categories/${id}`,
+    destroy: (id: string | number) => `/api/v1/categories/${id}`,
+    active: '/api/v1/categories/active',
+    search: '/api/v1/categories/search',
   },
 
   // Zones
@@ -330,22 +338,6 @@ export const API_ENDPOINTS = {
     destroy: (id: string | number) => `/api/v1/medication-evaluations/${id}`,
   },
 
-  // Analytics
-  analytics: {
-    dashboard: '/api/v1/analytics/dashboard',
-    evaluationTrends: '/api/v1/analytics/evaluation-trends',
-    topPerformers: '/api/v1/analytics/top-performers',
-    centerPerformance: '/api/v1/analytics/center-performance',
-    questionAnalytics: '/api/v1/analytics/question-analytics',
-    actionPlanStatistics: '/api/v1/analytics/action-plan-statistics',
-    scoreDistribution: '/api/v1/analytics/score-distribution',
-    zoneAnalytics: '/api/v1/analytics/zone-analytics',
-    classificationBreakdown: '/api/v1/analytics/classification-breakdown',
-    recentActivity: '/api/v1/analytics/recent-activity',
-    compositeScore: '/api/v1/analytics/composite-score',
-    exportPdf: '/api/v1/analytics/export/pdf',
-    exportExcel: '/api/v1/analytics/export/excel',
-  },
 };
 
 export default API_ENDPOINTS;

@@ -1,0 +1,13 @@
+# Frontend: lint-staged
+npx --no-install lint-staged --cwd frontend
+FRONTEND_EXIT=$?
+
+# Backend: Pint code style fix
+cd backend && vendor/bin/pint --dirty --format agent
+BACKEND_EXIT=$?
+
+# Fail if either check failed
+if [ $FRONTEND_EXIT -ne 0 ] || [ $BACKEND_EXIT -ne 0 ]; then
+  echo "❌ Pre-commit checks failed. Fix the issues above and try again."
+  exit 1
+fi

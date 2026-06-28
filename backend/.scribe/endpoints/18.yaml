@@ -1,19 +1,19 @@
-name: Professionals
+name: Departments
 description: |-
 
-  APIs for managing healthcare professionals.
+  APIs for managing departments within the organization.
 endpoints:
   -
     custom: []
     httpMethods:
       - GET
-    uri: api/v1/professionals
+    uri: api/v1/departments
     metadata:
       custom: []
-      groupName: Professionals
+      groupName: Departments
       groupDescription: |-
 
-        APIs for managing healthcare professionals.
+        APIs for managing departments within the organization.
       subgroup: ''
       subgroupDescription: ''
       title: ''
@@ -39,7 +39,12 @@ endpoints:
         headers:
           cache-control: 'no-cache, private'
           content-type: application/json
-          access-control-allow-origin: '*'
+          x-content-type-options: nosniff
+          x-frame-options: DENY
+          referrer-policy: strict-origin-when-cross-origin
+          content-security-policy: "default-src 'self'; script-src 'self'; style-src 'self' 'unsafe-inline'; img-src 'self' data:; font-src 'self'; connect-src 'self'"
+          access-control-allow-origin: 'http://localhost:5173'
+          access-control-allow-credentials: 'true'
         description: null
     responseFields: []
     auth:
@@ -53,13 +58,13 @@ endpoints:
     custom: []
     httpMethods:
       - POST
-    uri: api/v1/professionals
+    uri: api/v1/departments
     metadata:
       custom: []
-      groupName: Professionals
+      groupName: Departments
       groupDescription: |-
 
-        APIs for managing healthcare professionals.
+        APIs for managing departments within the organization.
       subgroup: ''
       subgroupDescription: ''
       title: ''
@@ -97,6 +102,17 @@ endpoints:
         exampleWasSpecified: false
         nullable: true
         deprecated: false
+      center_id:
+        custom: []
+        name: center_id
+        description: 'Must match an existing stored value.'
+        required: false
+        example: 16
+        type: integer
+        enumValues: []
+        exampleWasSpecified: false
+        nullable: true
+        deprecated: false
       is_active:
         custom: []
         name: is_active
@@ -111,6 +127,7 @@ endpoints:
     cleanBodyParameters:
       name: b
       description: 'Eius et animi quos velit et.'
+      center_id: 16
       is_active: true
     fileParameters: []
     responses: []
@@ -126,13 +143,13 @@ endpoints:
     custom: []
     httpMethods:
       - POST
-    uri: api/v1/professionals/import
+    uri: api/v1/departments/import
     metadata:
       custom: []
-      groupName: Professionals
+      groupName: Departments
       groupDescription: |-
 
-        APIs for managing healthcare professionals.
+        APIs for managing departments within the organization.
       subgroup: ''
       subgroupDescription: ''
       title: ''
@@ -175,71 +192,13 @@ endpoints:
     custom: []
     httpMethods:
       - GET
-    uri: 'api/v1/professionals/export/{format}'
+    uri: api/v1/departments/export
     metadata:
       custom: []
-      groupName: Professionals
+      groupName: Departments
       groupDescription: |-
 
-        APIs for managing healthcare professionals.
-      subgroup: ''
-      subgroupDescription: ''
-      title: ''
-      description: ''
-      authenticated: true
-      deprecated: false
-    headers:
-      Authorization: 'Bearer {YOUR_AUTH_KEY}'
-      Content-Type: application/json
-      Accept: application/json
-    urlParameters:
-      format:
-        custom: []
-        name: format
-        description: ''
-        required: true
-        example: architecto
-        type: string
-        enumValues: []
-        exampleWasSpecified: false
-        nullable: false
-        deprecated: false
-    cleanUrlParameters:
-      format: architecto
-    queryParameters: []
-    cleanQueryParameters: []
-    bodyParameters: []
-    cleanBodyParameters: []
-    fileParameters: []
-    responses:
-      -
-        custom: []
-        status: 401
-        content: '{"message":"Unauthenticated."}'
-        headers:
-          cache-control: 'no-cache, private'
-          content-type: application/json
-          access-control-allow-origin: '*'
-        description: null
-    responseFields: []
-    auth:
-      - headers
-      - Authorization
-      - 'Bearer 6g43cv8PD1aE5beadkZfhV6'
-    controller: null
-    method: null
-    route: null
-  -
-    custom: []
-    httpMethods:
-      - GET
-    uri: api/v1/professionals/sample
-    metadata:
-      custom: []
-      groupName: Professionals
-      groupDescription: |-
-
-        APIs for managing healthcare professionals.
+        APIs for managing departments within the organization.
       subgroup: ''
       subgroupDescription: ''
       title: ''
@@ -265,7 +224,12 @@ endpoints:
         headers:
           cache-control: 'no-cache, private'
           content-type: application/json
-          access-control-allow-origin: '*'
+          x-content-type-options: nosniff
+          x-frame-options: DENY
+          referrer-policy: strict-origin-when-cross-origin
+          content-security-policy: "default-src 'self'; script-src 'self'; style-src 'self' 'unsafe-inline'; img-src 'self' data:; font-src 'self'; connect-src 'self'"
+          access-control-allow-origin: 'http://localhost:5173'
+          access-control-allow-credentials: 'true'
         description: null
     responseFields: []
     auth:
@@ -279,13 +243,13 @@ endpoints:
     custom: []
     httpMethods:
       - GET
-    uri: api/v1/professionals/active
+    uri: api/v1/departments/sample
     metadata:
       custom: []
-      groupName: Professionals
+      groupName: Departments
       groupDescription: |-
 
-        APIs for managing healthcare professionals.
+        APIs for managing departments within the organization.
       subgroup: ''
       subgroupDescription: ''
       title: ''
@@ -311,7 +275,12 @@ endpoints:
         headers:
           cache-control: 'no-cache, private'
           content-type: application/json
-          access-control-allow-origin: '*'
+          x-content-type-options: nosniff
+          x-frame-options: DENY
+          referrer-policy: strict-origin-when-cross-origin
+          content-security-policy: "default-src 'self'; script-src 'self'; style-src 'self' 'unsafe-inline'; img-src 'self' data:; font-src 'self'; connect-src 'self'"
+          access-control-allow-origin: 'http://localhost:5173'
+          access-control-allow-credentials: 'true'
         description: null
     responseFields: []
     auth:
@@ -325,13 +294,13 @@ endpoints:
     custom: []
     httpMethods:
       - GET
-    uri: api/v1/professionals/search
+    uri: api/v1/departments/active
     metadata:
       custom: []
-      groupName: Professionals
+      groupName: Departments
       groupDescription: |-
 
-        APIs for managing healthcare professionals.
+        APIs for managing departments within the organization.
       subgroup: ''
       subgroupDescription: ''
       title: ''
@@ -357,7 +326,12 @@ endpoints:
         headers:
           cache-control: 'no-cache, private'
           content-type: application/json
-          access-control-allow-origin: '*'
+          x-content-type-options: nosniff
+          x-frame-options: DENY
+          referrer-policy: strict-origin-when-cross-origin
+          content-security-policy: "default-src 'self'; script-src 'self'; style-src 'self' 'unsafe-inline'; img-src 'self' data:; font-src 'self'; connect-src 'self'"
+          access-control-allow-origin: 'http://localhost:5173'
+          access-control-allow-credentials: 'true'
         description: null
     responseFields: []
     auth:
@@ -371,13 +345,64 @@ endpoints:
     custom: []
     httpMethods:
       - GET
-    uri: 'api/v1/professionals/{id}'
+    uri: api/v1/departments/search
     metadata:
       custom: []
-      groupName: Professionals
+      groupName: Departments
       groupDescription: |-
 
-        APIs for managing healthcare professionals.
+        APIs for managing departments within the organization.
+      subgroup: ''
+      subgroupDescription: ''
+      title: ''
+      description: ''
+      authenticated: true
+      deprecated: false
+    headers:
+      Authorization: 'Bearer {YOUR_AUTH_KEY}'
+      Content-Type: application/json
+      Accept: application/json
+    urlParameters: []
+    cleanUrlParameters: []
+    queryParameters: []
+    cleanQueryParameters: []
+    bodyParameters: []
+    cleanBodyParameters: []
+    fileParameters: []
+    responses:
+      -
+        custom: []
+        status: 401
+        content: '{"message":"Unauthenticated."}'
+        headers:
+          cache-control: 'no-cache, private'
+          content-type: application/json
+          x-content-type-options: nosniff
+          x-frame-options: DENY
+          referrer-policy: strict-origin-when-cross-origin
+          content-security-policy: "default-src 'self'; script-src 'self'; style-src 'self' 'unsafe-inline'; img-src 'self' data:; font-src 'self'; connect-src 'self'"
+          access-control-allow-origin: 'http://localhost:5173'
+          access-control-allow-credentials: 'true'
+        description: null
+    responseFields: []
+    auth:
+      - headers
+      - Authorization
+      - 'Bearer 6g43cv8PD1aE5beadkZfhV6'
+    controller: null
+    method: null
+    route: null
+  -
+    custom: []
+    httpMethods:
+      - GET
+    uri: 'api/v1/departments/{id}'
+    metadata:
+      custom: []
+      groupName: Departments
+      groupDescription: |-
+
+        APIs for managing departments within the organization.
       subgroup: ''
       subgroupDescription: ''
       title: ''
@@ -392,7 +417,7 @@ endpoints:
       id:
         custom: []
         name: id
-        description: 'The ID of the professional.'
+        description: 'The ID of the department.'
         required: true
         example: 1
         type: integer
@@ -415,7 +440,12 @@ endpoints:
         headers:
           cache-control: 'no-cache, private'
           content-type: application/json
-          access-control-allow-origin: '*'
+          x-content-type-options: nosniff
+          x-frame-options: DENY
+          referrer-policy: strict-origin-when-cross-origin
+          content-security-policy: "default-src 'self'; script-src 'self'; style-src 'self' 'unsafe-inline'; img-src 'self' data:; font-src 'self'; connect-src 'self'"
+          access-control-allow-origin: 'http://localhost:5173'
+          access-control-allow-credentials: 'true'
         description: null
     responseFields: []
     auth:
@@ -429,13 +459,13 @@ endpoints:
     custom: []
     httpMethods:
       - PUT
-    uri: 'api/v1/professionals/{id}'
+    uri: 'api/v1/departments/{id}'
     metadata:
       custom: []
-      groupName: Professionals
+      groupName: Departments
       groupDescription: |-
 
-        APIs for managing healthcare professionals.
+        APIs for managing departments within the organization.
       subgroup: ''
       subgroupDescription: ''
       title: ''
@@ -450,7 +480,7 @@ endpoints:
       id:
         custom: []
         name: id
-        description: 'The ID of the professional.'
+        description: 'The ID of the department.'
         required: true
         example: 1
         type: integer
@@ -485,6 +515,17 @@ endpoints:
         exampleWasSpecified: false
         nullable: true
         deprecated: false
+      center_id:
+        custom: []
+        name: center_id
+        description: 'Must match an existing stored value.'
+        required: false
+        example: 16
+        type: integer
+        enumValues: []
+        exampleWasSpecified: false
+        nullable: true
+        deprecated: false
       is_active:
         custom: []
         name: is_active
@@ -498,6 +539,7 @@ endpoints:
         deprecated: false
     cleanBodyParameters:
       description: 'Eius et animi quos velit et.'
+      center_id: 16
       is_active: false
     fileParameters: []
     responses: []
@@ -513,13 +555,13 @@ endpoints:
     custom: []
     httpMethods:
       - PATCH
-    uri: 'api/v1/professionals/{id}/toggle-status'
+    uri: 'api/v1/departments/{id}/toggle-status'
     metadata:
       custom: []
-      groupName: Professionals
+      groupName: Departments
       groupDescription: |-
 
-        APIs for managing healthcare professionals.
+        APIs for managing departments within the organization.
       subgroup: ''
       subgroupDescription: ''
       title: ''
@@ -534,7 +576,7 @@ endpoints:
       id:
         custom: []
         name: id
-        description: 'The ID of the professional.'
+        description: 'The ID of the department.'
         required: true
         example: 1
         type: integer
@@ -562,13 +604,13 @@ endpoints:
     custom: []
     httpMethods:
       - DELETE
-    uri: 'api/v1/professionals/{id}'
+    uri: 'api/v1/departments/{id}'
     metadata:
       custom: []
-      groupName: Professionals
+      groupName: Departments
       groupDescription: |-
 
-        APIs for managing healthcare professionals.
+        APIs for managing departments within the organization.
       subgroup: ''
       subgroupDescription: ''
       title: ''
@@ -583,7 +625,7 @@ endpoints:
       id:
         custom: []
         name: id
-        description: 'The ID of the professional.'
+        description: 'The ID of the department.'
         required: true
         example: 1
         type: integer

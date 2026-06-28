@@ -3,7 +3,7 @@
 namespace App\Features\Analytics\Exports;
 
 use App\Features\Analytics\Services\AnalyticsService;
-use Barryvdh\DomPDF\Facade\Pdf;
+use Dompdf\Dompdf;
 use Illuminate\Http\Response;
 
 class DashboardPdfExport
@@ -40,14 +40,14 @@ class DashboardPdfExport
         $previousLevel = error_reporting(E_ALL & ~E_DEPRECATED & ~E_USER_DEPRECATED);
 
         try {
-            $pdf = Pdf::loadHTML($html)
-                ->setPaper('a4', 'portrait')
-                ->setOptions([
-                    'isHtml5ParserEnabled' => true,
-                    'isRemoteEnabled' => true,
-                ]);
+            $dompdf = new Dompdf;
+            $dompdf->setPaper('a4', 'portrait');
+            $dompdf->loadHtml($html);
+            $dompdf->set_option('isHtml5ParserEnabled', true);
+            $dompdf->set_option('isRemoteEnabled', true);
+            $dompdf->render();
 
-            return response($pdf->output())
+            return response($dompdf->output())
                 ->header('Content-Type', 'application/pdf')
                 ->header('Content-Disposition', 'attachment; filename="dashboard-report-'.now()->format('Y-m-d').'.pdf"');
         } finally {

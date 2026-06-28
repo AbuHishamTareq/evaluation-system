@@ -25,10 +25,19 @@ interface AuthState {
   fetchPermissions: () => Promise<void>;
 }
 
+const storedUser = (() => {
+  try {
+    const raw = localStorage.getItem('auth_user');
+    return raw ? JSON.parse(raw) : null;
+  } catch {
+    return null;
+  }
+})();
+
 export const useAuthStore = create<AuthState>((set, get) => ({
-  user: null,
-  isAuthenticated: false,
-  isLoading: true,
+  user: storedUser,
+  isAuthenticated: !!storedUser,
+  isLoading: false,
   error: null,
   forgotPasswordLoading: false,
   forgotPasswordSuccess: false,
@@ -39,15 +48,14 @@ export const useAuthStore = create<AuthState>((set, get) => ({
     set({ error: null });
     try {
       const response = await authService.login({ email, password, remember_me: rememberMe });
+      localStorage.setItem('auth_user', JSON.stringify(response.user));
       set({
         user: response.user,
         isAuthenticated: true,
       });
-      // If login response includes permissions, store them
       if (response.user && (response.user as any).permissions) {
         set({ permissions: (response.user as any).permissions });
       } else {
-        // Otherwise fetch permissions separately
         try {
           const response = await apiClient.get<{ success: boolean; message: string; data: string[] }>(API_ENDPOINTS.auth.permissions);
           const perms = response.data;
@@ -75,6 +83,7 @@ export const useAuthStore = create<AuthState>((set, get) => ({
     } catch (error) {
       console.error('Logout error:', error);
     } finally {
+      localStorage.removeItem('auth_user');
       set({
         user: null,
         isAuthenticated: false,
@@ -85,15 +94,10 @@ export const useAuthStore = create<AuthState>((set, get) => ({
   },
 
   checkAuth: async () => {
-    set({ isLoading: true });
-
-    // Check for token in localStorage or sessionStorage
-    const localToken = localStorage.getItem('auth_token');
-    const sessionToken = sessionStorage.getItem('auth_token');
-
-    const token = localToken || sessionToken;
+    const token = localStorage.getItem('auth_token') || sessionStorage.getItem('auth_token');
 
     if (!token) {
+      localStorage.removeItem('auth_user');
       set({
         user: null,
         isAuthenticated: false,
@@ -103,17 +107,14 @@ export const useAuthStore = create<AuthState>((set, get) => ({
       return;
     }
 
-    // Set token in apiClient for the request
-    apiClient.setToken(token);
-
     try {
       const user = await authService.me();
+      localStorage.setItem('auth_user', JSON.stringify(user));
       set({
         user,
         isAuthenticated: true,
         isLoading: false,
       });
-      // Try to load permissions after successful auth
       try {
         const response = await apiClient.get<{ success: boolean; message: string; data: string[] }>(API_ENDPOINTS.auth.permissions);
         const perms = response.data;
@@ -122,8 +123,8 @@ export const useAuthStore = create<AuthState>((set, get) => ({
         // Permissions endpoint may not exist yet
       }
     } catch {
-      // Token is invalid, clear storage
       localStorage.removeItem('auth_token');
+      localStorage.removeItem('auth_user');
       sessionStorage.removeItem('auth_token');
       set({
         user: null,

@@ -1,19 +1,19 @@
-name: 'Action Plans'
+name: 'Evaluation Templates'
 description: |-
 
-  APIs for managing improvement action plans tied to evaluations.
+  APIs for managing evaluation templates used in performance reviews.
 endpoints:
   -
     custom: []
     httpMethods:
       - GET
-    uri: api/v1/action-plans
+    uri: api/v1/templates
     metadata:
       custom: []
-      groupName: 'Action Plans'
+      groupName: 'Evaluation Templates'
       groupDescription: |-
 
-        APIs for managing improvement action plans tied to evaluations.
+        APIs for managing evaluation templates used in performance reviews.
       subgroup: ''
       subgroupDescription: ''
       title: ''
@@ -39,7 +39,12 @@ endpoints:
         headers:
           cache-control: 'no-cache, private'
           content-type: application/json
-          access-control-allow-origin: '*'
+          x-content-type-options: nosniff
+          x-frame-options: DENY
+          referrer-policy: strict-origin-when-cross-origin
+          content-security-policy: "default-src 'self'; script-src 'self'; style-src 'self' 'unsafe-inline'; img-src 'self' data:; font-src 'self'; connect-src 'self'"
+          access-control-allow-origin: 'http://localhost:5173'
+          access-control-allow-credentials: 'true'
         description: null
     responseFields: []
     auth:
@@ -53,13 +58,13 @@ endpoints:
     custom: []
     httpMethods:
       - POST
-    uri: api/v1/action-plans
+    uri: api/v1/templates
     metadata:
       custom: []
-      groupName: 'Action Plans'
+      groupName: 'Evaluation Templates'
       groupDescription: |-
 
-        APIs for managing improvement action plans tied to evaluations.
+        APIs for managing evaluation templates used in performance reviews.
       subgroup: ''
       subgroupDescription: ''
       title: ''
@@ -75,9 +80,9 @@ endpoints:
     queryParameters: []
     cleanQueryParameters: []
     bodyParameters:
-      title:
+      name:
         custom: []
-        name: title
+        name: name
         description: 'Must not be greater than 255 characters.'
         required: true
         example: b
@@ -97,75 +102,262 @@ endpoints:
         exampleWasSpecified: false
         nullable: true
         deprecated: false
-      staff_id:
+      type:
         custom: []
-        name: staff_id
-        description: 'Must match an existing stored value.'
-        required: true
-        example: 16
-        type: integer
-        enumValues: []
+        name: type
+        description: ''
+        required: false
+        example: standard
+        type: string
+        enumValues:
+          - standard
+          - checklist
+          - audit
         exampleWasSpecified: false
-        nullable: false
+        nullable: true
         deprecated: false
-      evaluation_id:
+      schedule_type:
         custom: []
-        name: evaluation_id
-        description: 'Must match an existing stored value.'
-        required: true
-        example: 16
-        type: integer
-        enumValues: []
+        name: schedule_type
+        description: ''
+        required: false
+        example: custom
+        type: string
+        enumValues:
+          - one_time
+          - monthly
+          - quarterly
+          - custom
         exampleWasSpecified: false
-        nullable: false
+        nullable: true
         deprecated: false
-      due_date:
+      start_date:
         custom: []
-        name: due_date
+        name: start_date
         description: 'Must be a valid date.'
+        required: false
+        example: '2026-06-27T09:17:13'
+        type: string
+        enumValues: []
+        exampleWasSpecified: false
+        nullable: true
+        deprecated: false
+      end_date:
+        custom: []
+        name: end_date
+        description: 'Must be a valid date. Must be a date after <code>start_date</code>.'
+        required: false
+        example: '2052-07-20'
+        type: string
+        enumValues: []
+        exampleWasSpecified: false
+        nullable: true
+        deprecated: false
+      total_score:
+        custom: []
+        name: total_score
+        description: 'Must be at least 1.'
+        required: false
+        example: 22
+        type: integer
+        enumValues: []
+        exampleWasSpecified: false
+        nullable: true
+        deprecated: false
+      is_active:
+        custom: []
+        name: is_active
+        description: ''
+        required: false
+        example: true
+        type: boolean
+        enumValues: []
+        exampleWasSpecified: false
+        nullable: true
+        deprecated: false
+      category_id:
+        custom: []
+        name: category_id
+        description: 'Must match an existing stored value.'
+        required: false
+        example: 16
+        type: integer
+        enumValues: []
+        exampleWasSpecified: false
+        nullable: true
+        deprecated: false
+      sub_category_id:
+        custom: []
+        name: sub_category_id
+        description: 'Must match an existing stored value.'
+        required: false
+        example: 16
+        type: integer
+        enumValues: []
+        exampleWasSpecified: false
+        nullable: true
+        deprecated: false
+      questions:
+        custom: []
+        name: questions
+        description: ''
+        required: false
+        example: null
+        type: 'object[]'
+        enumValues: []
+        exampleWasSpecified: false
+        nullable: true
+        deprecated: false
+      new_questions:
+        custom: []
+        name: new_questions
+        description: ''
+        required: false
+        example: null
+        type: 'object[]'
+        enumValues: []
+        exampleWasSpecified: false
+        nullable: true
+        deprecated: false
+      'questions[].question_id':
+        custom: []
+        name: 'questions[].question_id'
+        description: 'This field is required when <code>questions</code> is present. Must match an existing stored value.'
+        required: false
+        example: 16
+        type: integer
+        enumValues: []
+        exampleWasSpecified: false
+        nullable: false
+        deprecated: false
+      'questions[].weight':
+        custom: []
+        name: 'questions[].weight'
+        description: 'Must be at least 1.'
+        required: false
+        example: 22
+        type: integer
+        enumValues: []
+        exampleWasSpecified: false
+        nullable: true
+        deprecated: false
+      'questions[].order':
+        custom: []
+        name: 'questions[].order'
+        description: 'Must be at least 0.'
+        required: false
+        example: 84
+        type: integer
+        enumValues: []
+        exampleWasSpecified: false
+        nullable: true
+        deprecated: false
+      'new_questions[].question_text':
+        custom: []
+        name: 'new_questions[].question_text'
+        description: ''
         required: true
-        example: '2026-06-15T14:14:09'
+        example: architecto
         type: string
         enumValues: []
         exampleWasSpecified: false
         nullable: false
         deprecated: false
-      priority:
+      'new_questions[].question_type':
         custom: []
-        name: priority
+        name: 'new_questions[].question_type'
         description: ''
-        required: false
-        example: medium
+        required: true
+        example: select
         type: string
         enumValues:
-          - low
-          - medium
-          - high
+          - text
+          - textarea
+          - select
+          - radio
+          - checkbox
+          - rating
+        exampleWasSpecified: false
+        nullable: false
+        deprecated: false
+      'new_questions[].description':
+        custom: []
+        name: 'new_questions[].description'
+        description: ''
+        required: false
+        example: 'Eius et animi quos velit et.'
+        type: string
+        enumValues: []
         exampleWasSpecified: false
         nullable: true
         deprecated: false
-      status:
+      'new_questions[].options':
         custom: []
-        name: status
+        name: 'new_questions[].options'
+        description: 'Must be a valid JSON string.'
+        required: false
+        example: '["architecto","architecto"]'
+        type: string
+        enumValues: []
+        exampleWasSpecified: false
+        nullable: true
+        deprecated: false
+      'new_questions[].weight':
+        custom: []
+        name: 'new_questions[].weight'
+        description: 'Must be at least 1. Must not be greater than 100.'
+        required: false
+        example: 22
+        type: integer
+        enumValues: []
+        exampleWasSpecified: false
+        nullable: true
+        deprecated: false
+      'new_questions[].max_score':
+        custom: []
+        name: 'new_questions[].max_score'
+        description: 'Must be at least 0. Must not be greater than 1000.'
+        required: false
+        example: 7
+        type: integer
+        enumValues: []
+        exampleWasSpecified: false
+        nullable: true
+        deprecated: false
+      'new_questions[].is_required':
+        custom: []
+        name: 'new_questions[].is_required'
         description: ''
         required: false
-        example: completed
-        type: string
-        enumValues:
-          - pending
-          - in_progress
-          - completed
+        example: true
+        type: boolean
+        enumValues: []
         exampleWasSpecified: false
         nullable: true
         deprecated: false
     cleanBodyParameters:
-      title: b
+      name: b
       description: 'Eius et animi quos velit et.'
-      staff_id: 16
-      evaluation_id: 16
-      due_date: '2026-06-15T14:14:09'
-      priority: medium
-      status: completed
+      type: standard
+      schedule_type: custom
+      start_date: '2026-06-27T09:17:13'
+      end_date: '2052-07-20'
+      total_score: 22
+      is_active: true
+      category_id: 16
+      sub_category_id: 16
+      questions:
+        - question_id: 16
+          weight: 22
+          order: 84
+      new_questions:
+        - question_text: architecto
+          question_type: select
+          description: 'Eius et animi quos velit et.'
+          options: '["architecto","architecto"]'
+          weight: 22
+          max_score: 7
+          is_required: true
     fileParameters: []
     responses: []
     responseFields: []
@@ -180,13 +372,13 @@ endpoints:
     custom: []
     httpMethods:
       - GET
-    uri: 'api/v1/action-plans/evaluation/{evaluationId}'
+    uri: api/v1/templates/active
     metadata:
       custom: []
-      groupName: 'Action Plans'
+      groupName: 'Evaluation Templates'
       groupDescription: |-
 
-        APIs for managing improvement action plans tied to evaluations.
+        APIs for managing evaluation templates used in performance reviews.
       subgroup: ''
       subgroupDescription: ''
       title: ''
@@ -197,20 +389,8 @@ endpoints:
       Authorization: 'Bearer {YOUR_AUTH_KEY}'
       Content-Type: application/json
       Accept: application/json
-    urlParameters:
-      evaluationId:
-        custom: []
-        name: evaluationId
-        description: ''
-        required: true
-        example: architecto
-        type: string
-        enumValues: []
-        exampleWasSpecified: false
-        nullable: false
-        deprecated: false
-    cleanUrlParameters:
-      evaluationId: architecto
+    urlParameters: []
+    cleanUrlParameters: []
     queryParameters: []
     cleanQueryParameters: []
     bodyParameters: []
@@ -224,7 +404,12 @@ endpoints:
         headers:
           cache-control: 'no-cache, private'
           content-type: application/json
-          access-control-allow-origin: '*'
+          x-content-type-options: nosniff
+          x-frame-options: DENY
+          referrer-policy: strict-origin-when-cross-origin
+          content-security-policy: "default-src 'self'; script-src 'self'; style-src 'self' 'unsafe-inline'; img-src 'self' data:; font-src 'self'; connect-src 'self'"
+          access-control-allow-origin: 'http://localhost:5173'
+          access-control-allow-credentials: 'true'
         description: null
     responseFields: []
     auth:
@@ -238,129 +423,13 @@ endpoints:
     custom: []
     httpMethods:
       - GET
-    uri: 'api/v1/action-plans/staff/{staffId}'
+    uri: 'api/v1/templates/{id}'
     metadata:
       custom: []
-      groupName: 'Action Plans'
+      groupName: 'Evaluation Templates'
       groupDescription: |-
 
-        APIs for managing improvement action plans tied to evaluations.
-      subgroup: ''
-      subgroupDescription: ''
-      title: ''
-      description: ''
-      authenticated: true
-      deprecated: false
-    headers:
-      Authorization: 'Bearer {YOUR_AUTH_KEY}'
-      Content-Type: application/json
-      Accept: application/json
-    urlParameters:
-      staffId:
-        custom: []
-        name: staffId
-        description: ''
-        required: true
-        example: 1
-        type: integer
-        enumValues: []
-        exampleWasSpecified: false
-        nullable: false
-        deprecated: false
-    cleanUrlParameters:
-      staffId: 1
-    queryParameters: []
-    cleanQueryParameters: []
-    bodyParameters: []
-    cleanBodyParameters: []
-    fileParameters: []
-    responses:
-      -
-        custom: []
-        status: 401
-        content: '{"message":"Unauthenticated."}'
-        headers:
-          cache-control: 'no-cache, private'
-          content-type: application/json
-          access-control-allow-origin: '*'
-        description: null
-    responseFields: []
-    auth:
-      - headers
-      - Authorization
-      - 'Bearer 6g43cv8PD1aE5beadkZfhV6'
-    controller: null
-    method: null
-    route: null
-  -
-    custom: []
-    httpMethods:
-      - GET
-    uri: 'api/v1/action-plans/staff/{staffId}/summary'
-    metadata:
-      custom: []
-      groupName: 'Action Plans'
-      groupDescription: |-
-
-        APIs for managing improvement action plans tied to evaluations.
-      subgroup: ''
-      subgroupDescription: ''
-      title: ''
-      description: ''
-      authenticated: true
-      deprecated: false
-    headers:
-      Authorization: 'Bearer {YOUR_AUTH_KEY}'
-      Content-Type: application/json
-      Accept: application/json
-    urlParameters:
-      staffId:
-        custom: []
-        name: staffId
-        description: ''
-        required: true
-        example: 1
-        type: integer
-        enumValues: []
-        exampleWasSpecified: false
-        nullable: false
-        deprecated: false
-    cleanUrlParameters:
-      staffId: 1
-    queryParameters: []
-    cleanQueryParameters: []
-    bodyParameters: []
-    cleanBodyParameters: []
-    fileParameters: []
-    responses:
-      -
-        custom: []
-        status: 401
-        content: '{"message":"Unauthenticated."}'
-        headers:
-          cache-control: 'no-cache, private'
-          content-type: application/json
-          access-control-allow-origin: '*'
-        description: null
-    responseFields: []
-    auth:
-      - headers
-      - Authorization
-      - 'Bearer 6g43cv8PD1aE5beadkZfhV6'
-    controller: null
-    method: null
-    route: null
-  -
-    custom: []
-    httpMethods:
-      - PATCH
-    uri: 'api/v1/action-plans/{id}/status'
-    metadata:
-      custom: []
-      groupName: 'Action Plans'
-      groupDescription: |-
-
-        APIs for managing improvement action plans tied to evaluations.
+        APIs for managing evaluation templates used in performance reviews.
       subgroup: ''
       subgroupDescription: ''
       title: ''
@@ -375,71 +444,7 @@ endpoints:
       id:
         custom: []
         name: id
-        description: 'The ID of the action plan.'
-        required: true
-        example: architecto
-        type: string
-        enumValues: []
-        exampleWasSpecified: false
-        nullable: false
-        deprecated: false
-    cleanUrlParameters:
-      id: architecto
-    queryParameters: []
-    cleanQueryParameters: []
-    bodyParameters:
-      status:
-        custom: []
-        name: status
-        description: ''
-        required: true
-        example: pending
-        type: string
-        enumValues:
-          - pending
-          - in_progress
-          - completed
-        exampleWasSpecified: false
-        nullable: false
-        deprecated: false
-    cleanBodyParameters:
-      status: pending
-    fileParameters: []
-    responses: []
-    responseFields: []
-    auth:
-      - headers
-      - Authorization
-      - 'Bearer 6g43cv8PD1aE5beadkZfhV6'
-    controller: null
-    method: null
-    route: null
-  -
-    custom: []
-    httpMethods:
-      - GET
-    uri: 'api/v1/action-plans/{id}'
-    metadata:
-      custom: []
-      groupName: 'Action Plans'
-      groupDescription: |-
-
-        APIs for managing improvement action plans tied to evaluations.
-      subgroup: ''
-      subgroupDescription: ''
-      title: ''
-      description: ''
-      authenticated: true
-      deprecated: false
-    headers:
-      Authorization: 'Bearer {YOUR_AUTH_KEY}'
-      Content-Type: application/json
-      Accept: application/json
-    urlParameters:
-      id:
-        custom: []
-        name: id
-        description: 'The ID of the action plan.'
+        description: 'The ID of the template.'
         required: true
         example: architecto
         type: string
@@ -462,7 +467,12 @@ endpoints:
         headers:
           cache-control: 'no-cache, private'
           content-type: application/json
-          access-control-allow-origin: '*'
+          x-content-type-options: nosniff
+          x-frame-options: DENY
+          referrer-policy: strict-origin-when-cross-origin
+          content-security-policy: "default-src 'self'; script-src 'self'; style-src 'self' 'unsafe-inline'; img-src 'self' data:; font-src 'self'; connect-src 'self'"
+          access-control-allow-origin: 'http://localhost:5173'
+          access-control-allow-credentials: 'true'
         description: null
     responseFields: []
     auth:
@@ -476,13 +486,13 @@ endpoints:
     custom: []
     httpMethods:
       - PUT
-    uri: 'api/v1/action-plans/{id}'
+    uri: 'api/v1/templates/{id}'
     metadata:
       custom: []
-      groupName: 'Action Plans'
+      groupName: 'Evaluation Templates'
       groupDescription: |-
 
-        APIs for managing improvement action plans tied to evaluations.
+        APIs for managing evaluation templates used in performance reviews.
       subgroup: ''
       subgroupDescription: ''
       title: ''
@@ -497,7 +507,7 @@ endpoints:
       id:
         custom: []
         name: id
-        description: 'The ID of the action plan.'
+        description: 'The ID of the template.'
         required: true
         example: architecto
         type: string
@@ -510,9 +520,9 @@ endpoints:
     queryParameters: []
     cleanQueryParameters: []
     bodyParameters:
-      title:
+      name:
         custom: []
-        name: title
+        name: name
         description: 'Must not be greater than 255 characters.'
         required: false
         example: b
@@ -532,75 +542,311 @@ endpoints:
         exampleWasSpecified: false
         nullable: true
         deprecated: false
-      staff_id:
+      type:
         custom: []
-        name: staff_id
-        description: 'Must match an existing stored value.'
-        required: false
-        example: 16
-        type: integer
-        enumValues: []
-        exampleWasSpecified: false
-        nullable: false
-        deprecated: false
-      evaluation_id:
-        custom: []
-        name: evaluation_id
-        description: 'Must match an existing stored value.'
-        required: false
-        example: 16
-        type: integer
-        enumValues: []
-        exampleWasSpecified: false
-        nullable: false
-        deprecated: false
-      due_date:
-        custom: []
-        name: due_date
-        description: 'Must be a valid date.'
-        required: false
-        example: '2026-06-15T14:14:09'
-        type: string
-        enumValues: []
-        exampleWasSpecified: false
-        nullable: false
-        deprecated: false
-      priority:
-        custom: []
-        name: priority
+        name: type
         description: ''
         required: false
-        example: high
+        example: standard
         type: string
         enumValues:
-          - low
-          - medium
-          - high
+          - standard
+          - checklist
+          - audit
         exampleWasSpecified: false
         nullable: true
         deprecated: false
-      status:
+      schedule_type:
         custom: []
-        name: status
+        name: schedule_type
         description: ''
         required: false
-        example: in_progress
+        example: one_time
         type: string
         enumValues:
-          - pending
-          - in_progress
-          - completed
+          - one_time
+          - monthly
+          - quarterly
+          - custom
+        exampleWasSpecified: false
+        nullable: false
+        deprecated: false
+      start_date:
+        custom: []
+        name: start_date
+        description: 'Must be a valid date.'
+        required: false
+        example: '2026-06-27T09:17:13'
+        type: string
+        enumValues: []
+        exampleWasSpecified: false
+        nullable: true
+        deprecated: false
+      end_date:
+        custom: []
+        name: end_date
+        description: 'Must be a valid date. Must be a date after <code>start_date</code>.'
+        required: false
+        example: '2052-07-20'
+        type: string
+        enumValues: []
+        exampleWasSpecified: false
+        nullable: true
+        deprecated: false
+      total_score:
+        custom: []
+        name: total_score
+        description: 'Must be at least 1.'
+        required: false
+        example: 22
+        type: integer
+        enumValues: []
+        exampleWasSpecified: false
+        nullable: true
+        deprecated: false
+      is_active:
+        custom: []
+        name: is_active
+        description: ''
+        required: false
+        example: true
+        type: boolean
+        enumValues: []
+        exampleWasSpecified: false
+        nullable: false
+        deprecated: false
+      category_id:
+        custom: []
+        name: category_id
+        description: 'Must match an existing stored value.'
+        required: false
+        example: 16
+        type: integer
+        enumValues: []
+        exampleWasSpecified: false
+        nullable: true
+        deprecated: false
+      sub_category_id:
+        custom: []
+        name: sub_category_id
+        description: 'Must match an existing stored value.'
+        required: false
+        example: 16
+        type: integer
+        enumValues: []
+        exampleWasSpecified: false
+        nullable: true
+        deprecated: false
+      questions:
+        custom: []
+        name: questions
+        description: ''
+        required: false
+        example: null
+        type: 'object[]'
+        enumValues: []
+        exampleWasSpecified: false
+        nullable: true
+        deprecated: false
+      new_questions:
+        custom: []
+        name: new_questions
+        description: ''
+        required: false
+        example: null
+        type: 'object[]'
+        enumValues: []
+        exampleWasSpecified: false
+        nullable: true
+        deprecated: false
+      'questions[].question_id':
+        custom: []
+        name: 'questions[].question_id'
+        description: 'This field is required when <code>questions</code> is present. Must match an existing stored value.'
+        required: false
+        example: 16
+        type: integer
+        enumValues: []
+        exampleWasSpecified: false
+        nullable: false
+        deprecated: false
+      'questions[].weight':
+        custom: []
+        name: 'questions[].weight'
+        description: 'Must be at least 1.'
+        required: false
+        example: 22
+        type: integer
+        enumValues: []
+        exampleWasSpecified: false
+        nullable: true
+        deprecated: false
+      'questions[].order':
+        custom: []
+        name: 'questions[].order'
+        description: 'Must be at least 0.'
+        required: false
+        example: 84
+        type: integer
+        enumValues: []
+        exampleWasSpecified: false
+        nullable: true
+        deprecated: false
+      'new_questions[].question_text':
+        custom: []
+        name: 'new_questions[].question_text'
+        description: ''
+        required: true
+        example: architecto
+        type: string
+        enumValues: []
+        exampleWasSpecified: false
+        nullable: false
+        deprecated: false
+      'new_questions[].question_type':
+        custom: []
+        name: 'new_questions[].question_type'
+        description: ''
+        required: true
+        example: checkbox
+        type: string
+        enumValues:
+          - text
+          - textarea
+          - select
+          - radio
+          - checkbox
+          - rating
+        exampleWasSpecified: false
+        nullable: false
+        deprecated: false
+      'new_questions[].description':
+        custom: []
+        name: 'new_questions[].description'
+        description: ''
+        required: false
+        example: 'Eius et animi quos velit et.'
+        type: string
+        enumValues: []
+        exampleWasSpecified: false
+        nullable: true
+        deprecated: false
+      'new_questions[].options':
+        custom: []
+        name: 'new_questions[].options'
+        description: 'Must be a valid JSON string.'
+        required: false
+        example: '["architecto","architecto"]'
+        type: string
+        enumValues: []
+        exampleWasSpecified: false
+        nullable: true
+        deprecated: false
+      'new_questions[].weight':
+        custom: []
+        name: 'new_questions[].weight'
+        description: 'Must be at least 1. Must not be greater than 100.'
+        required: false
+        example: 22
+        type: integer
+        enumValues: []
+        exampleWasSpecified: false
+        nullable: true
+        deprecated: false
+      'new_questions[].max_score':
+        custom: []
+        name: 'new_questions[].max_score'
+        description: 'Must be at least 0. Must not be greater than 1000.'
+        required: false
+        example: 7
+        type: integer
+        enumValues: []
+        exampleWasSpecified: false
+        nullable: true
+        deprecated: false
+      'new_questions[].is_required':
+        custom: []
+        name: 'new_questions[].is_required'
+        description: ''
+        required: false
+        example: true
+        type: boolean
+        enumValues: []
         exampleWasSpecified: false
         nullable: true
         deprecated: false
     cleanBodyParameters:
-      title: b
+      name: b
       description: 'Eius et animi quos velit et.'
-      staff_id: 16
-      evaluation_id: 16
-      due_date: '2026-06-15T14:14:09'
-      priority: high
-      status: in_progress
+      type: standard
+      schedule_type: one_time
+      start_date: '2026-06-27T09:17:13'
+      end_date: '2052-07-20'
+      total_score: 22
+      is_active: true
+      category_id: 16
+      sub_category_id: 16
+      questions:
+        - question_id: 16
+          weight: 22
+          order: 84
+      new_questions:
+        - question_text: architecto
+          question_type: checkbox
+          description: 'Eius et animi quos velit et.'
+          options: '["architecto","architecto"]'
+          weight: 22
+          max_score: 7
+          is_required: true
+    fileParameters: []
+    responses: []
+    responseFields: []
+    auth:
+      - headers
+      - Authorization
+      - 'Bearer 6g43cv8PD1aE5beadkZfhV6'
+    controller: null
+    method: null
+    route: null
+  -
+    custom: []
+    httpMethods:
+      - PATCH
+    uri: 'api/v1/templates/{id}/toggle-status'
+    metadata:
+      custom: []
+      groupName: 'Evaluation Templates'
+      groupDescription: |-
+
+        APIs for managing evaluation templates used in performance reviews.
+      subgroup: ''
+      subgroupDescription: ''
+      title: ''
+      description: ''
+      authenticated: true
+      deprecated: false
+    headers:
+      Authorization: 'Bearer {YOUR_AUTH_KEY}'
+      Content-Type: application/json
+      Accept: application/json
+    urlParameters:
+      id:
+        custom: []
+        name: id
+        description: 'The ID of the template.'
+        required: true
+        example: architecto
+        type: string
+        enumValues: []
+        exampleWasSpecified: false
+        nullable: false
+        deprecated: false
+    cleanUrlParameters:
+      id: architecto
+    queryParameters: []
+    cleanQueryParameters: []
+    bodyParameters: []
+    cleanBodyParameters: []
     fileParameters: []
     responses: []
     responseFields: []
@@ -615,13 +861,13 @@ endpoints:
     custom: []
     httpMethods:
       - DELETE
-    uri: 'api/v1/action-plans/{id}'
+    uri: 'api/v1/templates/{id}'
     metadata:
       custom: []
-      groupName: 'Action Plans'
+      groupName: 'Evaluation Templates'
       groupDescription: |-
 
-        APIs for managing improvement action plans tied to evaluations.
+        APIs for managing evaluation templates used in performance reviews.
       subgroup: ''
       subgroupDescription: ''
       title: ''
@@ -636,7 +882,7 @@ endpoints:
       id:
         custom: []
         name: id
-        description: 'The ID of the action plan.'
+        description: 'The ID of the template.'
         required: true
         example: architecto
         type: string

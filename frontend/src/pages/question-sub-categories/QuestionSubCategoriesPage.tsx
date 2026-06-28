@@ -516,22 +516,20 @@ const SubCategoryFormModal: React.FC<SubCategoryFormModalProps> = ({
 
 export const QuestionSubCategoriesPage: React.FC = () => {
   const hasPermission = useAuthStore((state) => state.hasPermission);
-  const {
-    subCategories,
-    isLoading,
-    isImporting,
-    error,
-    pagination,
-    fetchSubCategories,
-    createSubCategory,
-    updateSubCategory,
-    deleteSubCategory,
-    toggleStatus,
-    exportSubCategories,
-    importSubCategories,
-    downloadSample,
-    clearError,
-  } = useQuestionSubCategoryStore();
+  const subCategories = useQuestionSubCategoryStore((s) => s.subCategories);
+  const isLoading = useQuestionSubCategoryStore((s) => s.isLoading);
+  const isImporting = useQuestionSubCategoryStore((s) => s.isImporting);
+  const error = useQuestionSubCategoryStore((s) => s.error);
+  const pagination = useQuestionSubCategoryStore((s) => s.pagination);
+  const fetchSubCategories = useQuestionSubCategoryStore((s) => s.fetchSubCategories);
+  const createSubCategory = useQuestionSubCategoryStore((s) => s.createSubCategory);
+  const updateSubCategory = useQuestionSubCategoryStore((s) => s.updateSubCategory);
+  const deleteSubCategory = useQuestionSubCategoryStore((s) => s.deleteSubCategory);
+  const toggleStatus = useQuestionSubCategoryStore((s) => s.toggleStatus);
+  const exportSubCategories = useQuestionSubCategoryStore((s) => s.exportSubCategories);
+  const importSubCategories = useQuestionSubCategoryStore((s) => s.importSubCategories);
+  const downloadSample = useQuestionSubCategoryStore((s) => s.downloadSample);
+  const clearError = useQuestionSubCategoryStore((s) => s.clearError);
 
   const { addToast } = useToast();
   const fileInputRef = useRef<HTMLInputElement>(null);

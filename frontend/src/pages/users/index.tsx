@@ -348,20 +348,18 @@ const DropdownItem: React.FC<DropdownItemProps> = ({
 
 export const UsersPage: React.FC = () => {
   const hasPermission = useAuthStore((state) => state.hasPermission);
-  const {
-    users,
-    isLoading,
-    error,
-    pagination,
-    fetchUsers,
-    createUser,
-    updateUser,
-    updateUserStatus,
-    deleteUser,
-    clearError,
-    exportUsers,
-    importUsers,
-  } = useUserStore();
+  const users = useUserStore((s) => s.users);
+  const isLoading = useUserStore((s) => s.isLoading);
+  const error = useUserStore((s) => s.error);
+  const pagination = useUserStore((s) => s.pagination);
+  const fetchUsers = useUserStore((s) => s.fetchUsers);
+  const createUser = useUserStore((s) => s.createUser);
+  const updateUser = useUserStore((s) => s.updateUser);
+  const updateUserStatus = useUserStore((s) => s.updateUserStatus);
+  const deleteUser = useUserStore((s) => s.deleteUser);
+  const clearError = useUserStore((s) => s.clearError);
+  const exportUsers = useUserStore((s) => s.exportUsers);
+  const importUsers = useUserStore((s) => s.importUsers);
 
   const { addToast } = useToast();
   const fileInputRef = useRef<HTMLInputElement>(null);

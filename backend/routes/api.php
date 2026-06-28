@@ -43,13 +43,12 @@ use Illuminate\Support\Facades\Route;
 Route::prefix('v1')->group(function () {
     // Public routes - Authentication
     Route::prefix('auth')->group(function () {
-        Route::post('/register', [AuthController::class, 'register']);
-        Route::post('/login', [AuthController::class, 'login']);
-        Route::post('/reset-password', [AuthController::class, 'resetPassword']);
+        Route::post('/login', [AuthController::class, 'login'])->middleware('throttle:login');
+        Route::post('/reset-password', [AuthController::class, 'resetPassword'])->middleware('throttle:3,60');
     });
 
     // Protected routes
-    Route::middleware('auth:sanctum')->group(function () {
+    Route::middleware(['auth:sanctum', 'throttle:api'])->group(function () {
         // Auth
         Route::prefix('auth')->group(function () {
             Route::post('/logout', [AuthController::class, 'logout']);
@@ -70,9 +69,9 @@ Route::prefix('v1')->group(function () {
             Route::post('/', [StaffController::class, 'store'])->middleware('permission:staff.create');
             Route::post('/import', [StaffController::class, 'import'])->middleware('permission:staff.create');
             Route::get('/export', [StaffController::class, 'export'])->middleware('permission:staff.view');
-            Route::get('/sample', [StaffController::class, 'sample']);
-            Route::get('/statistics', [StaffController::class, 'statistics']);
-            Route::get('/search', [StaffController::class, 'search']);
+            Route::get('/sample', [StaffController::class, 'sample'])->middleware('permission:staff.create');
+            Route::get('/statistics', [StaffController::class, 'statistics'])->middleware('permission:reports.view');
+            Route::get('/search', [StaffController::class, 'search'])->middleware('permission:staff.view');
             Route::get('/center/{centerId}', [StaffController::class, 'byCenter'])->middleware('permission:centers.view_staff');
             Route::get('/team-code/{teamCode}', [StaffController::class, 'byTeamCode'])->middleware('permission:staff.view');
             Route::patch('/{id}/toggle-active', [StaffController::class, 'toggleActive'])->middleware('permission:staff.activate');
@@ -91,7 +90,7 @@ Route::prefix('v1')->group(function () {
             Route::get('/', [QuestionCategoryController::class, 'index'])->middleware('permission:question-categories.view');
             Route::post('/', [QuestionCategoryController::class, 'store'])->middleware('permission:question-categories.create');
             Route::get('/active', [QuestionCategoryController::class, 'active'])->middleware('permission:question-categories.view');
-            Route::get('/sample', [QuestionCategoryController::class, 'downloadSample']);
+            Route::get('/sample', [QuestionCategoryController::class, 'downloadSample'])->middleware('permission:question-categories.view');
             Route::get('/export/{format?}', [QuestionCategoryController::class, 'export'])->middleware('permission:question-categories.view');
             Route::post('/import', [QuestionCategoryController::class, 'import'])->middleware('permission:question-categories.create');
             Route::get('/{id}', [QuestionCategoryController::class, 'show'])->middleware('permission:question-categories.view');
@@ -172,16 +171,16 @@ Route::prefix('v1')->group(function () {
         });
 
         // Action Plans
-        Route::prefix('action-plans')->group(function () {
+        Route::prefix('action-plans')->middleware('permission:action-plans.view')->group(function () {
             Route::get('/', [ActionPlanController::class, 'index']);
-            Route::post('/', [ActionPlanController::class, 'store']);
+            Route::post('/', [ActionPlanController::class, 'store'])->middleware('permission:action-plans.create');
             Route::get('/evaluation/{evaluationId}', [ActionPlanController::class, 'byEvaluation']);
             Route::get('/staff/{staffId}', [ActionPlanController::class, 'byStaff']);
             Route::get('/staff/{staffId}/summary', [ActionPlanController::class, 'summary']);
-            Route::patch('/{id}/status', [ActionPlanController::class, 'updateStatus']);
+            Route::patch('/{id}/status', [ActionPlanController::class, 'updateStatus'])->middleware('permission:action-plans.edit');
             Route::get('/{id}', [ActionPlanController::class, 'show']);
-            Route::put('/{id}', [ActionPlanController::class, 'update']);
-            Route::delete('/{id}', [ActionPlanController::class, 'destroy']);
+            Route::put('/{id}', [ActionPlanController::class, 'update'])->middleware('permission:action-plans.edit');
+            Route::delete('/{id}', [ActionPlanController::class, 'destroy'])->middleware('permission:action-plans.delete');
         });
 
         // Team Codes
@@ -190,7 +189,7 @@ Route::prefix('v1')->group(function () {
             Route::post('/', [TeamCodeController::class, 'store'])->middleware('permission:team-codes.create');
             Route::post('/import', [TeamCodeController::class, 'import'])->middleware('permission:team-codes.create');
             Route::get('/export', [TeamCodeController::class, 'export'])->middleware('permission:team-codes.view');
-            Route::get('/sample', [TeamCodeController::class, 'downloadSample']);
+            Route::get('/sample', [TeamCodeController::class, 'downloadSample'])->middleware('permission:team-codes.view');
             Route::get('/active', [TeamCodeController::class, 'active'])->middleware('permission:team-codes.view');
             Route::get('/search', [TeamCodeController::class, 'search'])->middleware('permission:team-codes.view');
             Route::get('/{id}/statistics', [TeamCodeController::class, 'statistics'])->middleware('permission:team-codes.view');
@@ -201,7 +200,7 @@ Route::prefix('v1')->group(function () {
         });
 
         // Analytics
-        Route::prefix('analytics')->group(function () {
+        Route::prefix('analytics')->middleware('throttle:analytics')->group(function () {
             Route::get('/dashboard', [AnalyticsController::class, 'dashboard'])->middleware('permission:reports.view');
             Route::get('/evaluation-trends', [AnalyticsController::class, 'evaluationTrends'])->middleware('permission:reports.view');
             Route::get('/top-performers', [AnalyticsController::class, 'topPerformers'])->middleware('permission:reports.view');
@@ -213,8 +212,8 @@ Route::prefix('v1')->group(function () {
             Route::get('/classification-breakdown', [AnalyticsController::class, 'classificationBreakdown'])->middleware('permission:reports.view');
             Route::get('/recent-activity', [AnalyticsController::class, 'recentActivity'])->middleware('permission:reports.view');
             Route::get('/composite-score', [AnalyticsController::class, 'compositeScore'])->middleware('permission:reports.view');
-            Route::get('/export/pdf', [AnalyticsController::class, 'exportPdf'])->middleware('permission:reports.export');
-            Route::get('/export/excel', [AnalyticsController::class, 'exportExcel'])->middleware('permission:reports.export');
+            Route::get('/export/pdf', [AnalyticsController::class, 'exportPdf'])->middleware('permission:reports.export', 'throttle:exports');
+            Route::get('/export/excel', [AnalyticsController::class, 'exportExcel'])->middleware('permission:reports.export', 'throttle:exports');
         });
 
         // Zones
@@ -241,7 +240,7 @@ Route::prefix('v1')->group(function () {
             Route::post('/', [FieldController::class, 'store'])->middleware('permission:fields.create');
             Route::post('/import', [FieldController::class, 'import'])->middleware('permission:fields.create');
             Route::get('/export', [FieldController::class, 'export'])->middleware('permission:fields.view');
-            Route::get('/sample', [FieldController::class, 'downloadSample']);
+            Route::get('/sample', [FieldController::class, 'downloadSample'])->middleware('permission:fields.view');
             Route::get('/active', [FieldController::class, 'active'])->middleware('permission:fields.view');
             Route::get('/search', [FieldController::class, 'search'])->middleware('permission:fields.view');
             Route::get('/{id}', [FieldController::class, 'show'])->middleware('permission:fields.view');
@@ -255,7 +254,7 @@ Route::prefix('v1')->group(function () {
             Route::post('/', [SpecialtyController::class, 'store'])->middleware('permission:specialties.create');
             Route::post('/import', [SpecialtyController::class, 'import'])->middleware('permission:specialties.create');
             Route::get('/export', [SpecialtyController::class, 'export'])->middleware('permission:specialties.view');
-            Route::get('/sample', [SpecialtyController::class, 'downloadSample']);
+            Route::get('/sample', [SpecialtyController::class, 'downloadSample'])->middleware('permission:specialties.view');
             Route::get('/active', [SpecialtyController::class, 'active'])->middleware('permission:specialties.view');
             Route::get('/search', [SpecialtyController::class, 'search'])->middleware('permission:specialties.view');
             Route::get('/field/{fieldId}', [SpecialtyController::class, 'byField'])->middleware('permission:specialties.view');
@@ -270,7 +269,7 @@ Route::prefix('v1')->group(function () {
             Route::post('/', [RankController::class, 'store'])->middleware('permission:ranks.create');
             Route::post('/import', [RankController::class, 'import'])->middleware('permission:ranks.create');
             Route::get('/export', [RankController::class, 'export'])->middleware('permission:ranks.view');
-            Route::get('/sample', [RankController::class, 'downloadSample']);
+            Route::get('/sample', [RankController::class, 'downloadSample'])->middleware('permission:ranks.view');
             Route::get('/active', [RankController::class, 'active'])->middleware('permission:ranks.view');
             Route::get('/search', [RankController::class, 'search'])->middleware('permission:ranks.view');
             Route::get('/{id}', [RankController::class, 'show'])->middleware('permission:ranks.view');
@@ -284,7 +283,7 @@ Route::prefix('v1')->group(function () {
             Route::post('/', [CategoryController::class, 'store'])->middleware('permission:categories.create');
             Route::post('/import', [CategoryController::class, 'import'])->middleware('permission:categories.create');
             Route::get('/export', [CategoryController::class, 'export'])->middleware('permission:categories.view');
-            Route::get('/sample', [CategoryController::class, 'downloadSample']);
+            Route::get('/sample', [CategoryController::class, 'downloadSample'])->middleware('permission:categories.view');
             Route::get('/active', [CategoryController::class, 'active'])->middleware('permission:categories.view');
             Route::get('/search', [CategoryController::class, 'search'])->middleware('permission:categories.view');
             Route::get('/{id}', [CategoryController::class, 'show'])->middleware('permission:categories.view');
@@ -298,7 +297,7 @@ Route::prefix('v1')->group(function () {
             Route::post('/', [ClassificationController::class, 'store'])->middleware('permission:classifications.create');
             Route::post('/import', [ClassificationController::class, 'import'])->middleware('permission:classifications.create');
             Route::get('/export', [ClassificationController::class, 'export'])->middleware('permission:classifications.view');
-            Route::get('/sample', [ClassificationController::class, 'downloadSample']);
+            Route::get('/sample', [ClassificationController::class, 'downloadSample'])->middleware('permission:classifications.view');
             Route::post('/resolve', [ClassificationController::class, 'resolve'])->middleware('permission:classifications.view');
             Route::post('/category', [ClassificationController::class, 'category'])->middleware('permission:classifications.view');
             Route::get('/{id}', [ClassificationController::class, 'show'])->middleware('permission:classifications.view');
@@ -310,9 +309,9 @@ Route::prefix('v1')->group(function () {
         Route::prefix('educational-degrees')->group(function () {
             Route::get('/', [EducationalDegreeController::class, 'index'])->middleware('permission:educational-degrees.view');
             Route::post('/', [EducationalDegreeController::class, 'store'])->middleware('permission:educational-degrees.create');
-            Route::post('/import', [EducationalDegreeController::class, 'import']);
-            Route::get('/export', [EducationalDegreeController::class, 'export']);
-            Route::get('/sample', [EducationalDegreeController::class, 'downloadSample']);
+            Route::post('/import', [EducationalDegreeController::class, 'import'])->middleware('permission:educational-degrees.create');
+            Route::get('/export', [EducationalDegreeController::class, 'export'])->middleware('permission:educational-degrees.view');
+            Route::get('/sample', [EducationalDegreeController::class, 'downloadSample'])->middleware('permission:educational-degrees.view');
             Route::get('/active', [EducationalDegreeController::class, 'active'])->middleware('permission:educational-degrees.view');
             Route::get('/search', [EducationalDegreeController::class, 'search'])->middleware('permission:educational-degrees.view');
             Route::get('/{id}', [EducationalDegreeController::class, 'show'])->middleware('permission:educational-degrees.view');
@@ -325,9 +324,9 @@ Route::prefix('v1')->group(function () {
         Route::prefix('departments')->group(function () {
             Route::get('/', [DepartmentController::class, 'index'])->middleware('permission:departments.view');
             Route::post('/', [DepartmentController::class, 'store'])->middleware('permission:departments.create');
-            Route::post('/import', [DepartmentController::class, 'import']);
-            Route::get('/export', [DepartmentController::class, 'export']);
-            Route::get('/sample', [DepartmentController::class, 'downloadSample']);
+            Route::post('/import', [DepartmentController::class, 'import'])->middleware('permission:departments.create');
+            Route::get('/export', [DepartmentController::class, 'export'])->middleware('permission:departments.view');
+            Route::get('/sample', [DepartmentController::class, 'downloadSample'])->middleware('permission:departments.view');
             Route::get('/active', [DepartmentController::class, 'active'])->middleware('permission:departments.view');
             Route::get('/search', [DepartmentController::class, 'search'])->middleware('permission:departments.view');
             Route::get('/{id}', [DepartmentController::class, 'show'])->middleware('permission:departments.view');
@@ -340,9 +339,9 @@ Route::prefix('v1')->group(function () {
         Route::prefix('clinic-assignments')->group(function () {
             Route::get('/', [ClinicAssignmentController::class, 'index'])->middleware('permission:clinic-assignments.view');
             Route::post('/', [ClinicAssignmentController::class, 'store'])->middleware('permission:clinic-assignments.create');
-            Route::post('/import', [ClinicAssignmentController::class, 'import']);
-            Route::get('/export/{format}', [ClinicAssignmentController::class, 'export']);
-            Route::get('/sample', [ClinicAssignmentController::class, 'downloadSample']);
+            Route::post('/import', [ClinicAssignmentController::class, 'import'])->middleware('permission:clinic-assignments.create');
+            Route::get('/export/{format}', [ClinicAssignmentController::class, 'export'])->middleware('permission:clinic-assignments.view');
+            Route::get('/sample', [ClinicAssignmentController::class, 'downloadSample'])->middleware('permission:clinic-assignments.view');
             Route::get('/active', [ClinicAssignmentController::class, 'active'])->middleware('permission:clinic-assignments.view');
             Route::get('/search', [ClinicAssignmentController::class, 'search'])->middleware('permission:clinic-assignments.view');
             Route::get('/{id}', [ClinicAssignmentController::class, 'show'])->middleware('permission:clinic-assignments.view');
@@ -357,7 +356,7 @@ Route::prefix('v1')->group(function () {
             Route::post('/', [MedicationController::class, 'store'])->middleware('permission:medications.create');
             Route::get('/export', [MedicationController::class, 'export'])->middleware('permission:medications.export');
             Route::post('/import', [MedicationController::class, 'import'])->middleware('permission:medications.import');
-            Route::get('/template', [MedicationController::class, 'template']);
+            Route::get('/template', [MedicationController::class, 'template'])->middleware('permission:medications.view');
             Route::get('/active', [MedicationController::class, 'active'])->middleware('permission:medications.view');
             Route::get('/{id}', [MedicationController::class, 'show'])->middleware('permission:medications.view');
             Route::put('/{id}', [MedicationController::class, 'update'])->middleware('permission:medications.edit');
@@ -370,7 +369,7 @@ Route::prefix('v1')->group(function () {
             Route::post('/', [PhcMedicationController::class, 'store'])->middleware('permission:medications.create');
             Route::get('/export', [PhcMedicationController::class, 'export'])->middleware('permission:phc-medications.export');
             Route::post('/import', [PhcMedicationController::class, 'import'])->middleware('permission:phc-medications.import');
-            Route::get('/template', [PhcMedicationController::class, 'template']);
+            Route::get('/template', [PhcMedicationController::class, 'template'])->middleware('permission:medications.view');
             Route::get('/by-center/{phcCenterId}', [PhcMedicationController::class, 'byCenter'])->middleware('permission:medications.view');
             Route::get('/{id}', [PhcMedicationController::class, 'show'])->middleware('permission:medications.view');
             Route::put('/{id}', [PhcMedicationController::class, 'update'])->middleware('permission:medications.edit');
@@ -399,9 +398,9 @@ Route::prefix('v1')->group(function () {
         Route::prefix('professionals')->group(function () {
             Route::get('/', [ProfessionalController::class, 'index'])->middleware('permission:professionals.view');
             Route::post('/', [ProfessionalController::class, 'store'])->middleware('permission:professionals.create');
-            Route::post('/import', [ProfessionalController::class, 'import']);
-            Route::get('/export/{format}', [ProfessionalController::class, 'export']);
-            Route::get('/sample', [ProfessionalController::class, 'downloadSample']);
+            Route::post('/import', [ProfessionalController::class, 'import'])->middleware('permission:professionals.create');
+            Route::get('/export/{format}', [ProfessionalController::class, 'export'])->middleware('permission:professionals.view');
+            Route::get('/sample', [ProfessionalController::class, 'downloadSample'])->middleware('permission:professionals.view');
             Route::get('/active', [ProfessionalController::class, 'active'])->middleware('permission:professionals.view');
             Route::get('/search', [ProfessionalController::class, 'search'])->middleware('permission:professionals.view');
             Route::get('/{id}', [ProfessionalController::class, 'show'])->middleware('permission:professionals.view');
@@ -423,20 +422,20 @@ Route::prefix('v1')->group(function () {
             Route::put('/{role}/users', [RoleController::class, 'syncUsers'])->middleware('permission:roles.assign_users');
         });
 
-        Route::prefix('permissions')->group(function () {
-            Route::get('/', [PermissionController::class, 'index'])->middleware('permission:permissions.view');
-            Route::post('/', [PermissionController::class, 'store']);
+        Route::prefix('permissions')->middleware('permission:permissions.view')->group(function () {
+            Route::get('/', [PermissionController::class, 'index']);
+            Route::post('/', [PermissionController::class, 'store'])->middleware('permission:permissions.create');
             Route::get('/{permission}', [PermissionController::class, 'show']);
-            Route::put('/{permission}', [PermissionController::class, 'update']);
-            Route::delete('/{permission}', [PermissionController::class, 'destroy']);
+            Route::put('/{permission}', [PermissionController::class, 'update'])->middleware('permission:permissions.edit');
+            Route::delete('/{permission}', [PermissionController::class, 'destroy'])->middleware('permission:permissions.delete');
         });
 
-        Route::prefix('users')->group(function () {
+        Route::prefix('users')->middleware('permission:users.view')->group(function () {
             Route::get('/', [UserController::class, 'index']);
             Route::post('/', [UserController::class, 'store'])->middleware('permission:users.manage');
             Route::get('/export', [UserController::class, 'export']);
-            Route::post('/import', [UserController::class, 'import']);
-            Route::get('/{id}', [UserController::class, 'show'])->middleware('permission:users.view');
+            Route::post('/import', [UserController::class, 'import'])->middleware('permission:users.manage');
+            Route::get('/{id}', [UserController::class, 'show']);
             Route::put('/{id}', [UserController::class, 'update'])->middleware('permission:users.manage');
             Route::delete('/{id}', [UserController::class, 'destroy'])->middleware('permission:users.manage');
             Route::patch('/{id}/toggle-active', [UserController::class, 'toggleActive'])->middleware('permission:users.manage');

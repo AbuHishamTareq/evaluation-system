@@ -13,6 +13,7 @@ class ApiClient {
         'Content-Type': 'application/json',
         'Accept': 'application/json',
       },
+      withCredentials: true,
       timeout: 30000,
     });
 
@@ -20,10 +21,9 @@ class ApiClient {
   }
 
   private setupInterceptors() {
-    // Request interceptor - add auth token
     this.client.interceptors.request.use(
       (config) => {
-        const token = localStorage.getItem('auth_token');
+        const token = localStorage.getItem('auth_token') || sessionStorage.getItem('auth_token');
         if (token) {
           config.headers.Authorization = `Bearer ${token}`;
         }
@@ -32,14 +32,12 @@ class ApiClient {
       (error) => Promise.reject(error)
     );
 
-    // Response interceptor - handle errors
     this.client.interceptors.response.use(
       (response) => response,
       (error: AxiosError) => {
         if (error.response?.status === 401) {
           const isLoginPage = window.location.pathname === '/login';
           if (!isLoginPage) {
-            localStorage.removeItem('auth_token');
             window.location.href = '/login';
           }
         }
@@ -53,10 +51,6 @@ class ApiClient {
     return response.data;
   }
 
-  /**
-   * Performs a GET request and returns the full response object (including headers).
-   * Useful for blob downloads where Content-Disposition headers need to be read.
-   */
   async getFullResponse<T>(url: string, config?: AxiosRequestConfig): Promise<{ data: T; headers: Record<string, string> }> {
     const response = await this.client.get<T>(url, config);
     return { data: response.data, headers: response.headers as Record<string, string> };
@@ -80,14 +74,6 @@ class ApiClient {
   async delete<T>(url: string, config?: AxiosRequestConfig): Promise<T> {
     const response = await this.client.delete<T>(url, config);
     return response.data;
-  }
-
-  setToken(token: string) {
-    localStorage.setItem('auth_token', token);
-  }
-
-  clearToken() {
-    localStorage.removeItem('auth_token');
   }
 }
 

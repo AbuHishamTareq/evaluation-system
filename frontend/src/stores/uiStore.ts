@@ -32,7 +32,7 @@ export const useUIStore = create<UIState>((set) => ({
   toggleSidebarCollapsed: () => set((state) => ({ sidebarCollapsed: !state.sidebarCollapsed })),
 
   addNotification: (notification) => {
-    const id = Math.random().toString(36).substr(2, 9);
+    const id = crypto.randomUUID();
     const newNotification = { ...notification, id };
 
     set((state) => ({

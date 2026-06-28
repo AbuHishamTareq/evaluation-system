@@ -31,38 +31,6 @@ class AuthTest extends TestCase
         $this->headers = ['Authorization' => 'Bearer '.$this->token];
     }
 
-    public function test_user_can_register(): void
-    {
-        $response = $this->json('POST', '/api/v1/auth/register', [
-            'name' => 'New User',
-            'email' => 'newuser@example.com',
-            'password' => 'password123',
-            'password_confirmation' => 'password123',
-        ]);
-
-        $response->assertStatus(201)
-            ->assertJsonStructure([
-                'success',
-                'message',
-                'data' => ['id', 'name', 'email'],
-            ]);
-
-        $this->assertDatabaseHas('users', [
-            'email' => 'newuser@example.com',
-            'name' => 'New User',
-        ]);
-    }
-
-    public function test_user_cannot_register_with_missing_fields(): void
-    {
-        $response = $this->json('POST', '/api/v1/auth/register', [
-            'name' => '',
-            'email' => 'not-an-email',
-        ]);
-
-        $response->assertStatus(422);
-    }
-
     public function test_user_can_login(): void
     {
         $response = $this->json('POST', '/api/v1/auth/login', [

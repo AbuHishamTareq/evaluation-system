@@ -251,21 +251,19 @@ const DetailPanel: React.FC<DetailPanelProps> = ({
 };
 
 export const ClinicAssignmentsPage: React.FC = () => {
-  const {
-    assignments,
-    isLoading,
-    isImporting,
-    error,
-    pagination,
-    fetchAssignments,
-    createAssignment,
-    updateAssignment,
-    toggleAssignmentStatus,
-    deleteAssignment,
-    clearError,
-    exportAssignments,
-    importAssignments,
-  } = useClinicAssignmentStore();
+  const assignments = useClinicAssignmentStore((s) => s.assignments);
+  const isLoading = useClinicAssignmentStore((s) => s.isLoading);
+  const isImporting = useClinicAssignmentStore((s) => s.isImporting);
+  const error = useClinicAssignmentStore((s) => s.error);
+  const pagination = useClinicAssignmentStore((s) => s.pagination);
+  const fetchAssignments = useClinicAssignmentStore((s) => s.fetchAssignments);
+  const createAssignment = useClinicAssignmentStore((s) => s.createAssignment);
+  const updateAssignment = useClinicAssignmentStore((s) => s.updateAssignment);
+  const toggleAssignmentStatus = useClinicAssignmentStore((s) => s.toggleAssignmentStatus);
+  const deleteAssignment = useClinicAssignmentStore((s) => s.deleteAssignment);
+  const clearError = useClinicAssignmentStore((s) => s.clearError);
+  const exportAssignments = useClinicAssignmentStore((s) => s.exportAssignments);
+  const importAssignments = useClinicAssignmentStore((s) => s.importAssignments);
 
   const { addToast } = useToast();
   const fileInputRef = useRef<HTMLInputElement>(null);
@@ -441,10 +439,10 @@ export const ClinicAssignmentsPage: React.FC = () => {
 
   const handleDownloadSample = async () => {
     try {
-      const token = localStorage.getItem('auth_token');
+      const token = localStorage.getItem('auth_token') || sessionStorage.getItem('auth_token');
       const baseUrl = import.meta.env.VITE_API_URL || 'http://localhost:8000';
       const response = await fetch(`${baseUrl}/api/v1/clinic-assignments/sample`, {
-        headers: { Authorization: `Bearer ${token}` },
+        headers: token ? { Authorization: `Bearer ${token}` } : {},
       });
       if (!response.ok) throw new Error('Failed to download sample');
       const blob = await response.blob();

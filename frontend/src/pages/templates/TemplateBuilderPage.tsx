@@ -394,7 +394,8 @@ const TemplateFormModal: React.FC<TemplateFormModalProps> = ({
       setCreateOptions([]);
     }
   }, [editingTemplate, isOpen]);
-  const { subCategories, fetchSubCategories } = useQuestionSubCategoryStore();
+  const subCategories = useQuestionSubCategoryStore((s) => s.subCategories);
+  const fetchSubCategories = useQuestionSubCategoryStore((s) => s.fetchSubCategories);
 
   // Fetch sub-categories when category changes
   useEffect(() => {
@@ -1143,20 +1144,21 @@ const TplDropdownItem: React.FC<TplDropdownItemProps> = ({
 
 // ─── Main Page ──────────────────────────────────────────────────────────────
 export const TemplateBuilderPage: React.FC = () => {
-  const {
-    templates,
-    isLoading,
-    error,
-    pagination,
-    fetchTemplates,
-    createTemplate,
-    updateTemplate,
-    deleteTemplate,
-    toggleTemplateStatus,
-    clearError,
-  } = useTemplateStore();
+  const templates = useTemplateStore((s) => s.templates);
+  const isLoading = useTemplateStore((s) => s.isLoading);
+  const error = useTemplateStore((s) => s.error);
+  const pagination = useTemplateStore((s) => s.pagination);
+  const fetchTemplates = useTemplateStore((s) => s.fetchTemplates);
+  const createTemplate = useTemplateStore((s) => s.createTemplate);
+  const updateTemplate = useTemplateStore((s) => s.updateTemplate);
+  const deleteTemplate = useTemplateStore((s) => s.deleteTemplate);
+  const toggleTemplateStatus = useTemplateStore((s) => s.toggleTemplateStatus);
+  const clearError = useTemplateStore((s) => s.clearError);
 
-  const { questions, fetchQuestions, categories, fetchCategories } = useQuestionStore();
+  const questions = useQuestionStore((s) => s.questions);
+  const fetchQuestions = useQuestionStore((s) => s.fetchQuestions);
+  const categories = useQuestionStore((s) => s.categories);
+  const fetchCategories = useQuestionStore((s) => s.fetchCategories);
   const { addToast } = useToast();
   const hasPermission = useAuthStore((state) => state.hasPermission);
 
