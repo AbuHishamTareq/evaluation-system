@@ -1,5 +1,5 @@
 # Frontend: lint-staged
-npx --no-install lint-staged --cwd frontend
+(cd frontend && npm exec lint-staged)
 FRONTEND_EXIT=$?
 
 # Backend: Pint code style fix
